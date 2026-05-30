@@ -2524,14 +2524,14 @@ avrdu.menu.WDTwindow.63msec.bootloader.wdtwindowbits=0100
 #----------------------------------------#
 # Flash Mapping options                  #
 #________________________________________#
-avrdu.menu.flmap.lockdefault=Use last FLMAP section, lock FLMAP, provide PROGMEM_MAPPED
 avrdu.menu.flmap.unlocked=Start w/default, do not lock flmap. No PROGMEM_MAPPED.
+avrdu.menu.flmap.lockdefault=Use last FLMAP section, lock FLMAP, provide PROGMEM_MAPPED
 avrdu.menu.flmap.locksection0=Set FLMAP to section 0, lock FLMAP, provide PROGMEM_MAPPED
-avrdu.menu.flmap.lockdefault.build.flmapopts=-DLOCK_FLMAP -DFLMAPSECTION1
 avrdu.menu.flmap.unlocked.build.flmapopts=
+avrdu.menu.flmap.lockdefault.build.flmapopts=-DLOCK_FLMAP -DFLMAPSECTION1
 avrdu.menu.flmap.locksection0.build.flmapopts=-DLOCK_FLMAP -DFLMAPSECTION0
-avrdu.menu.flmap.lockdefault.build.flmapabr=.fld
 avrdu.menu.flmap.unlocked.build.flmapabr=.ful
+avrdu.menu.flmap.lockdefault.build.flmapabr=.fld
 avrdu.menu.flmap.locksection0.build.flmapabr=.fl0
 
 

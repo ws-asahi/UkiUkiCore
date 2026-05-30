@@ -1,0 +1,594 @@
+/*  Curiosity Nano AVR64DU32 (EV59F82A) variant for DxCore.
+ *
+ *  Derived from `32pin-duseries/pins_arduino.h` (Spence Konde, 2021-2022, LGPL2.1).
+ *  Differences from the generic 32-pin DU variant:
+ *    1. LED_BUILTIN is PIN_PF2 (LED0 on the Nano, GND-sink, LOW = ON).
+ *    2. Serial1's default mux is HWSERIAL1_MUX_PINSWAP_2 (PD6/PD7) so that
+ *       Serial1 talks to the nEDBG CDC port without needing Serial1.swap(2).
+ *    3. Serial is redefined to the on-chip USB CDC instance (USBSerial)
+ *       supplied by the AVRDU_CDC stack, so Serial.print() goes to the
+ *       host PC over USB rather than to USART0 pins.
+ *
+ *  Everything else - pin numbering, ADC channel map, PWM mapping, SPI/TWI
+ *  defines, USART0 mux table, USART1 mux table - is identical to the
+ *  generic 32pin-duseries variant.
+ *
+ *  License: LGPL 2.1 (inherits from the file this was derived from).
+ */
+//                                                                                    *INDENT-OFF*
+/*
+ ###  #     # ####      ####  #   #       ###   ##
+#   # #     # #   #     #   # #   #          # #  #           #
+#####  #   #  ####      #   # #   #        ##    #   ### ###     ###
+#   #   # #   #  #      #   # #   #          #  #        #  # #  #  #
+#   #    #    #   #     ####   ###        ###  ####      ###  #  #  #
+===================================       ----------     #
+Variant Definition file for the AVR64DU32 Curiosity Nano #
+(EV59F82A).  Compatible chips: AVR64DU32, AVR32DU32,     #
+AVR16DU32.
+
+Include guard and include basic libraries. We are normally including this inside Arduino.h */
+
+#ifndef Pins_Arduino_h
+#define Pins_Arduino_h
+#include <avr/pgmspace.h>
+#include "timers.h"
+
+#define DD_32PIN_PINOUT
+#define CURIOSITY_NANO_DU
+#define AVRDU_USB_CDC
+
+ /*##  ### #   #  ###
+ #   #  #  ##  # #
+ ####   #  # # #  ###
+ #      #  #  ##     #
+ #     ### #   #  #*/
+
+/* Like the 28-pin parts, the 32-pin DD's have a layout and
+ * numbering scheme identical to the DA/DBm just with more analog pins. */
+
+#define PIN_PA0 (0)
+#define PIN_PA1 (1)
+#define PIN_PA2 (2)
+#define PIN_PA3 (3)
+#define PIN_PA4 (4)
+#define PIN_PA5 (5)
+#define PIN_PA6 (6)
+#define PIN_PA7 (7)
+#define PIN_PC0 (8) /* fake pin PC0 */
+//  no  PIN_PC1 (9)
+//  no  PIN_PC2 (10)
+#define PIN_PC3 (11)
+#define PIN_PD0 (12)
+#define PIN_PD1 (13)
+#define PIN_PD2 (14)
+#define PIN_PD3 (15)
+#define PIN_PD4 (16)
+#define PIN_PD5 (17)
+#define PIN_PD6 (18)
+#define PIN_PD7 (19)
+#define PIN_PF0 (20)
+#define PIN_PF1 (21)
+#define PIN_PF2 (22)
+#define PIN_PF3 (23)
+#define PIN_PF4 (24)
+#define PIN_PF5 (25)
+#define PIN_PF6 (26) // RESET
+#define PIN_PF7 (27) // UPDI
+
+#define FAKE_PIN_PC0
+
+        /*##   ##   ###  ###  ###  ###
+        #   # #  # #      #  #    #
+        ####  ####  ###   #  #     ###
+        #   # #  #     #  #  #        #
+        ####  #  # ####  ###  ###  #*/
+
+#define PINS_COUNT                     (28)
+#define NUM_ANALOG_INPUTS              (31)
+// #define NUM_RESERVED_PINS            0     // These may at your option be defined,
+// #define NUM_INTERNALLY_USED_PINS     0     // They will be filled in with defaults otherwise
+// Autocalculated are :
+// NUM_DIGITAL_PINS = PINS_COUNT - NUM_RESERVED_PINS
+// TOTAL_FREE_OPINS = NUM_DIGITAL_PINS - NUM_INTERNALLY_USED_PINS
+// Count of I2C and SPI pins will be defined as 2 and 3 but not used in further calculations. If you
+// for some reason need to change this, define them here. Only ones not defined here get automatically set.
+  // Curiosity Nano: LED0 is on PF2 (GND-sink driver: LOW = ON, HIGH = OFF).
+  #define LED_BUILTIN                  (PIN_PF2)
+  #define LED_BUILTIN_ACTIVE_LOW       (1)
+  // SW0 (user button) is PD0, active LOW with internal pull-up.
+  #define PIN_BUTTON_BUILTIN           (PIN_PD0)
+
+/* Until the legacy attach interrupt has been completely obsoleted - this is such a waste here! */
+#ifdef CORE_ATTACH_OLD
+  #define EXTERNAL_NUM_INTERRUPTS      (48)
+#endif
+
+       /*   #  ###   ### ####   ###   ###
+        ## ## #   # #    #   # #   # #
+        # # # ##### #    ####  #   #  ###
+        #   # #   # #    # #   #   #     #
+        #   # #   #  ### #  #   ###   ##*/
+// If you change the number of pins in any way or if the part has ADC on different pins from the board you are adapting
+// you must ensure that these will do what they say they will do.
+// that bit about the 4 ADC ADC channels on PORTC not working with MVIO enabled is ugly to handle.
+
+#define digitalPinToAnalogInput(p)           ((p) >= PIN_PD0 ? (((p) < PIN_PF0)   ? ((p) - PIN_PD0) : ((p) < PIN_PF6)   ? ((p) -  4)      : NOT_A_PIN) : (((p) > PIN_PA1)                        ? ((p) + 20) : NOT_A_PIN))
+#define analogChannelToDigitalPin(p)      ( (p) <  8 ? (p) +      PIN_PD0  \
+                                          : (p) < 16 ? NOT_A_PIN           \
+                                          : (p) < 22 ? (p) - 16 + PIN_PF0  \
+                                          : (p) < 28 ? (p) - 20 + PIN_PA0  \
+                                          : (p) < 31 ? NOT_A_PIN           \
+                                          : (p) < 32 ? (p) - 28 + PIN_PC0  \
+                                          : NOT_A_PIN )
+
+
+#define analogInputToDigitalPin(p)                        analogChannelToDigitalPin((p) & 0x7F) /*This assumes that the argument is NOT a digital pin number - but allows channel ID's or channel numbers. */
+#define digitalOrAnalogPinToDigital(p)    (((p) & 0x80) ? analogChannelToDigitalPin((p) & 0x7f) : (((p)<=NUM_DIGITAL_PINS) ? (p) : NOT_A_PIN)) /* This will act on either kind of pin ID but not analog channel*/
+#define portToPinZero(port)               ((port) == PA ? PIN_PA0 : ((port)== PC ? PIN_PC0 : ((port)== PD ? PIN_PD0 : ((port)== PF ? PIN_PF0 : NOT_A_PIN))))
+
+// PWM pins
+#if defined(MILLIS_USE_TIMERB0)
+  #define digitalPinHasPWMTCB(p) (((p) == PIN_PA3))
+#elif defined(MILLIS_USE_TIMERB1)
+  #define digitalPinHasPWMTCB(p) (((p) == PIN_PA2))
+#else //no TCB's are used for millis
+  #define digitalPinHasPWMTCB(p) (((p) == PIN_PA2) || ((p) == PIN_PA3))
+#endif
+
+// Timer pin mapping
+#define TCA0_PINS (PORTMUX_TCA0_PORTF_gc)     // TCA0 output on PF[0:5] - PORTF is your go to PWM port on the DU-series, as the DU did not get any new mappings, doesn't have a USART2, doesn't have opamps, etc.
+#define TCB0_PINS (0x00)                      // TCB0 output on PA2 (default) TCB is not a good timer type for PWM, and wouldn't be even if these pins weren't super-useful - but they are, and it's other option duplicates TCA0.
+#define TCB1_PINS (0x00)                      // TCB1 output on PA3 (default) TCB is not a good timer type for PWM, and wouldn't be even if these pins weren't super-useful - but they are, and it's other option duplicates TCA0.
+
+#define PIN_TCA0_WO0_INIT (PIN_PF0)
+#define PIN_TCB0_WO_INIT  (PIN_PA2)
+#define PIN_TCB1_WO_INIT  (PIN_PA3)
+#define PIN_TCB2_WO_INIT  (PIN_PC0)
+#define PIN_TCD0_WOA_INIT (PIN_PA4)
+
+#define digitalPinHasPWM(p)               (digitalPinHasPWMTCB(p) || ((p) >= PIN_PA2 && (p) <= PIN_PA7) || ((p) >= PIN_PF0 && (p) < PIN_PF6))
+
+        /*##   ###  ####  ##### #   # #   # #   #
+        #   # #   # #   #   #   ## ## #   #  # #
+        ####  #   # ####    #   # # # #   #   #
+        #     #   # #  #    #   #   # #   #  # #
+        #      ###  #   #   #   #   #  ###  #   */
+
+
+#define SPI_INTERFACES_COUNT            (1)
+
+// SPI 0
+#define SPI_MUX                         (0x00)
+#define SPI_MUX_PINSWAP_4               (0x04)
+#define SPI_MUX_PINSWAP_NONE            (PORTMUX_SPI0_NONE_gc)
+#define PIN_SPI_MOSI                    (PIN_PA4)
+#define PIN_SPI_MISO                    (PIN_PA5)
+#define PIN_SPI_SCK                     (PIN_PA6)
+#define PIN_SPI_SS                      (PIN_PA7)
+#define PIN_SPI_MOSI_PINSWAP_4          (PIN_PD4)
+#define PIN_SPI_MISO_PINSWAP_4          (PIN_PD5)
+#define PIN_SPI_SCK_PINSWAP_4           (PIN_PD6)
+#define PIN_SPI_SS_PINSWAP_4            (PIN_PD7)
+
+
+// TWI 0
+#define PIN_WIRE_SDA                    (PIN_PA2)
+#define PIN_WIRE_SCL                    (PIN_PA3)
+#define PIN_WIRE_SDA_PINSWAP_1          (PIN_PA2)
+#define PIN_WIRE_SCL_PINSWAP_1          (PIN_PA3)
+#define PIN_WIRE_SDA_PINSWAP_3          (PIN_PA0)
+#define PIN_WIRE_SCL_PINSWAP_3          (PIN_PA1)
+
+// USART 0
+#define HWSERIAL0_MUX                   (0x00 /* PORTMUX_USART0_DEFAULT_gc */)
+#define HWSERIAL0_MUX_PINSWAP_1         (0x01 /* PORTMUX_USART0_ALT1_gc */)
+#define HWSERIAL0_MUX_PINSWAP_2         (0x02 /* PORTMUX_USART0_ALT2_gc */)
+#define HWSERIAL0_MUX_PINSWAP_3         (0x03 /* PORTMUX_USART0_ALT3_gc */)
+#define HWSERIAL0_MUX_PINSWAP_NONE      (0x05)
+#define PIN_HWSERIAL0_TX                (PIN_PA0)
+#define PIN_HWSERIAL0_RX                (PIN_PA1)
+#define PIN_HWSERIAL0_XCK               (PIN_PA2)
+#define PIN_HWSERIAL0_XDIR              (PIN_PA3)
+#define PIN_HWSERIAL0_TX_PINSWAP_1      (PIN_PA4)
+#define PIN_HWSERIAL0_RX_PINSWAP_1      (PIN_PA5)
+#define PIN_HWSERIAL0_XCK_PINSWAP_1     (PIN_PA6)
+#define PIN_HWSERIAL0_XDIR_PINSWAP_1    (PIN_PA7)
+#define PIN_HWSERIAL0_TX_PINSWAP_2      (PIN_PA2)
+#define PIN_HWSERIAL0_RX_PINSWAP_2      (PIN_PA3)
+#define PIN_HWSERIAL0_XCK_PINSWAP_2     (NOT_A_PIN)
+#define PIN_HWSERIAL0_XDIR_PINSWAP_2    (NOT_A_PIN)
+#define PIN_HWSERIAL0_TX_PINSWAP_3      (PIN_PD4)
+#define PIN_HWSERIAL0_RX_PINSWAP_3      (PIN_PD5)
+#define PIN_HWSERIAL0_XCK_PINSWAP_3     (PIN_PD6)
+#define PIN_HWSERIAL0_XDIR_PINSWAP_3    (PIN_PD7)
+
+// USART1
+// NOTE on the table-generation quirk in DxCore's UART_swap.h:
+//   The PINSWAP_2 row is only emitted into the _usart1_pins[] table when
+//   HWSERIAL1_MUX_PINSWAP_1 is ALSO defined (the rows are #if-nested:
+//   default -> PINSWAP_1 -> PINSWAP_2 -> PINSWAP_3).  If we define only
+//   PINSWAP_2 (as stock 32pin-duseries does), the PINSWAP_2 row is
+//   dropped, MUXCOUNT_USART1 becomes 1, and Serial1 ends up with no
+//   usable pins.  So we define PINSWAP_1 as a NOT_A_PIN placeholder
+//   purely to make the table include our real PINSWAP_2 (PD6/PD7) row.
+#define HWSERIAL1_MUX                   (0x00 /* PORTMUX_USART1_DEFAULT_gc */)
+#define HWSERIAL1_MUX_PINSWAP_1         (0x01 << 3 /* PORTMUX_USART1_ALT1_gc - not on this package */)
+#define HWSERIAL1_MUX_PINSWAP_2         (0x02 << 3 /* PORTMUX_USART1_ALT2_gc */)
+#define HWSERIAL1_MUX_PINSWAP_NONE      (0x03 << 3)
+#define PIN_HWSERIAL1_TX                (NOT_A_PIN)
+#define PIN_HWSERIAL1_RX                (NOT_A_PIN)
+#define PIN_HWSERIAL1_XCK               (NOT_A_PIN)
+#define PIN_HWSERIAL1_XDIR              (NOT_A_PIN)
+#define PIN_HWSERIAL1_TX_PINSWAP_1      (NOT_A_PIN)   /* placeholder: ALT1 pins (PC4/PC5) absent on 32-pin DU */
+#define PIN_HWSERIAL1_RX_PINSWAP_1      (NOT_A_PIN)
+#define PIN_HWSERIAL1_XCK_PINSWAP_1     (NOT_A_PIN)
+#define PIN_HWSERIAL1_XDIR_PINSWAP_1    (NOT_A_PIN)
+#define PIN_HWSERIAL1_TX_PINSWAP_2      (PIN_PD6)
+#define PIN_HWSERIAL1_RX_PINSWAP_2      (PIN_PD7)
+#define PIN_HWSERIAL1_XCK_PINSWAP_2     (NOT_A_PIN)
+#define PIN_HWSERIAL1_XDIR_PINSWAP_2    (NOT_A_PIN)
+
+/* Curiosity Nano specific: nEDBG's CDC virtual COM port is wired to
+ * PD6 (target TX -> nEDBG CDC RX) and PD7 (target RX <- nEDBG CDC TX),
+ * confirmed by the board user guide table 3-2.  That is USART1 ALT2.
+ *
+ * IMPORTANT: HWSERIAL1_MUX_DEFAULT is consumed by DxCore as the *row
+ * index* into _usart1_pins[] (see UART.cpp _set_pins / swap()), NOT as
+ * the raw PORTMUX register value.  With the table rows now being
+ *   index 0 = default      (no pins)
+ *   index 1 = PINSWAP_1     (placeholder, no pins)
+ *   index 2 = PINSWAP_2     (PD6 / PD7)   <-- what we want
+ * the correct default index is 2.  (The stock duseries habit of writing
+ * HWSERIAL1_MUX_DEFAULT = HWSERIAL1_MUX_PINSWAP_2 = 0x10 is a bug: 0x10
+ * is the raw ALT2 group code, which when used as an index is out of
+ * range, so _set_pins skips pin configuration and Serial1 goes nowhere.)
+ *
+ * With index 2, Serial1.begin(115200) uses PD6/PD7 out of the box; no
+ * Serial1.swap(2) call is needed (though swap(2) also works now). */
+#ifndef HWSERIAL1_MUX_DEFAULT
+  #define HWSERIAL1_MUX_DEFAULT         (2)   /* row index of PINSWAP_2 (PD6/PD7) */
+#endif
+
+        /*##  #   #  ###  #     ###   ###      ####  ### #   #  ###
+        #   # ##  # #   # #    #   # #         #   #  #  ##  # #
+        ##### # # # ##### #    #   # #  ##     ####   #  # # #  ###
+        #   # #  ## #   # #    #   # #   #     #      #  #  ##     #
+        #   # #   # #   # ####  ###   ###      #     ### #   #  #*/
+
+
+#define PIN_A0             (PIN_PD0)
+#define PIN_A1             (PIN_PD1)
+#define PIN_A2             (PIN_PD2)
+#define PIN_A3             (PIN_PD3)
+#define PIN_A4             (PIN_PD4)
+#define PIN_A5             (PIN_PD5)
+#define PIN_A6             (PIN_PD6)
+#define PIN_A7             (PIN_PD7)
+#define PIN_A8             (NOT_A_PIN)
+#define PIN_A9             (NOT_A_PIN)
+#define PIN_A10            (NOT_A_PIN)
+#define PIN_A11            (NOT_A_PIN)
+#define PIN_A12            (NOT_A_PIN)
+#define PIN_A13            (NOT_A_PIN)
+#define PIN_A14            (NOT_A_PIN)
+#define PIN_A15            (NOT_A_PIN)
+#define PIN_A16            (PIN_PF0)
+#define PIN_A17            (PIN_PF1)
+#define PIN_A18            (PIN_PF2)
+#define PIN_A19            (PIN_PF3)
+#define PIN_A20            (PIN_PF4)
+#define PIN_A21            (PIN_PF5)
+/* No ADC on               PIN_PF6 (reset) */
+/* No ADC on               PIN_PF7 (UPDI) */
+/* No ADC on               PIN_PA0 (XTAL1) */
+/* No ADC on               PIN_PA1 (XTAL2) */
+#define PIN_A22            (PIN_PA2)
+#define PIN_A23            (PIN_PA3)
+#define PIN_A24            (PIN_PA4)
+#define PIN_A25            (PIN_PA5)
+#define PIN_A26            (PIN_PA6)
+#define PIN_A27            (PIN_PA7)
+#define PIN_A28            (NOT_A_PIN)
+#define PIN_A29            (NOT_A_PIN)
+#define PIN_A30            (NOT_A_PIN)
+#define PIN_A31            (PIN_PC3)
+
+static const uint8_t A0  = PIN_A0;
+static const uint8_t A1  = PIN_A1;
+static const uint8_t A2  = PIN_A2;
+static const uint8_t A3  = PIN_A3;
+static const uint8_t A4  = PIN_A4;
+static const uint8_t A5  = PIN_A5;
+static const uint8_t A6  = PIN_A6;
+static const uint8_t A7  = PIN_A7;
+static const uint8_t A8  = NOT_A_PIN; // No PORTE
+static const uint8_t A9  = NOT_A_PIN;
+static const uint8_t A10 = NOT_A_PIN;
+static const uint8_t A11 = NOT_A_PIN;
+static const uint8_t A12 = NOT_A_PIN;
+static const uint8_t A13 = NOT_A_PIN;
+static const uint8_t A14 = NOT_A_PIN;
+static const uint8_t A15 = NOT_A_PIN;
+static const uint8_t A16 = PIN_A16; // PF0
+static const uint8_t A17 = PIN_A17;
+static const uint8_t A18 = PIN_A18;
+static const uint8_t A19 = PIN_A19;
+static const uint8_t A20 = PIN_A20;
+static const uint8_t A21 = PIN_A21;
+static const uint8_t A22 = PIN_A22; // PORTA starting at PA2 - skips the two crystal pins.
+static const uint8_t A23 = PIN_A23;
+static const uint8_t A24 = PIN_A24;
+static const uint8_t A25 = PIN_A25;
+static const uint8_t A26 = PIN_A26;
+static const uint8_t A27 = PIN_A27;
+static const uint8_t A28 = NOT_A_PIN; // PORTC
+static const uint8_t A29 = NOT_A_PIN;
+static const uint8_t A30 = NOT_A_PIN;
+static const uint8_t A31 = PIN_A31;
+
+#define AIN0               ADC_CH(0)
+#define AIN1               ADC_CH(1)
+#define AIN2               ADC_CH(2)
+#define AIN3               ADC_CH(3)
+#define AIN4               ADC_CH(4)
+#define AIN5               ADC_CH(5)
+#define AIN6               ADC_CH(6)
+#define AIN7               ADC_CH(7)
+#define AIN16              ADC_CH(16)
+#define AIN17              ADC_CH(17)
+#define AIN18              ADC_CH(18)
+#define AIN19              ADC_CH(19)
+#define AIN20              ADC_CH(20)
+#define AIN21              ADC_CH(21)
+#define AIN22              ADC_CH(22)
+#define AIN23              ADC_CH(23)
+#define AIN24              ADC_CH(24)
+#define AIN25              ADC_CH(25)
+#define AIN26              ADC_CH(26)
+#define AIN27              ADC_CH(27)
+#define AIN31              ADC_CH(31)
+
+
+
+        /*##  ### #   #      ###  ####  ####   ###  #   #  ###
+        #   #  #  ##  #     #   # #   # #   # #   #  # #  #
+        ####   #  # # #     ##### ####  ####  #####   #    ###
+        #      #  #  ##     #   # #  #  #  #  #   #   #       #
+        #     ### #   #     #   # #   # #   # #   #   #    #*/
+
+#ifdef ARDUINO_MAIN
+  // These need to be defined in one and only one place.
+  const uint8_t digital_pin_to_port[] = {
+    PA,         //  0 PA0/USART0_Tx/CLKIN
+    PA,         //  1 PA1/USART0_Rx
+    PA,         //  2 PA2/AIN22/SDA
+    PA,         //  3 PA3/AIN23/SCL
+    PA,         //  4 PA4/AIN24/MOSI
+    PA,         //  5 PA5/AIN25/MISO
+    PA,         //  6 PA6/AIN26/SCK
+    PA,         //  7 PA7/AIN27/SS/CLKOUT
+    NOT_A_PORT, // USB
+    NOT_A_PORT, // USB
+    NOT_A_PORT, // USB
+    PC,         // 11 PC3/AIN31
+    PD,         // 12 PD0/AIN0
+    PD,         // 13 PD1/AIN1
+    PD,         // 14 PD2/AIN2
+    PD,         // 15 PD3/AIN3
+    PD,         // 16 PD4/AIN4
+    PD,         // 17 PD5/AIN5
+    PD,         // 18 PD6/AIN6
+    PD,         // 19 PD7/AIN7/AREF
+    PF,         // 20 PF0/AIN16/TOSC1/TCA0 PWM (default)
+    PF,         // 21 PF1/AIN17/TOSC2/TCA0 PWM (default)
+    PF,         // 22 PF2/AIN18/TCA0 PWM (default) -- LED_BUILTIN (Curiosity Nano LED0)
+    PF,         // 23 PF3/AIN19/TCA0 PWM (default)
+    PF,         // 24 PF4/AIN20/TCA0 PWM (default)
+    PF,         // 25 PF5/AIN21/TCA0 PWM (default)
+    PF,         // 26 PF6 RESET
+    PF          // 27 PF7 UPDI
+  };
+
+  /* Use this for accessing PINnCTRL register */
+  const uint8_t digital_pin_to_bit_position[] = { // *INDENT-OFF*
+    #if ((CLOCK_SOURCE & 0x03) == 0) // PA0 used for external clock and crystal.
+      PIN0_bp,//   0 PA0
+    #else
+      NOT_A_PIN,
+    #endif
+    #if ((CLOCK_SOURCE & 0x03) == 1)   // PA1 also used for crystal
+      NOT_A_PIN,
+    #else // PA1 used for external crystal.
+      PIN1_bp,//   1 PA1
+    #endif    // *INDENT-ON*
+    PIN2_bp,   //  2 PA2/SDA
+    PIN3_bp,   //  3 PA3/SCL
+    PIN4_bp,   //  4 PA4/MOSI
+    PIN5_bp,   //  5 PA5/MISO
+    PIN6_bp,   //  6 PA6/SCK
+    PIN7_bp,   //  7 PA7/SS/CLKOUT
+    NOT_A_PIN, //  USB
+    NOT_A_PIN, //  USB
+    NOT_A_PIN, //  USB
+    PIN3_bp,   // 11 PC3
+    PIN0_bp,   // 12 PD0/AIN0
+    PIN1_bp,   // 13 PD1/AIN1
+    PIN2_bp,   // 14 PD2/AIN2
+    PIN3_bp,   // 15 PD3/AIN3
+    PIN4_bp,   // 16 PD4/AIN4
+    PIN5_bp,   // 17 PD5/AIN5
+    PIN6_bp,   // 18 PD6/AIN6
+    PIN7_bp,   // 19 PD7/AIN7/AREF
+    PIN0_bp,   // 20 PF0/USART2_Tx/TOSC1
+    PIN1_bp,   // 21 PF1/USART2_Rx/TOSC2
+    PIN2_bp,   // 22 PF2 -- LED_BUILTIN
+    PIN3_bp,   // 23 PF3
+    PIN4_bp,   // 24 PF4
+    PIN5_bp,   // 25 PF5
+    PIN6_bp,   // 26 PF6 RESET
+    PIN7_bp    // 27 PD7 UPDI
+  };
+
+  const uint8_t digital_pin_to_bit_mask[] = { // *INDENT-OFF*
+    #if ((CLOCK_SOURCE & 0x03) == 0) // PA0 used for external clock and crystal.
+      PIN0_bm,//   0 PA0
+    #else
+      NOT_A_PIN,
+    #endif
+    #if ((CLOCK_SOURCE & 0x03) == 1)   // PA1 also used for crystal
+      NOT_A_PIN,
+    #else // PA1 used for external crystal.
+      PIN1_bm,//   1 PA1
+    #endif    // *INDENT-ON*
+    PIN2_bm,   //  2 PA2/SDA
+    PIN3_bm,   //  3 PA3/SCL
+    PIN4_bm,   //  4 PA4/MOSI
+    PIN5_bm,   //  5 PA5/MISO
+    PIN6_bm,   //  6 PA6/SCK
+    PIN7_bm,   //  7 PA7/SS/CLKOUT
+    NOT_A_PIN, //  USB
+    NOT_A_PIN, //  USB
+    NOT_A_PIN, //  USB
+    PIN3_bm,   // 11 PC3
+    PIN0_bm,   // 12 PD0/AIN0
+    PIN1_bm,   // 13 PD1/AIN1
+    PIN2_bm,   // 14 PD2/AIN2
+    PIN3_bm,   // 15 PD3/AIN3
+    PIN4_bm,   // 16 PD4/AIN4
+    PIN5_bm,   // 17 PD5/AIN5
+    PIN6_bm,   // 18 PD6/AIN6
+    PIN7_bm,   // 19 PD7/AIN7/AREF
+    PIN0_bm,   // 20 PF0/TOSC1
+    PIN1_bm,   // 21 PF1/TOSC2
+    PIN2_bm,   // 22 PF2 -- LED_BUILTIN
+    PIN3_bm,   // 23 PF3
+    PIN4_bm,   // 24 PF4
+    PIN5_bm,   // 25 PF5
+    PIN6_bm,   // 26 PF6 RESET
+    PIN7_bm    // 27 PF7 UPDI
+  };
+
+  const uint8_t digital_pin_to_timer[] = {
+    NOT_ON_TIMER, //  0 PA0 TCA0 WO0 h/w default (not our default)
+    NOT_ON_TIMER, //  1 PA1 TCA0 WO1 h/w default (not our default)
+    TIMERB0,      //  2 PA2 TCA0 WO2 h/w default (not our default)
+    TIMERB1,      //  3 PA3 TCA0 WO3 h/w default (not our default)
+    NOT_ON_TIMER, //  4 PA4 TCA0 WO4 h/w default (not our default)
+    NOT_ON_TIMER, //  5 PA5 TCA0 WO5 h/w default (not our default)
+    NOT_ON_TIMER, //  6 PA6
+    NOT_ON_TIMER, //  7 PA7
+    NOT_ON_TIMER, //  8  USB
+    NOT_ON_TIMER, //  9  USB
+    NOT_ON_TIMER, // 10  USB
+    NOT_ON_TIMER, // 11 PC3 TCA0 ALT2
+    NOT_ON_TIMER, // 12 PD0 TCA0 ALT3
+    NOT_ON_TIMER, // 13 PD1 TCA0 ALT3
+    NOT_ON_TIMER, // 14 PD2 TCA0 ALT3
+    NOT_ON_TIMER, // 15 PD3 TCA0 ALT3
+    NOT_ON_TIMER, // 16 PD4 TCA0 ALT3
+    NOT_ON_TIMER, // 17 PD5 TCA0 ALT3
+    NOT_ON_TIMER, // 18 PD6 DAC0 output
+    NOT_ON_TIMER, // 19 PD7
+    NOT_ON_TIMER, // 20 PF0 TCA0 WO0 ALT5 (default)
+    NOT_ON_TIMER, // 21 PF1 TCA0 WO1 ALT5 (default)
+    NOT_ON_TIMER, // 22 PF2 TCA0 WO2 ALT5 (default)
+    NOT_ON_TIMER, // 23 PF3 TCA0 WO3 ALT5 (default)
+    NOT_ON_TIMER, // 24 PF4 TCA0 WO4 ALT5 (default)
+    NOT_ON_TIMER, // 25 PF5 TCA0 WO5 ALT5 (default)
+    NOT_ON_TIMER, // 26 PF6 RESET
+    NOT_ON_TIMER  // 27 PF7 UPDI
+  };
+
+#endif
+// These are used for CI testing. They should *not* *ever* be used except for CI-testing.
+// For CI testing we often need to have known usable pins, that won't generate compile errors
+// (we don't care whether it would actually do anything useful, we are concerned only with compiling successfully)
+#define __EXAMPLE_DIGITAL_PIN0 (PIN_PA3)
+#define __EXAMPLE_DIGITAL_PIN1 (PIN_PA4)
+#define __EXAMPLE_DIGITAL_PIN2 (PIN_PA5)
+#define __EXAMPLE_DIGITAL_PIN3 (PIN_PA6)
+#define __EXAMPLE_ANALOG_PIN0 (PIN_PA4)
+#define __EXAMPLE_ANALOG_PIN1 (PIN_PA5)
+#define __EXAMPLE_ANALOG_PIN2 (PIN_PA6)
+#define __EXAMPLE_ANALOG_PIN3 (PIN_PA7)
+#define __EXAMPLE_TCA_PWM_PIN (PIN_PF0)
+#define __EXAMPLE_TCB_PWM_PIN (PIN_PA2)
+#define __EXAMPLE_TCD_PWM_PIN (PIN_PA7)
+
+
+/* =================================================================
+ *  USB identity (Phase 1)
+ * =================================================================
+ *  USBCON signals "this board has USB" to the standard Arduino HID /
+ *  Keyboard / Mouse / mheironimus Joystick libraries - they all gate
+ *  their USB code with `#if defined(USBCON)`. Without it they do not
+ *  compile their PluggableUSB paths (HID etc.).
+ *
+ *  USB_VID / USB_PID is the board identity. Boards.txt build flags can
+ *  override these (e.g., a ProMicro clone variant), hence #ifndef.
+ *
+ *  Defaults here use pid.codes test PID 0x1209:0xDA32 for the AVR DU
+ *  Curiosity Nano (runtime CDC).
+ */
+#ifndef USBCON
+  #define USBCON
+#endif
+#ifndef USB_VID
+  #define USB_VID                0x1209
+#endif
+#ifndef USB_PID
+  #define USB_PID                0xDA32
+#endif
+#ifndef USB_MANUFACTURER
+  #define USB_MANUFACTURER       "DxCore"
+#endif
+#ifndef USB_PRODUCT
+  #define USB_PRODUCT            "AVRDU"
+#endif
+
+
+/* =================================================================
+ *  Serial  ->  native USB CDC   (Arduino Leonardo convention)
+ * =================================================================
+ *  After this file is included, DxCore's cores/dxcore/Arduino.h does:
+ *      #ifndef Serial
+ *        #define Serial Serial0
+ *      #endif
+ *  Defining Serial here pre-empts that default. On the AVR DU (USB0
+ *  present) we point Serial at the on-chip USB CDC instance, USBSerial -
+ *  exactly as the ATmega32U4 cores make Serial the native USB port on the
+ *  Leonardo/Micro.
+ *
+ *  USBSerial (class USBSerial_) is declared in the core header USBSerial.h,
+ *  which HardwareSerial.h pulls in (guarded by USB0) later in Arduino.h.
+ *  So only the macro is needed here; the object is declared by the time
+ *  anything dereferences Serial.
+ *
+ *  Serial1 remains the first hardware UART (USART1). Its default mux is set
+ *  to PINSWAP_2 (PD6/PD7) above - the pair wired to the Curiosity Nano
+ *  nEDBG CDC virtual COM port. This mirrors how AVR DA/DB/DD Curiosity Nano
+ *  boards expose their debugger VCP on the board-specific CDC USART
+ *  (DA48: USART1/PC0-PC1, DB48: USART3/PB0-PB1, DD32: USART0/PD4-PD5).
+ *
+ *  Define HAVE_NO_USB_SERIAL_REDIRECT to keep the legacy Serial == USART0.
+ */
+#if defined(USB0) && !defined(HAVE_NO_USB_SERIAL_REDIRECT)
+  #ifndef Serial
+    #define Serial                  USBSerial   /* Serial = native USB CDC   */
+  #endif
+  #ifndef SERIAL_PORT_MONITOR
+    #define SERIAL_PORT_MONITOR     Serial      /* Serial Monitor -> USB     */
+  #endif
+  #ifndef SERIAL_PORT_USBVIRTUAL
+    #define SERIAL_PORT_USBVIRTUAL  Serial      /* native USB virtual serial */
+  #endif
+  #ifndef SERIAL_PORT_HARDWARE
+    #define SERIAL_PORT_HARDWARE    Serial1     /* physical UART (nEDBG VCP) */
+  #endif
+  #ifndef SERIAL_PORT_HARDWARE_OPEN
+    #define SERIAL_PORT_HARDWARE_OPEN Serial1
+  #endif
+#endif
+
+#endif

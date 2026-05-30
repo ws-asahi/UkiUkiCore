@@ -105,7 +105,7 @@ protected:
   uint8_t getShortName(char* name);
 
 private:
-  unsigned int epType[1];   /* DxCore: api/PluggableUSB.h declares epType as unsigned int* */
+  uint8_t epType[1];   /* DxCore: api/PluggableUSB.h declares epType as uint8_t* */
 
   HIDSubDescriptor* rootNode;
   uint16_t descriptorSize;

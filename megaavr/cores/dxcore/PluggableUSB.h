@@ -2,3 +2,4 @@
  * Copyright (c) 2026 Yusuke Shimizu (Workshop Asahi). SPDX-License-Identifier: MIT */
 #pragma once
 #include "api/PluggableUSB.h"
+#include "usb_ep_types.h"

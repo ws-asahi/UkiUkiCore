@@ -1,3 +1,37 @@
+/*
+ * usb_cdc.c - CDC-ACM implementation: line coding, ring buffers, 1200bps touch reset
+ *
+ * Part of the AVR-DU native USB stack for DxCore.
+ *
+ * Copyright (c) 2026 Yusuke Shimizu (Workshop Asahi)
+ *
+ * Clean-room implementation written from public specifications only:
+ *   - USB 2.0 Specification
+ *   - USB CDC 1.2 and HID 1.11 class specifications
+ *   - AVR64DU32 data sheet (Microchip)
+ * No Microchip USB stack, ASF/START, TinyUSB, LUFA, or any other existing
+ * USB implementation source was consulted or copied.
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 /* AVR DU native-USB stack. Compiled only on parts with the USB peripheral. */
 #include <avr/io.h>   /* defines USB0 on parts that have USB; must precede the guard */
 #if defined(USB0)
@@ -197,7 +231,7 @@ static void trigger_1200bps_reset(void) {
 }
 
 /* ============================================================
- * EP2 OUT (RX from host) — runs in usbPoll() context
+ * EP2 OUT (RX from host) 窶・runs in usbPoll() context
  * ============================================================ */
 volatile uint16_t g_cdc_rx_total = 0;   /* diagnostic: raw bytes received on EP2 OUT */
 volatile uint16_t g_cdc_tx_starts = 0;  /* diagnostic: EP3 IN transfers started */
@@ -215,7 +249,7 @@ void usb_cdc_on_ep2_out(uint16_t cnt) {
 }
 
 /* ============================================================
- * EP3 IN done — clear in-flight flag so next packet can be queued
+ * EP3 IN done 窶・clear in-flight flag so next packet can be queued
  * ============================================================ */
 static void cdc_tx_pump(void);  /* fwd decl */
 
@@ -226,7 +260,7 @@ void usb_cdc_on_ep3_in_done(void) {
 }
 
 /* ============================================================
- * TX pump — fills EP3 IN buffer from g_tx_ring
+ * TX pump 窶・fills EP3 IN buffer from g_tx_ring
  * Call from usbCdcPoll() (which is called from usbPoll-ish context)
  * ============================================================ */
 static void cdc_tx_pump(void) {

@@ -1,3 +1,4 @@
+/* Copyright (c) 2026 Yusuke Shimizu (Workshop Asahi). SPDX-License-Identifier: MIT */
 /* DxCore-style passthrough wrapper. The actual API lives at api/USBAPI.h
  * (vendored from arduino/ArduinoCore-API). This lets the bundled HID library
  * (and user libraries that follow the upstream Arduino convention) write

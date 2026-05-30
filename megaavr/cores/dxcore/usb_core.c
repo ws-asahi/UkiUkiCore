@@ -1,3 +1,37 @@
+/*
+ * usb_core.c - USB stack core: init, event loop, control transfer state machine
+ *
+ * Part of the AVR-DU native USB stack for DxCore.
+ *
+ * Copyright (c) 2026 Yusuke Shimizu (Workshop Asahi)
+ *
+ * Clean-room implementation written from public specifications only:
+ *   - USB 2.0 Specification
+ *   - USB CDC 1.2 and HID 1.11 class specifications
+ *   - AVR64DU32 data sheet (Microchip)
+ * No Microchip USB stack, ASF/START, TinyUSB, LUFA, or any other existing
+ * USB implementation source was consulted or copied.
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 /* AVR DU native-USB stack. Compiled only on parts with the USB peripheral. */
 #include <avr/io.h>   /* defines USB0 on parts that have USB; must precede the guard */
 #if defined(USB0)
@@ -10,7 +44,7 @@
  * Architecture:
  *   - Uses official USB_EP_TABLE_t (FIFO[32] + EP[16] + FRAMENUM)
  *   - EPPTR set to &g_ep_table.EP[0]  (FIFO occupies negative offsets)
- *   - All interrupts DISABLED — main loop drives usbPoll()
+ *   - All interrupts DISABLED 窶・main loop drives usbPoll()
  *   - Uses official USB_*_bm macros from ioavr64du32.h
  *
  *  EP map (Phase 1: CDC-only; HID EPs disabled, dynamic via PluggableUSB in Phase 2):
@@ -161,7 +195,7 @@ static uint16_t       g_ep0_in_rem;      /* bytes still to send         */
 static bool           g_ep0_in_need_zlp; /* terminating ZLP required?   */
 
 /* Load and fire one IN packet (n <= USB_EP0_SIZE). EP0.IN must be deactivated
- * (BUSNAK set) on entry — true right after SETUP and after each IN TRNCOMPL,
+ * (BUSNAK set) on entry 窶・true right after SETUP and after each IN TRNCOMPL,
  * which satisfies the datasheet rule that CNT/MCNT are written while NAKed. */
 static void ep0_send_chunk(uint16_t n) {
     for (uint16_t i = 0; i < n; i++) g_ep0_data_buf[i] = g_ep0_in_src[i];
@@ -301,7 +335,7 @@ static void handle_ep0_in_complete(void) {
             g_ep0_in_need_zlp = false;
             ep0_send_chunk(0);
         } else {
-            /* all data sent — EP0.OUT was pre-armed in ep0_start_data_in() */
+            /* all data sent 窶・EP0.OUT was pre-armed in ep0_start_data_in() */
             g_ctrl_state = CTRL_STATUS_OUT_STAGE;
         }
         break;
@@ -322,7 +356,7 @@ static void handle_ep0_in_complete(void) {
 static void handle_ep0_out_complete(void) {
     switch (g_ctrl_state) {
     case CTRL_DATA_OUT_STAGE:
-        /* DATA-OUT received — let class handler inspect, then ZLP status.
+        /* DATA-OUT received 窶・let class handler inspect, then ZLP status.
          * Restore the OUT direction to its SETUP-receive configuration:
          * we repointed DATAPTR and enabled multipacket in
          * ep0_start_data_out(), and the next SETUP packet must be DMA'd
@@ -343,13 +377,13 @@ static void handle_ep0_out_complete(void) {
 }
 
 /* ============================================================
- * Polled event loop — call from loop() as often as possible
+ * Polled event loop 窶・call from loop() as often as possible
  * ============================================================ */
 /* ============================================================
  * Event service routines (invoked from the USB interrupt vectors)
  * ============================================================ */
 
-/* Bus events — currently just bus RESET (INTFLAGSA / USB0_BUSEVENT_vect). */
+/* Bus events 窶・currently just bus RESET (INTFLAGSA / USB0_BUSEVENT_vect). */
 static void usb_service_busevent(void) {
     uint8_t flags_a = USB0.INTFLAGSA;
     if (flags_a & USB_RESET_bm) {
@@ -364,7 +398,7 @@ static void usb_service_busevent(void) {
     }
 }
 
-/* Transaction events — SETUP and per-endpoint TRNCOMPL
+/* Transaction events 窶・SETUP and per-endpoint TRNCOMPL
  * (INTFLAGSB / USB0_TRNCOMPL_vect). */
 static void usb_service_trncompl(void) {
     uint8_t flags_b = USB0.INTFLAGSB;
@@ -389,7 +423,7 @@ static void usb_service_trncompl(void) {
             USB0.STATUS[0].OUTCLR = USB_TRNCOMPL_bm;
             handle_ep0_out_complete();
         }
-        /* EP1 IN: CDC notification — HW re-sets BUSNAK, no action */
+        /* EP1 IN: CDC notification 窶・HW re-sets BUSNAK, no action */
         if (g_ep_table.EP[1].IN.STATUS & USB_TRNCOMPL_bm) {
             rmw_wait();
             USB0.STATUS[1].INCLR = USB_TRNCOMPL_bm;

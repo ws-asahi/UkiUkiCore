@@ -4,3 +4,4 @@
  * `#include "USBAPI.h"` and have it resolve from the core include path. */
 #pragma once
 #include "api/USBAPI.h"
+#include "usb_ep_types.h"

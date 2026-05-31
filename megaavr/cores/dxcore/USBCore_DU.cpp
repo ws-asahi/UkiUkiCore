@@ -81,7 +81,7 @@ void usbcore_acc_load_P(const uint8_t *src_pgm, uint16_t n) {
  *  scan over the whole table can apply CDC and dynamic EPs uniformly
  *  if ever needed.
  * ============================================================ */
-static unsigned int s_ep_types[USBCORE_NUM_EP] = {
+static uint8_t s_ep_types[USBCORE_NUM_EP] = {
     EP_TYPE_CONTROL,         /* EP0 control            */
     EP_TYPE_INTERRUPT_IN,    /* EP1 CDC notify         */
     EP_TYPE_BULK_OUT,        /* EP2 CDC data RX        */
@@ -289,7 +289,7 @@ bool usbcore_try_plugged_get_descriptor(const usb_setup_t *s) {
  * ============================================================ */
 void usbcore_init_plugged_endpoints(void) {
     for (uint8_t ep = 4; ep < USBCORE_NUM_EP; ep++) {
-        unsigned int t = s_ep_types[ep];
+        uint8_t t = s_ep_types[ep];
         if (t == 0) continue;       /* slot unused */
 
         uint8_t  dir_in  = (t & 0x80) ? 1 : 0;

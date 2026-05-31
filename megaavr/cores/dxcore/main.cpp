@@ -87,6 +87,15 @@ int main()  __attribute__((weak));
  * overrides main. In the past there was a USB-related function here, that is removed, as work  *
  * will be needed in any event at the core level if VUSB-based "stuff" arrives, but really I'm  *
  * just waiting for the DU-series now                                                           */
+/* AVR DU native USB auto-init: forward declaration at file scope so the
+ * call in main() does not depend on the Arduino.h -> USBAPI.h -> USBSerial.h
+ * include chain (an upstream merge can break it). A linkage specification
+ * is only legal at namespace scope, hence here rather than inside main().
+ * The definition lives in USBSerial.cpp (extern "C"). */
+#if defined(USB0)
+extern "C" void usb_auto_init(void);
+#endif
+
 int main() {
   onBeforeInit(); // Emnpty callback called before init but after the .init stuff. First normal code executed
   init(); // Interrupts are turned on just prior to init() returning.

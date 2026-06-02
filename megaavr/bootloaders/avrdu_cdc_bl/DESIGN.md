@@ -14,7 +14,7 @@ bootloader project. Implementation references are limited to:
  - USB 2.0 specification (chapter 9)
  - USB CDC 1.20 / PSTN 1.20 specifications
  - AVR64DU32 datasheet (DS40002676 rev. A or later)
- - AVR064: STK500 Communication Protocol Application Note
+ - AVR061: STK500 Communication Protocol Application Note
  - Microchip ATPACK device headers (`avr/io.h`, `avr/iousbxxx.h`)
 
 A two-line per-file provenance header in every source file restates this.
@@ -168,7 +168,7 @@ VID/PID:
 ## 4. STK500v1 protocol
 
 avrdude's `-c arduino` driver speaks STK500v1, a small ASCII-byte
-protocol documented in Atmel AVR064. Each request is a single command
+protocol documented in Atmel AVR061. Each request is a single command
 byte (sometimes with parameters), terminated by `CRC_EOP = 0x20`. The
 bootloader replies `INSYNC = 0x14`, optional data, then `OK = 0x10`.
 

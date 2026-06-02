@@ -3,7 +3,7 @@
  * --------------------------------------------------------------------
  *  Clean-room implementation.  References:
  *    - AVR64DU32 datasheet (Microchip DS40002676A or later)
- *    - Atmel AVR064 - STK500 Communication Protocol App Note
+ *    - Atmel AVR061 - STK500 Communication Protocol App Note
  *    - USB 2.0 specification, USB CDC PSTN 1.20 specification
  *    - Microchip ATPACK device headers (avr/io.h)
  *  No source from Optiboot, LUFA, TinyUSB, V-USB or any other

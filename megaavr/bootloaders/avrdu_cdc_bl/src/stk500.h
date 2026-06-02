@@ -1,7 +1,7 @@
 /*
  * avrdu_cdc_bl/src/stk500.h
  * --------------------------------------------------------------------
- *  Clean-room implementation.  Reference: Atmel AVR064 - "STK500
+ *  Clean-room implementation.  Reference: Atmel AVR061 - "STK500
  *  Communication Protocol" application note (publicly published by
  *  Atmel/Microchip).  No source consulted from Optiboot or any other
  *  STK500 implementation.
@@ -12,7 +12,7 @@
 
 #include <stdint.h>
 
-/* Protocol literals from AVR064 section 4 ("Command set"). */
+/* Protocol literals from AVR061 section 4 ("Command set"). */
 #define STK_OK              0x10
 #define STK_INSYNC          0x14
 #define STK_NOSYNC          0x15

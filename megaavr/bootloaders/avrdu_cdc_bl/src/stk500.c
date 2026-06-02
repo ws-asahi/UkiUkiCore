@@ -1,7 +1,7 @@
 /*
  * avrdu_cdc_bl/src/stk500.c
  * --------------------------------------------------------------------
- *  Clean-room implementation.  Reference: Atmel AVR064 STK500
+ *  Clean-room implementation.  Reference: Atmel AVR061 STK500
  *  Communication Protocol application note (publicly published).
  *  No code from Optiboot or any other STK500 implementation was
  *  consulted while writing this.
@@ -110,7 +110,7 @@ static void dispatch(void) {
             break;
 
         case STK_GET_SIGN_ON: {
-            /* AVR064 says "AVR STK" (7 bytes) followed by OK. */
+            /* AVR061 says "AVR STK" (7 bytes) followed by OK. */
             static const uint8_t sig[] = "AVR STK";
             put1(STK_INSYNC);
             put_n(sig, sizeof(sig) - 1);

@@ -14,7 +14,7 @@ writing this code.  References are limited to:
 - USB 2.0 specification
 - USB CDC 1.20 / PSTN 1.20 specifications
 - AVR64DU32 datasheet (Microchip DS40002676)
-- Atmel AVR064 - STK500 Communication Protocol Application Note
+- Atmel AVR061 - STK500 Communication Protocol Application Note
 - Microchip ATPACK device headers (`avr/io.h`, group/group-mask defines)
 
 License: LGPL 2.1 (to match the host DxCore repository).  See `LICENSE.md`.

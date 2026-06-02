@@ -39,13 +39,13 @@ Code organisation, naming, and comments are original to this work.
 |---|---|
 | Microchip DS40002676 (AVR64DU32 datasheet) | NVMCTRL section 11, USB peripheral section 28, RSTCTRL section 12, CLKCTRL section 11.5, fuse layout |
 | Microchip DS40002683 (AVR DU family datasheet) | Cross-reference for shared peripherals |
-| Atmel AVR064 - STK500 Communication Protocol Application Note | STK500v1 command set (Section 4), used by avrdude's "arduino" programmer mode |
+| Atmel AVR061 - STK500 Communication Protocol Application Note | STK500v1 command set (Section 4), used by avrdude's "arduino" programmer mode |
 | Microchip ATPACK device headers (`avr/io.h`, `ioavr64du32.h`) | Register and bit-field names |
 
 ### avrdude protocol behaviour
 
 The exact byte sequences avrdude emits when invoked as `-c arduino`
-were inferred from the AVR064 application note and verified against
+were inferred from the AVR061 application note and verified against
 the protocol diagrams in the same note.  No source code from avrdude
 itself was read.
 

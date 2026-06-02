@@ -88,6 +88,7 @@ __attribute__((weak)) void usb_cdc_on_configured(void)  { }
 __attribute__((weak)) void usb_cdc_on_reset(void)       { }
 __attribute__((weak)) void usb_cdc_on_ep2_out(uint16_t cnt) { (void)cnt; }
 __attribute__((weak)) void usb_cdc_on_ep3_in_done(void) { }
+__attribute__((weak)) void usb_cdc_on_sof(void)         { }
 
 /* ============================================================
  * Endpoint table initialization
@@ -362,6 +363,12 @@ static void usb_service_busevent(void) {
         usb_cdc_on_reset();
         USB0.INTFLAGSA = USB_RESET_bm;
     }
+    /* Start-of-Frame (1 ms): drive the CDC idle-flush so a paused TX
+     * stream that ended on a full 64-byte packet gets a terminating ZLP. */
+    if (flags_a & USB_SOF_bm) {
+        usb_cdc_on_sof();
+        USB0.INTFLAGSA = USB_SOF_bm;
+    }
 }
 
 /* Transaction events — SETUP and per-endpoint TRNCOMPL
@@ -495,7 +502,7 @@ void usbInit(void) {
 
     /* 6. Enable USB interrupts (interrupt-driven; loop() need not poll).
      *    INTCTRLA -> USB0_BUSEVENT_vect ; INTCTRLB -> USB0_TRNCOMPL_vect */
-    USB0.INTCTRLA = USB_RESET_bm;                     /* bus reset            */
+    USB0.INTCTRLA = USB_RESET_bm | USB_SOF_bm;        /* bus reset + SOF      */
     USB0.INTCTRLB = USB_SETUP_bm | USB_TRNCOMPL_bm;   /* setup + trncompl     */
 
     /* 7. Enable USB peripheral; MAXEP in bits [3:0] */

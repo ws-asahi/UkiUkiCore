@@ -167,6 +167,7 @@ static volatile uint8_t g_tx_head = 0;     /* write by app       */
 static volatile uint8_t g_tx_tail = 0;     /* read by USB stack  */
 
 static volatile bool g_tx_in_flight = false;  /* EP3 currently transmitting */
+static volatile bool g_tx_last_full = false;  /* last armed EP3 IN packet was exactly USB_EP3_SIZE */
 
 /* ============================================================
  * 1200 bps touch-reset (Leonardo style)
@@ -249,6 +250,10 @@ static void cdc_tx_pump(void) {
     USB0.STATUS[3].INCLR = USB_BUSNAK_bm;
     g_cdc_tx_starts++;
     g_tx_in_flight = true;
+    /* Remember whether this was a maximum-length packet: a full 64-byte
+     * bulk-IN packet does NOT terminate the host's transfer, so if the
+     * ring then drains we must emit a ZLP (see usb_cdc_on_sof). */
+    g_tx_last_full = (n == USB_EP3_SIZE);
 }
 
 /* Start a TX transfer from NON-interrupt (main) context, race-free against
@@ -269,6 +274,39 @@ static bool tx_ring_put(uint8_t b) {
     return true;
 }
 
+/* ============================================================
+ * Start-of-Frame hook (called from the bus-event ISR every 1 ms).
+ *
+ * A USB bulk-IN transfer is only delivered to the host application when it
+ * is terminated by a short packet (< wMaxPacketSize) or a zero-length
+ * packet (ZLP). A tight sketch loop keeps the TX ring full, so every packet
+ * is a full 64-byte packet and the host never sees a terminator - the data
+ * sits buffered on the host until ~64-byte boundaries pile up. This is why
+ * inserting delay() (which lets the ring drain to a short final packet)
+ * "fixes" output.
+ *
+ * Here we flush automatically: once per frame, if nothing is in flight and
+ * the ring is empty but the last packet we sent was full, arm a ZLP to
+ * close the transfer so the host releases the buffered bytes. The flag is
+ * cleared after one ZLP, so a continuous stream (ring never empty) is never
+ * interrupted and an idle link emits exactly one terminating ZLP.
+ * ============================================================ */
+void usb_cdc_on_sof(void) {
+    if (g_current_configuration != 1) return;
+    if (g_tx_in_flight) return;
+    /* Data queued but not yet shipped: ensure forward progress. */
+    if (g_tx_head != g_tx_tail) { cdc_tx_pump(); return; }
+    /* Ring empty: terminate a dangling full-packet transfer with a ZLP. */
+    if (g_tx_last_full && (g_ep_table.EP[3].IN.STATUS & USB_BUSNAK_bm)) {
+        g_ep_table.EP[3].IN.CNT = 0;
+        while (USB0.INTFLAGSB & USB_RMWBUSY_bm) {}
+        USB0.STATUS[3].INCLR = USB_BUSNAK_bm;
+        g_cdc_tx_starts++;
+        g_tx_in_flight = true;
+        g_tx_last_full = false;
+    }
+}
+
 void usbCdcPoll(void) {
     /* Interrupt-driven now; retained for API compatibility. A kick here is
      * harmless and guarantees forward progress if ever called manually. */
@@ -282,12 +320,14 @@ void usb_cdc_on_reset(void) {
     g_rx_head = g_rx_tail = 0;
     g_tx_head = g_tx_tail = 0;
     g_tx_in_flight = false;
+    g_tx_last_full = false;
     g_control_line_state = 0;
     g_pending_set_line_coding = false;
 }
 
 void usb_cdc_on_configured(void) {
     g_tx_in_flight = false;
+    g_tx_last_full = false;
 }
 
 /* ============================================================

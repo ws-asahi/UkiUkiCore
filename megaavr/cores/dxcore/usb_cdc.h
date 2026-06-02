@@ -80,6 +80,7 @@ void usb_cdc_on_configured(void);          /* SET_CONFIGURATION(1)     */
 void usb_cdc_on_reset(void);               /* Bus reset                */
 void usb_cdc_on_ep2_out(uint16_t cnt);     /* EP2 OUT TRNCOMPL         */
 void usb_cdc_on_ep3_in_done(void);         /* EP3 IN TRNCOMPL          */
+void usb_cdc_on_sof(void);                 /* SOF: idle TX flush (ZLP) */
 
 /* Call from main loop to drive the TX pump */
 void usbCdcPoll(void);

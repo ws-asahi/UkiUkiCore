@@ -1,5 +1,5 @@
 /*
- * avrdu_cdc_bl/src/usb_desc.h
+ * usbcdcboot/src/usb_desc.h
  * --------------------------------------------------------------------
  *  Clean-room.  Reference: USB 2.0, USB CDC 1.20 / PSTN 1.20.
  *  License: LGPL 2.1.

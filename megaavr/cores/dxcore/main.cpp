@@ -102,7 +102,23 @@ int main() {
   initVariant();
 /* >>> AVR DU native USB auto-init  ===================================== */
 #if defined(USB0)
-  usb_auto_init();   /* declared in USBSerial.h via Arduino.h chain */
+  /* Auto-start native USB CDC at boot only when the board wants Serial == USB
+   * active out of the box.  The USB-CDC bootloader board needs it so the CDC
+   * port enumerates for the 1200bps-touch upload reset (and Serial works at
+   * once); a plain no-bootloader DU board leaves USB inactive until the sketch
+   * calls Serial.begin(), so Serial emits nothing unless the port is opened.
+   * Default follows the CDC-bootloader flag; a board may force it on/off via
+   * -DUSB_AUTO_INIT=1 / 0 from boards.txt (e.g. a no-bootloader USB-native board). */
+  #if !defined(USB_AUTO_INIT)
+    #if defined(USING_AVRDU_CDC_BOOTLOADER)
+      #define USB_AUTO_INIT 1
+    #else
+      #define USB_AUTO_INIT 0
+    #endif
+  #endif
+  #if USB_AUTO_INIT
+    usb_auto_init();   /* declared above (extern "C"); defined in USBSerial.cpp */
+  #endif
 #endif
 /* <<< AVR DU native USB auto-init ====================================== */
   if (!onAfterInit()) sei();  // enable interrupts.

@@ -1,5 +1,5 @@
 /*
- * avrdu_cdc_bl/src/nvm.c
+ * usbcdcboot/src/nvm.c
  * --------------------------------------------------------------------
  *  Clean-room implementation.  Reference: AVR64DU32 datasheet
  *  section 11 (NVMCTRL) and section 6.5 (CCP protection).  No code

@@ -1,5 +1,5 @@
 /*
- * avrdu_cdc_bl/src/usb_desc.c
+ * usbcdcboot/src/usb_desc.c
  * --------------------------------------------------------------------
  *  Clean-room.  Reference: USB 2.0 spec chapter 9, USB CDC 1.20,
  *  PSTN 1.20.  No code from any other USB stack was consulted.

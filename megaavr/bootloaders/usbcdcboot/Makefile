@@ -1,7 +1,7 @@
-# avrdu_cdc_bl/Makefile
+# usbcdcboot/Makefile
 # --------------------------------------------------------------------
 #   Build rules for the AVRDU CDC bootloader.
-#   Produces avrdu_cdc_bl_64du32.hex, .elf, .lst, .map.
+#   Produces usbcdcboot_64du32.hex, .elf, .lst, .map.
 #
 #   Usage from inside this directory:
 #
@@ -17,7 +17,7 @@
 
 MCU      := avr64du32
 F_CPU    := 24000000UL
-TARGET   := avrdu_cdc_bl_64du32
+TARGET   := usbcdcboot_64du32
 BOOT_BASE := 0x0000
 BOOTSIZE  := 4096           # bytes reserved for the bootloader (BOOTSIZE fuse * 512)
 

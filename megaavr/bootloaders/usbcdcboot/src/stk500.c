@@ -1,5 +1,5 @@
 /*
- * avrdu_cdc_bl/src/stk500.c
+ * usbcdcboot/src/stk500.c
  * --------------------------------------------------------------------
  *  Clean-room implementation.  Reference: Atmel AVR061 STK500
  *  Communication Protocol application note (publicly published).

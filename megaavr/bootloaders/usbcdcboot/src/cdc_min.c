@@ -1,5 +1,5 @@
 /*
- * avrdu_cdc_bl/src/cdc_min.c
+ * usbcdcboot/src/cdc_min.c
  * --------------------------------------------------------------------
  *  Clean-room implementation.  References:
  *    - USB CDC 1.20 specification

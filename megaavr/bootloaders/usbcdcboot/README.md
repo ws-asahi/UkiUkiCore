@@ -32,10 +32,10 @@ make TOOLROOT=../../../../tools
 This produces:
 
 ```
-avrdu_cdc_bl_64du32.elf
-avrdu_cdc_bl_64du32.hex
-avrdu_cdc_bl_64du32.lst
-avrdu_cdc_bl_64du32.map
+usbcdcboot_64du32.elf
+usbcdcboot_64du32.hex
+usbcdcboot_64du32.lst
+usbcdcboot_64du32.map
 ```
 
 To check that the build fits in the 4 KB BOOT section:
@@ -67,7 +67,7 @@ Arduino IDE:
 
 Burn-bootloader writes both the fuse set (`BOOTSIZE=0x08` is the
 critical one - it reserves the 4 KB BOOT section) and the
-`avrdu_cdc_bl_64du32.hex` payload.
+`usbcdcboot_64du32.hex` payload.
 
 After burn, the AVR64DU32 reboots into the bootloader.  Windows / macOS
 will enumerate a new "AVRDU CDC Bootloader" COM port (separate from the

@@ -4,4 +4,4 @@
 *.map
 src/*.o
 # Keep the prebuilt hex shipped to users, in version control:
-!avrdu_cdc_bl_64du32.hex
+!usbcdcboot_64du32.hex

@@ -1,5 +1,5 @@
 /*
- * avrdu_cdc_bl/src/nvm.h
+ * usbcdcboot/src/nvm.h
  * --------------------------------------------------------------------
  *  Clean-room implementation.  Reference: AVR64DU32 datasheet
  *  section 11 (NVMCTRL).  License: LGPL 2.1.

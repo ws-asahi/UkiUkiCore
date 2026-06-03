@@ -1,5 +1,5 @@
 /*
- * avrdu_cdc_bl/src/usb_min.h
+ * usbcdcboot/src/usb_min.h
  * --------------------------------------------------------------------
  *  Clean-room implementation.  License: LGPL 2.1.
  *

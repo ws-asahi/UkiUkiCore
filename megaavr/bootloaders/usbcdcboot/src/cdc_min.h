@@ -1,5 +1,5 @@
 /*
- * avrdu_cdc_bl/src/cdc_min.h
+ * usbcdcboot/src/cdc_min.h
  * --------------------------------------------------------------------
  *  Clean-room implementation.  Reference: USB CDC 1.20 + PSTN 1.20.
  *  License: LGPL 2.1.

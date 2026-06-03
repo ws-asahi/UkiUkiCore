@@ -1,5 +1,5 @@
 /*
- * avrdu_cdc_bl/src/main.c
+ * usbcdcboot/src/main.c
  * --------------------------------------------------------------------
  *  Clean-room implementation.  References:
  *    - AVR64DU32 datasheet (Microchip DS40002676A or later)

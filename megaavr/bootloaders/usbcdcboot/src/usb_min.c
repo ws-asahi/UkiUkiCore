@@ -1,5 +1,5 @@
 /*
- * avrdu_cdc_bl/src/usb_min.c
+ * usbcdcboot/src/usb_min.c
  * --------------------------------------------------------------------
  *  Clean-room implementation.  References:
  *    - USB 2.0 specification (chapter 9: Device Framework)

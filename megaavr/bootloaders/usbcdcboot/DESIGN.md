@@ -1,4 +1,4 @@
-# AVRDU CDC Bootloader — Design Document
+# AVRDU CDC Bootloader  EDesign Document
 
 **Target**: AVR64DU32 on Microchip Curiosity Nano (EV59F82A) and similar
 boards exposing the AVR DU's native USB-D+/D- to a host PC.
@@ -27,32 +27,18 @@ The AVR64DU32 has 64 KB of program flash divided by the BOOTSIZE fuse
 into two contiguous regions, with optional APPDATA on top:
 
 ```
-  0x0000 ┌─────────────────────────────┐
-         │                             │
-         │  BOOT section (4 KB)        │  ← this bootloader lives here
-         │  - reset / vector table     │
-         │  - usb_min_*                │
-         │  - cdc_min_*                │
-         │  - stk500_parser            │
-         │  - nvm_self_program         │
-         │                             │
-  0x1000 ├─────────────────────────────┤  ← BOOTEND = BOOTSIZE * 512
-         │                             │
-         │  APPCODE section (60 KB)    │  ← the user sketch
-         │  - relocated vector table   │
-         │  - .text                    │
-         │  - .data init image         │
-         │                             │
-  0xFFFF └─────────────────────────────┘
-```
+  0x0000 ┌─────────────────────────────━E         ━E                            ━E         ━E BOOT section (4 KB)        ━E ↁEthis bootloader lives here
+         ━E - reset / vector table     ━E         ━E - usb_min_*                ━E         ━E - cdc_min_*                ━E         ━E - stk500_parser            ━E         ━E - nvm_self_program         ━E         ━E                            ━E  0x1000 ├─────────────────────────────┤  ↁEBOOTEND = BOOTSIZE * 512
+         ━E                            ━E         ━E APPCODE section (60 KB)    ━E ↁEthe user sketch
+         ━E - relocated vector table   ━E         ━E - .text                    ━E         ━E - .data init image         ━E         ━E                            ━E  0xFFFF └─────────────────────────────━E```
 
-`BOOTSIZE = 0x08` (8 blocks × 512 B = 4096 B) is the boards.txt fuse
+`BOOTSIZE = 0x08` (8 blocks ÁE512 B = 4096 B) is the boards.txt fuse
 value. The corresponding linker flag is `-Wl,--section-start=.text=0x0`
 for the bootloader and `-Wl,--section-start=.text=0x1000` for the app.
 
 SRAM (8 KB, 0x6000..0x7FFF) is shared between bootloader and app at
 different times. The bootloader uses a magic word at the very top of
-SRAM (`0x7FFE`, two bytes) to coordinate entry mode with the app — see
+SRAM (`0x7FFE`, two bytes) to coordinate entry mode with the app  Esee
 section 3.
 
 ---
@@ -68,22 +54,22 @@ bootloader to accept a flash upload, or jumping to the application.
 The AVR DU records the last reset cause in `RSTCTRL.RSTFR`. The
 bootloader reads and clears this register first. Possible flags:
 
- - `PORF`  — power-on reset (cold boot)
- - `BORF`  — brown-out reset
- - `EXTRF` — external reset (RESET pin)
- - `WDRF`  — watchdog timer reset (used by the 1200 bps touch path)
- - `SWRF`  — software reset
- - `UPDIRF`— UPDI reset (after a chip-erase, app may be invalid)
+ - `PORF`   Epower-on reset (cold boot)
+ - `BORF`   Ebrown-out reset
+ - `EXTRF`  Eexternal reset (RESET pin)
+ - `WDRF`   Ewatchdog timer reset (used by the 1200 bps touch path)
+ - `SWRF`   Esoftware reset
+ - `UPDIRF` EUPDI reset (after a chip-erase, app may be invalid)
 
 ### 2.2 Magic-word handshake
 
 A two-byte magic at `AVRDU_BL_MAGIC_ADDR = 0x7FFE` distinguishes
 "please stay in the bootloader" from "this was just a normal reset":
 
- - `AVRDU_BL_MAGIC_STAY  = 0xB007`  — request set by the app right
+ - `AVRDU_BL_MAGIC_STAY  = 0xB007`   Erequest set by the app right
                                        before a WDT reset (the avrdude
                                        1200 bps touch path uses this)
- - anything else                      — proceed to the application
+ - anything else                       Eproceed to the application
 
 The runtime's `usb_cdc.c` does the following when the host opens the CDC
 port at 1200 bps and then drops DTR:
@@ -136,8 +122,8 @@ written in `AVRDU_CDC/`. Features kept:
 
  - USB 2.0 Full-Speed device, single configuration
  - One control endpoint (EP0)
- - One bulk IN endpoint  (EP1 IN,  64 B, application data → host)
- - One bulk OUT endpoint (EP2 OUT, 64 B, host → application data)
+ - One bulk IN endpoint  (EP1 IN,  64 B, application data ↁEhost)
+ - One bulk OUT endpoint (EP2 OUT, 64 B, host ↁEapplication data)
  - SET_LINE_CODING / GET_LINE_CODING (no actual UART, but avrdude reads
    the current line coding to compare against 1200; the bootloader
    doesn't itself need this, but the runtime does)
@@ -194,12 +180,12 @@ Implemented commands (the minimum avrdude actually uses for the
 
 Unknown commands trigger `NOSYNC = 0x15` and the host re-syncs.
 
-The address loaded by `LOAD_ADDRESS` is a **word** address (×2 for
+The address loaded by `LOAD_ADDRESS` is a **word** address (ÁE for
 bytes). For PROG_PAGE the data is written byte-for-byte to flash at
 `load_addr * 2`. For 64 KB flash we must also handle the
 `UNIVERSAL` command `0x4D xx xx` which avrdude uses to set the
 high-order byte (since STK500v1 addresses are only 16 bits and we have
-a 16-bit byte address space already — the AVR64DU32 has a 64 KB
+a 16-bit byte address space already  Ethe AVR64DU32 has a 64 KB
 program space which is 32 K *words*, so a 16-bit word address covers
 the whole part and the byte-extension command can be safely treated as
 a no-op for the 64DU32).
@@ -233,7 +219,7 @@ The 512 B page size is hard-coded for AVR64DU32. The bootloader's
 Importantly: code running in BOOT can write to APPCODE/APPDATA but NOT
 to BOOT itself. The BOOTLOCK fuse bit is not set (we don't lock the
 bootloader against UPDI rewrites), but the silicon block on BOOT
-self-write is unconditional. This is desirable — it protects the
+self-write is unconditional. This is desirable  Eit protects the
 bootloader from a runaway app.
 
 ---
@@ -241,9 +227,9 @@ bootloader from a runaway app.
 ## 6. File / Module Layout
 
 ```
-bootloaders/avrdu_cdc_bl/
+bootloaders/usbcdcboot/
     Makefile                  GNU make build rules; produces hex/elf/lst
-    avrdu_cdc_bl_64du32.hex   compiled bootloader for AVR64DU32
+    usbcdcboot_64du32.hex   compiled bootloader for AVR64DU32
     src/
         main.c                reset handler, RSTFR check, jump_to_app
         usb_min.c             USB peripheral init, EP polling
@@ -294,7 +280,7 @@ Two integration points between bootloader and the runtime application:
 ### 8.1 1200 bps touch in the runtime
 
 The runtime's `usb_cdc.c` already implements the touch path (DTR drop
-while line coding is 1200 baud → set magic, detach, WDT reset). The
+while line coding is 1200 baud ↁEset magic, detach, WDT reset). The
 only contract addition is the magic address/value:
 
 ```c
@@ -345,9 +331,9 @@ A separate `README.md` in the bootloader directory will spell out the
 exact build steps. The high level is:
 
 ```
-cd hardware/megaavr/1.6.2/bootloaders/avrdu_cdc_bl
+cd hardware/megaavr/1.6.2/bootloaders/usbcdcboot
 make TOOLROOT=../../../../tools             # uses DxCore's avr-gcc 7.3.0
-# produces avrdu_cdc_bl_64du32.hex
+# produces usbcdcboot_64du32.hex
 
 # burn via nEDBG:
 arduino-cli --burn-bootloader --board "DxCore:megaavr:avrduusb" \

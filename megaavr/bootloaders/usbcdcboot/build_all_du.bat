@@ -1,3 +1,4 @@
+
 @echo off
 setlocal
 pushd "%~dp0"
@@ -29,7 +30,7 @@ if not exist "%GCCBIN%\avr-gcc.exe" (
   popd & exit /b 1
 )
 set "PATH=%GCCBIN%;%PATH%"
-if not defined MAKE set MAKE=C:\Program Files\MigGW\bin\make.exe
+if not defined MAKE set MAKE=make.exe
 
 call :build 16du14
 call :build 16du20

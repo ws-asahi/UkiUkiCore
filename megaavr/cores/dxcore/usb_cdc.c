@@ -443,6 +443,13 @@ uint16_t usbCdcAvailable(void) {
     return (uint16_t)n;
 }
 
+uint16_t usbCdcTxFree(void) {
+    int16_t used = (int16_t)g_tx_head - (int16_t)g_tx_tail;
+    if (used < 0) used += CDC_TX_RING_SIZE;
+    /* tx_ring_put() keeps one slot empty to tell "full" from "empty" */
+    return (uint16_t)((CDC_TX_RING_SIZE - 1) - used);
+}
+
 int usbCdcRead(void) {
     if (g_rx_head == g_rx_tail) return -1;
     uint8_t b = g_rx_ring[g_rx_tail];

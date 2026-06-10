@@ -55,6 +55,9 @@ bool usbCdcTxReady(void);
 /* Returns number of bytes available to read from RX buffer */
 uint16_t usbCdcAvailable(void);
 
+/* Returns free slots in the TX ring (for availableForWrite()) */
+uint16_t usbCdcTxFree(void);
+
 /* Read one byte from RX buffer, returns -1 if empty */
 int usbCdcRead(void);
 

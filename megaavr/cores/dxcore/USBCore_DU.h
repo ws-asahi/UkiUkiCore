@@ -50,6 +50,24 @@ void usbcore_init_plugged_endpoints(void);
  * by USB_Send/Recv via polling (blocking writes).                         */
 void usbcore_service_dynamic_ep_trncompl(void);
 
+/* --- Control-OUT data stage for plugged (HID) host->device requests ----- *
+ * HID SET_REPORT (keyboard LED state, feature reports, ...) carries its     *
+ * payload in an EP0 OUT data stage that must be received BEFORE the owning  *
+ * PluggableUSB module can consume it. Because our SETUP handler runs in ISR *
+ * context we cannot block inside the module's setup() the way the 32U4 core *
+ * does; instead we stage the OUT data into a buffer, then re-dispatch       *
+ * setup() once it has landed, so the module's USB_RecvControl() reads it    *
+ * synchronously - identical API semantics to the Arduino AVR core.         *
+ *                                                                           *
+ *   usbcore_ctrl_out_begin()   - save SETUP, return armed length (0=reject) *
+ *   usbcore_ctrl_out_buf()     - EP0 OUT landing buffer to arm              *
+ *   usbcore_ctrl_out_pending() - a plugged ctrl-OUT is awaiting its data    *
+ *   usbcore_ctrl_out_dispatch()- data landed: re-run the module's setup()   */
+uint16_t usbcore_ctrl_out_begin(const usb_setup_t *s);
+uint8_t *usbcore_ctrl_out_buf(void);
+bool     usbcore_ctrl_out_pending(void);
+void     usbcore_ctrl_out_dispatch(void);
+
 #ifdef __cplusplus
 }
 #endif

@@ -140,10 +140,62 @@ int USB_SendControl(uint8_t flags, const void* d, int len) {
     return n;
 }
 
-/* SET_REPORT / etc.: would receive payload during EP0 OUT data stage.
- * Not used by Keyboard/Mouse; leave as no-op stub returning 0 for now. */
-int USB_RecvControl(void* /*d*/, int /*len*/)     { return 0; }
-int USB_RecvControlLong(void* /*d*/, int /*len*/) { return 0; }
+/* ============================================================
+ *  Control-OUT data stage staging (plugged / HID host->device)
+ *
+ *  Flow (see usb_standard.c usb_handle_class_request):
+ *    SETUP(host->device, wLength>0, non-CDC IF)
+ *      -> usbcore_ctrl_out_begin() saves the SETUP and returns the length
+ *         to arm; usb_standard.c arms EP0 OUT at usbcore_ctrl_out_buf().
+ *    EP0 OUT data lands -> handle_ep0_out_complete()
+ *      -> usb_class_data_out_complete() -> usbcore_ctrl_out_dispatch()
+ *         re-runs the owning module's setup(), which reads the staged
+ *         bytes synchronously via USB_RecvControl().
+ *  Only one control transfer is in flight at a time, so a single set of
+ *  static state is sufficient (and is mutually exclusive with the CDC
+ *  SET_LINE_CODING path).
+ * ============================================================ */
+static usb_setup_t s_ctrl_out_setup;             /* SETUP to re-dispatch        */
+static uint8_t     s_ctrl_out_buf[USB_EP_SIZE];  /* EP0 OUT landing buffer      */
+static uint16_t    s_ctrl_out_len     = 0;       /* bytes the host will send    */
+static uint16_t    s_ctrl_out_pos     = 0;       /* USB_RecvControl read cursor */
+static bool        s_ctrl_out_pending = false;
+
+uint16_t usbcore_ctrl_out_begin(const usb_setup_t *s) {
+    s_ctrl_out_setup = *s;
+    uint16_t n = s->wLength;
+    if (n > sizeof(s_ctrl_out_buf)) n = sizeof(s_ctrl_out_buf); /* single-packet cap */
+    s_ctrl_out_len     = n;
+    s_ctrl_out_pos     = 0;
+    s_ctrl_out_pending = true;
+    return n;
+}
+
+uint8_t *usbcore_ctrl_out_buf(void)     { return s_ctrl_out_buf; }
+bool     usbcore_ctrl_out_pending(void) { return s_ctrl_out_pending; }
+
+void usbcore_ctrl_out_dispatch(void) {
+    /* EP0 OUT has filled s_ctrl_out_buf. Hand it to the owning module: its
+     * setup() calls USB_RecvControl() below, which now returns the staged
+     * bytes. The status-stage ZLP is issued by handle_ep0_out_complete()
+     * after we return. */
+    s_ctrl_out_pending = false;
+    s_ctrl_out_pos     = 0;
+    USBSetup u = as_usbsetup(&s_ctrl_out_setup);
+    PluggableUSB().setup(u);
+}
+
+/* SET_REPORT / HID feature report: return bytes staged by the EP0 OUT data
+ * stage (see above). Sequential reads, like the Arduino AVR core. */
+int USB_RecvControl(void* d, int len) {
+    if (len <= 0) return 0;
+    uint16_t avail = s_ctrl_out_len - s_ctrl_out_pos;
+    uint16_t n = ((uint16_t)len > avail) ? avail : (uint16_t)len;
+    memcpy(d, &s_ctrl_out_buf[s_ctrl_out_pos], n);
+    s_ctrl_out_pos += n;
+    return (int)n;
+}
+int USB_RecvControlLong(void* d, int len) { return USB_RecvControl(d, len); }
 
 /* ============================================================
  *  Dynamic-EP staging buffers and USBAPI
@@ -323,5 +375,56 @@ void usbcore_init_plugged_endpoints(void) {
  * Currently a no-op: USB_Send polls the same flag synchronously.
  * Kept as a hook for when we add asynchronous OUT (USB_Recv) support. */
 void usbcore_service_dynamic_ep_trncompl(void) { }
+
+/* ============================================================
+ *  USBDevice control object  (Arduino Leonardo / UNO R4 compatible)
+ *  Declared in api/USBAPI.h; implemented here for the AVR-DU USB peripheral
+ *  so libraries referencing the global USBDevice (HID-Project System,
+ *  MIDIUSB, ...) link and run unchanged.
+ * ============================================================ */
+
+/* USB0 bus-signalling bits for device-initiated remote wakeup.
+ * Datasheet DS40002548A: USB.CTRLB and USB.BUSSTATE. Fallbacks match the
+ * documented bit positions if the I/O header names them differently. */
+#ifndef USB_URESUME_bm
+#define USB_URESUME_bm    (1 << 3)   /* CTRLB / BUSSTATE bit 3: Upstream Resume */
+#endif
+#ifndef USB_SUSPENDED_bm
+#define USB_SUSPENDED_bm  (1 << 1)   /* BUSSTATE bit 1: Bus Suspended           */
+#endif
+#ifndef USB_WTRSM_bm
+#define USB_WTRSM_bm      (1 << 4)   /* BUSSTATE bit 4: Wait Time Resume elapsed */
+#endif
+
+USBDevice_::USBDevice_() { }
+
+bool USBDevice_::configured() { return usbIsConfigured(); }
+void USBDevice_::attach()     { usbAttach(); }
+void USBDevice_::detach()     { usbDetach(); }
+void USBDevice_::poll()       { usbPoll(); }
+
+bool USBDevice_::isSuspended() {
+    return (USB0.BUSSTATE & USB_SUSPENDED_bm) != 0;
+}
+
+/* Device-initiated remote wakeup (upstream resume).
+ * Returns false unless the host enabled it (SET_FEATURE DEVICE_REMOTE_WAKEUP,
+ * tracked in g_remote_wakeup_enabled) AND the bus is suspended. Per the
+ * datasheet, an upstream resume must not start until the bus has been
+ * suspended >= 5 ms (T_WTRSM); BUSSTATE.WTRSM signals that. We wait (bounded)
+ * for WTRSM, then write CTRLB.URESUME (hardware self-clears it). */
+bool USBDevice_::wakeupHost() {
+    if (!g_remote_wakeup_enabled)            return false;
+    if (!(USB0.BUSSTATE & USB_SUSPENDED_bm)) return false;
+
+    for (uint16_t guard = 0; !(USB0.BUSSTATE & USB_WTRSM_bm); ++guard) {
+        if (guard == 0xFFFF) return false;   /* WTRSM never set: bail out */
+    }
+
+    USB0.CTRLB |= USB_URESUME_bm;   /* initiate upstream resume (self-clearing) */
+    return true;
+}
+
+USBDevice_ USBDevice;
 
 #endif /* USB0 */

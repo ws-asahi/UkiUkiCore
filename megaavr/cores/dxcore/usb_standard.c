@@ -99,6 +99,7 @@ static void handle_get_descriptor(const usb_setup_t *s) {
          *
          * Ask the registered PluggableUSB modules (HID report descriptors
          * come in as wValue[H]=0x22 here). */
+        usbcore_acc_reset();
         if (usbcore_try_plugged_get_descriptor(s)) {
             p   = usbcore_acc_buf();
             len = usbcore_acc_len();
@@ -276,9 +277,24 @@ void usb_handle_class_request(const usb_setup_t *s) {
     }
     /* Phase 2: defer all other interfaces to whichever PluggableUSB module
      * claimed them at static init time (HID via the bundled HID library,
-     * XInput in a future build mode, etc.). The module either calls
-     * USB_SendControl to push response bytes into the accumulator (which we
-     * then ship as a control-IN), or just consumes the SETUP and we ZLP. */
+     * XInput in a future build mode, etc.).
+     *
+     * host->device request WITH a data stage (HID SET_REPORT carrying the
+     * keyboard-LED byte, feature reports, ...): the payload arrives in an
+     * EP0 OUT data stage. Receive it first, then re-dispatch to the module
+     * from usb_class_data_out_complete() so its setup() can read it via
+     * USB_RecvControl(). This mirrors the CDC SET_LINE_CODING flow. */
+    if (!(s->bmRequestType & 0x80) && s->wLength > 0) {
+        uint16_t n = usbcore_ctrl_out_begin(s);
+        if (n == 0) { ep0_stall(); return; }
+        ep0_start_data_out(usbcore_ctrl_out_buf(), n);
+        return;   /* continued in usb_class_data_out_complete() */
+    }
+
+    /* No data stage, or device->host: dispatch immediately. The module
+     * either calls USB_SendControl to push response bytes into the
+     * accumulator (which we then ship as a control-IN), or just consumes
+     * the SETUP and we ZLP. */
     if (usbcore_try_plugged_setup(s)) {
         uint16_t n = usbcore_acc_len();
         if (n > 0) {
@@ -295,14 +311,21 @@ void usb_handle_class_request(const usb_setup_t *s) {
 /* ============================================================
  * EP0 data-out completion -> dispatch to whichever class needs it
  *
- * In Phase 2 only CDC SET_LINE_CODING actually consumes OUT data here.
- * HID SET_REPORT-on-EP0 (e.g. keyboard LED state) is not yet routed
- * to PluggableUSB modules; add a dispatch to PluggableUSB().setup()
- * here if LED feedback is required.
+ * Two consumers share the EP0 OUT data stage (mutually exclusive, one
+ * control transfer at a time):
+ *   - plugged PluggableUSB modules (HID SET_REPORT / LED, feature reports)
+ *   - CDC SET_LINE_CODING (7-byte line coding)
  * ============================================================ */
 extern void usb_cdc_data_out_complete(void);   /* in usb_cdc.c     */
 
 void usb_class_data_out_complete(void) {
+    /* A plugged (HID) host->device data stage takes priority: deliver the
+     * staged bytes to the owning module, which reads them via USB_RecvControl. */
+    if (usbcore_ctrl_out_pending()) {
+        usbcore_ctrl_out_dispatch();
+        return;   /* status-stage ZLP is sent by handle_ep0_out_complete() */
+    }
+    /* Otherwise it is the CDC SET_LINE_CODING payload. */
     usb_cdc_data_out_complete();
 }
 

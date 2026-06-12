@@ -13,14 +13,14 @@
  *   - All interrupts DISABLED — main loop drives usbPoll()
  *   - Uses official USB_*_bm macros from ioavr64du32.h
  *
- *  EP map (Phase 1: CDC-only; HID EPs disabled, dynamic via PluggableUSB in Phase 2):
+ *  EP map (CDC fixed on EP1..EP3; HID and other classes are allocated
+ *  dynamically on EP4+ by PluggableUSB modules - see USBCore_DU.cpp):
  *    EP0      Control
  *    EP1 IN   CDC notify     (interrupt 16B)
  *    EP2 OUT  CDC data RX    (bulk      64B)
  *    EP3 IN   CDC data TX    (bulk      64B)
- *    EP4 IN   HID Keyboard   (interrupt  8B)
- *    EP5 IN   HID Mouse      (interrupt  8B)
- *    EP6 IN   HID Gamepad    (interrupt  8B)
+ *    EP4..EP7 dynamic        (PluggableUSB: HID Keyboard/Mouse share one
+ *                             interrupt-IN EP via Report IDs, Leonardo-style)
  */
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -127,23 +127,13 @@ static void usb_ep_table_init(void) {
     g_ep_table.EP[3].IN.DATAPTR  = (uint16_t)g_ep3_in_buf;
     g_ep_table.EP[3].IN.STATUS   = USB_BUSNAK_bm;
 
-    /* Phase 1: HID is gone (CDC-only baseline). EP4-EP6 stay zeroed by the memset above,
-     * which leaves their TYPE = DISABLED. Will be re-enabled dynamically by PluggableUSB
-     * modules in Phase 2 (USBCore_DU.cpp -> InitEndpoints from epBuffer[]). */
-#if 0
-    /* EP4 IN: HID Keyboard */
-    g_ep_table.EP[4].IN.CTRL     = USB_TYPE_BULKINT_gc | USB_BUFSIZE_DEFAULT_BUF8_gc;
-    g_ep_table.EP[4].IN.DATAPTR  = (uint16_t)g_ep4_in_buf;
-    g_ep_table.EP[4].IN.STATUS   = USB_BUSNAK_bm;
-    /* EP5 IN: HID Mouse */
-    g_ep_table.EP[5].IN.CTRL     = USB_TYPE_BULKINT_gc | USB_BUFSIZE_DEFAULT_BUF8_gc;
-    g_ep_table.EP[5].IN.DATAPTR  = (uint16_t)g_ep5_in_buf;
-    g_ep_table.EP[5].IN.STATUS   = USB_BUSNAK_bm;
-    /* EP6 IN: HID Gamepad */
-    g_ep_table.EP[6].IN.CTRL     = USB_TYPE_BULKINT_gc | USB_BUFSIZE_DEFAULT_BUF8_gc;
-    g_ep_table.EP[6].IN.DATAPTR  = (uint16_t)g_ep6_in_buf;
-    g_ep_table.EP[6].IN.STATUS   = USB_BUSNAK_bm;
-#endif /* Phase 2 will re-enable via PluggableUSB */
+    /* HID and other classes are NOT hardcoded here. EP4..EP7 stay zeroed by
+     * the memset above (TYPE = DISABLED) and are programmed dynamically at
+     * SET_CONFIGURATION by usbcore_init_plugged_endpoints() from the EP types
+     * the PluggableUSB modules registered via plug(). Keyboard and Mouse use
+     * the bundled HID library, which is a single PluggableUSB module owning
+     * one interrupt-IN EP and one interface (Report IDs multiplex the two),
+     * exactly as on the Arduino Leonardo. */
 }
 
 /* ============================================================
@@ -418,19 +408,10 @@ static void usb_service_trncompl(void) {
             USB0.STATUS[3].INCLR = USB_TRNCOMPL_bm;
             usb_cdc_on_ep3_in_done();
         }
-        /* Phase 1: HID EPs (4-6) are disabled. Phase 2 will route dynamic-EP TRNCOMPL
-         * to the PluggableUSB module owning each EP. */
-#if 0
-        if (g_ep_table.EP[4].IN.STATUS & USB_TRNCOMPL_bm) {
-            rmw_wait(); USB0.STATUS[4].INCLR = USB_TRNCOMPL_bm;
-        }
-        if (g_ep_table.EP[5].IN.STATUS & USB_TRNCOMPL_bm) {
-            rmw_wait(); USB0.STATUS[5].INCLR = USB_TRNCOMPL_bm;
-        }
-        if (g_ep_table.EP[6].IN.STATUS & USB_TRNCOMPL_bm) {
-            rmw_wait(); USB0.STATUS[6].INCLR = USB_TRNCOMPL_bm;
-        }
-#endif
+        /* Dynamic PluggableUSB EPs (EP4+): IN reports are completed
+         * synchronously inside USB_Send() (it polls the per-EP TRNCOMPL in
+         * the SRAM endpoint table itself), so no servicing is required in the
+         * ISR. The async-OUT (USB_Recv) hook lives in USBCore_DU.cpp. */
         USB0.INTFLAGSB = USB_TRNCOMPL_bm;
     }
 

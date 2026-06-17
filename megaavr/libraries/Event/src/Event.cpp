@@ -811,6 +811,11 @@ void Event::set_user(event::user::user_t event_user) {
         PORTMUX_EVSYSROUTEA |= (1 << ((event_user & 0x7F) - 0x0D));
       #elif defined(__AVR_DD__)
         PORTMUX_EVSYSROUTEA |= (1 << ((event_user & 0x7F) - 0x0D));
+      #elif defined(__AVR_DU__)
+        uint8_t u = event_user & 0x7F;
+        if      (u == 0x09) PORTMUX_EVSYSROUTEA |= (1 << 0);
+        else if (u == 0x0A) PORTMUX_EVSYSROUTEA |= (1 << 3);
+        else if (u == 0x0B) PORTMUX_EVSYSROUTEA |= (1 << 5);
       #elif MEGATINYCORE_SERIES == 2
         PORTMUX_EVSYSROUTEA |= (1 << ((event_user & 0x7F) - 0x0D));
       #endif
@@ -1006,6 +1011,11 @@ void Event::clear_user(event::user::user_t event_user) {
       PORTMUX_EVSYSROUTEA &= ~(1 << ((event_user & 0x7F) - 0x0E));
     #elif defined(__AVR_DB__)
       PORTMUX_EVSYSROUTEA &= ~(1 << ((event_user & 0x7F) - 0x0D));
+    #elif defined(__AVR_DU__)
+      uint8_t u = event_user & 0x7F;
+      if      (u == 0x09) PORTMUX_EVSYSROUTEA &= ~(1 << 0);
+      else if (u == 0x0A) PORTMUX_EVSYSROUTEA &= ~(1 << 3);
+      else if (u == 0x0B) PORTMUX_EVSYSROUTEA &= ~(1 << 5);
     #endif
   }
 }

@@ -3,14 +3,17 @@
 #if defined(USB0)
 /**
  * usb_core.c
- * USB stack core: initialization, polled event loop, control state machine
+ * USB stack core: initialization, interrupt service routines, control
+ * state machine
  *
  * Target: AVR64DU32 with DxCore
  *
  * Architecture:
  *   - Uses official USB_EP_TABLE_t (FIFO[32] + EP[16] + FRAMENUM)
  *   - EPPTR set to &g_ep_table.EP[0]  (FIFO occupies negative offsets)
- *   - All interrupts DISABLED — main loop drives usbPoll()
+ *   - Fully interrupt-driven: USB0_BUSEVENT_vect (reset/SOF) and
+ *     USB0_TRNCOMPL_vect (SETUP + per-endpoint TRNCOMPL) drive all activity;
+ *     usbPoll() is a no-op kept for source compatibility.
  *   - Uses official USB_*_bm macros from ioavr64du32.h
  *
  *  EP map (CDC fixed on EP1..EP3; HID and other classes are allocated
@@ -28,6 +31,7 @@
 #include <string.h>
 #include "usb_core.h"
 #include "usb_standard.h"
+#include "USBCore_DU.h"
 
 /* ============================================================
  * Global state
@@ -411,7 +415,8 @@ static void usb_service_trncompl(void) {
         /* Dynamic PluggableUSB EPs (EP4+): IN reports are completed
          * synchronously inside USB_Send() (it polls the per-EP TRNCOMPL in
          * the SRAM endpoint table itself), so no servicing is required in the
-         * ISR. The async-OUT (USB_Recv) hook lives in USBCore_DU.cpp. */
+         * ISR. Dynamic OUT (host->device) data is drained here. */
+        usbcore_service_dynamic_ep_trncompl();
         USB0.INTFLAGSB = USB_TRNCOMPL_bm;
     }
 

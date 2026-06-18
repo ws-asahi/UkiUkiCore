@@ -198,7 +198,7 @@ static void trigger_1200bps_reset(void) {
 }
 
 /* ============================================================
- * EP2 OUT (RX from host) — runs in usbPoll() context
+ * EP2 OUT (RX from host) — invoked from the TRNCOMPL ISR
  * ============================================================ */
 volatile uint16_t g_cdc_rx_total = 0;   /* diagnostic: raw bytes received on EP2 OUT */
 volatile uint16_t g_cdc_tx_starts = 0;  /* diagnostic: EP3 IN transfers started */
@@ -227,8 +227,9 @@ void usb_cdc_on_ep3_in_done(void) {
 }
 
 /* ============================================================
- * TX pump — fills EP3 IN buffer from g_tx_ring
- * Call from usbCdcPoll() (which is called from usbPoll-ish context)
+ * TX pump — fills EP3 IN buffer from g_tx_ring.
+ * Runs in ISR context (EP3-IN-done and SOF hooks); from main context it
+ * is reached via cdc_tx_kick(), which masks interrupts to stay race-free.
  * ============================================================ */
 static void cdc_tx_pump(void) {
     if (g_tx_in_flight) return;

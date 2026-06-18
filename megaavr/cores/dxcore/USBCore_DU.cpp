@@ -206,15 +206,67 @@ int USB_RecvControlLong(void* d, int len) { return USB_RecvControl(d, len); }
 static uint8_t  s_dyn_ep_buf[USBCORE_DYN_EP_COUNT][USBCORE_DYN_EP_BUF];
 static uint8_t  s_dyn_ep_pos[USBCORE_DYN_EP_COUNT];
 
-uint8_t USB_Available(uint8_t /*ep*/)  { return 0; }   /* TBD when an OUT EP is plugged */
+/* Per dynamic OUT (host->device) endpoint receive ring. The TRNCOMPL ISR
+ * copies each received packet out of the endpoint buffer (s_dyn_ep_buf[idx],
+ * which is the OUT EP's DATAPTR) into this ring and immediately re-arms the
+ * endpoint; USB_Recv()/USB_Available() consume it from main context. Single
+ * producer (ISR) / single consumer (main) with uint8_t head/tail = lock-free
+ * on this 8-bit core (same pattern as the CDC RX ring). */
+#define USBCORE_DYN_RX_RING   64    /* >= one max packet; tune to RAM budget */
+static uint8_t          s_dyn_rx_ring[USBCORE_DYN_EP_COUNT][USBCORE_DYN_RX_RING];
+static volatile uint8_t s_dyn_rx_head[USBCORE_DYN_EP_COUNT];  /* written by ISR  */
+static volatile uint8_t s_dyn_rx_tail[USBCORE_DYN_EP_COUNT];  /* written by main */
+
+/* Forward declaration: dyn_ep_release() is defined further down, but
+ * USB_Flush() below needs it to push a staged short packet. */
+static int dyn_ep_release(uint8_t ep);
+
+uint8_t USB_Available(uint8_t ep) {
+    ep &= 0x07;
+    if (ep < USBCORE_DYN_EP_BASE || ep >= USBCORE_NUM_EP) return 0;
+    uint8_t i = ep - USBCORE_DYN_EP_BASE;
+    int16_t n = (int16_t)s_dyn_rx_head[i] - (int16_t)s_dyn_rx_tail[i];
+    if (n < 0) n += USBCORE_DYN_RX_RING;
+    return (uint8_t)n;
+}
+
+/* TBD when an OUT EP is plugged */
 uint8_t USB_SendSpace(uint8_t ep)      {
     ep &= 0x07;
     if (ep < USBCORE_DYN_EP_BASE || ep >= USBCORE_NUM_EP) return 0;
     return USBCORE_DYN_EP_BUF - s_dyn_ep_pos[ep - USBCORE_DYN_EP_BASE];
 }
-int     USB_Recv(uint8_t /*ep*/, void* /*data*/, int /*len*/) { return 0; }
-int     USB_Recv(uint8_t /*ep*/)                              { return -1; }
-void    USB_Flush(uint8_t /*ep*/) { /* sent on RELEASE; nothing buffered after */ }
+
+int USB_Recv(uint8_t ep, void* data, int len) {
+    ep &= 0x07;
+    if (ep < USBCORE_DYN_EP_BASE || ep >= USBCORE_NUM_EP) return -1;
+    if (len <= 0) return 0;
+    uint8_t  i   = ep - USBCORE_DYN_EP_BASE;
+    uint8_t *dst = (uint8_t *)data;
+    int got = 0;
+    while (got < len && s_dyn_rx_tail[i] != s_dyn_rx_head[i]) {
+        dst[got++] = s_dyn_rx_ring[i][s_dyn_rx_tail[i]];
+        s_dyn_rx_tail[i] = (uint8_t)((s_dyn_rx_tail[i] + 1) % USBCORE_DYN_RX_RING);
+    }
+    return got;
+}
+int USB_Recv(uint8_t ep) {
+    uint8_t b;
+    return (USB_Recv(ep, &b, 1) == 1) ? (int)b : -1;
+}
+
+/* Push whatever is staged on a dynamic IN endpoint out to the bus. The
+ * Arduino USBAPI lets a library stage payload with USB_Send() (without
+ * TRANSFER_RELEASE) and then emit a sub-maxpacket packet with USB_Flush();
+ * MIDIUSB sends every event this way. HID never does - it ORs
+ * TRANSFER_RELEASE into each report - so USB_Flush() is first exercised here. */
+void    USB_Flush(uint8_t ep) {
+    ep &= 0x07;
+    if (ep < USBCORE_DYN_EP_BASE || ep >= USBCORE_NUM_EP) return;
+    if (s_dyn_ep_pos[ep - USBCORE_DYN_EP_BASE] > 0) {
+        dyn_ep_release(ep);
+    }
+}
 
 /* Issue an IN packet on a dynamic EP from its staging buffer.
  * Blocking - waits for HW to be idle, sets CNT/clears BUSNAK, then waits
@@ -232,16 +284,20 @@ static int dyn_ep_release(uint8_t ep) {
     /* Arm the packet. */
     g_ep_table.EP[ep].IN.DATAPTR = (uint16_t)s_dyn_ep_buf[ep - USBCORE_DYN_EP_BASE];
     g_ep_table.EP[ep].IN.CNT     = s_dyn_ep_pos[ep - USBCORE_DYN_EP_BASE];
-    /* Clear BUSNAK (release) and any previous TRNCOMPL together. */
-    g_ep_table.EP[ep].IN.STATUS  = 0;
+    /* Activate: clear BUSNAK (+ stale flags) via INCLR, but PRESERVE TOGGLE so
+     * the hardware keeps DATA0/DATA1 in sync with the host (see usb_core.c). */
+    while (USB0.INTFLAGSB & USB_RMWBUSY_bm) {}
+    USB0.STATUS[ep].INCLR = USB_UNFOVF_bm | USB_TRNCOMPL_bm | USB_STALLED_bm | USB_BUSNAK_bm;
 
     /* Wait for completion. */
     tmo = 0;
     while (!(g_ep_table.EP[ep].IN.STATUS & USB_TRNCOMPL_bm)) {
         if (++tmo == 0) { s_dyn_ep_pos[ep - USBCORE_DYN_EP_BASE] = 0; return -1; }
     }
-    /* Re-arm BUSNAK so we own the buffer; clear TRNCOMPL. */
-    g_ep_table.EP[ep].IN.STATUS = USB_BUSNAK_bm | USB_TRNCOMPL_bm;
+    /* Clear TRNCOMPL only; the hardware re-sets BUSNAK after the IN completes.
+     * Never write STATUS directly here - it would clear TOGGLE. */
+    while (USB0.INTFLAGSB & USB_RMWBUSY_bm) {}
+    USB0.STATUS[ep].INCLR = USB_TRNCOMPL_bm;
 
     int sent = s_dyn_ep_pos[ep - USBCORE_DYN_EP_BASE];
     s_dyn_ep_pos[ep - USBCORE_DYN_EP_BASE] = 0;
@@ -371,10 +427,36 @@ void usbcore_init_plugged_endpoints(void) {
     }
 }
 
-/* TRNCOMPL bookkeeping for dynamic IN EPs.
- * Currently a no-op: USB_Send polls the same flag synchronously.
- * Kept as a hook for when we add asynchronous OUT (USB_Recv) support. */
-void usbcore_service_dynamic_ep_trncompl(void) { }
+/* Service dynamic OUT (host->device) endpoints. Called from the TRNCOMPL ISR.
+ * Dynamic IN reports still complete synchronously inside USB_Send(); only OUT
+ * endpoints need servicing here. For each plugged OUT EP that completed a
+ * transaction: ack TRNCOMPL, copy the packet into its RX ring, then re-arm.
+ * All STATUS access is OUTCLR (atomic, preserves the DATA0/DATA1 TOGGLE) -
+ * never a direct STATUS write. */
+void usbcore_service_dynamic_ep_trncompl(void) {
+    for (uint8_t ep = USBCORE_DYN_EP_BASE; ep < USBCORE_NUM_EP; ep++) {
+        uint8_t t = s_ep_types[ep];
+        if (t == 0 || (t & 0x80)) continue;            /* unused or IN endpoint */
+        if (!(g_ep_table.EP[ep].OUT.STATUS & USB_TRNCOMPL_bm)) continue;
+
+        uint8_t i = ep - USBCORE_DYN_EP_BASE;
+        while (USB0.INTFLAGSB & USB_RMWBUSY_bm) {}
+        USB0.STATUS[ep].OUTCLR = USB_TRNCOMPL_bm;      /* ack the transaction */
+
+        uint16_t cnt = g_ep_table.EP[ep].OUT.CNT;
+        if (cnt > USBCORE_DYN_EP_BUF) cnt = USBCORE_DYN_EP_BUF;
+        for (uint16_t k = 0; k < cnt; k++) {
+            uint8_t next = (uint8_t)((s_dyn_rx_head[i] + 1) % USBCORE_DYN_RX_RING);
+            if (next == s_dyn_rx_tail[i]) break;       /* ring full: drop the rest */
+            s_dyn_rx_ring[i][s_dyn_rx_head[i]] = s_dyn_ep_buf[i][k];
+            s_dyn_rx_head[i] = next;
+        }
+
+        g_ep_table.EP[ep].OUT.CNT = 0;
+        while (USB0.INTFLAGSB & USB_RMWBUSY_bm) {}
+        USB0.STATUS[ep].OUTCLR = USB_BUSNAK_bm;        /* re-arm for next packet */
+    }
+}
 
 /* ============================================================
  *  USBDevice control object  (Arduino Leonardo / UNO R4 compatible)

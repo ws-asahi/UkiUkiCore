@@ -123,11 +123,25 @@ typedef struct {
     u8  interval;
 } EndpointDescriptor;
 
+typedef struct {
+    u8  len;             /* 8  */
+    u8  dtype;           /* 11 */
+    u8  firstInterface;
+    u8  interfaceCount;
+    u8  functionClass;
+    u8  functionSubClass;
+    u8  functionProtocol;
+    u8  iInterface;
+} IADDescriptor;
+
 /* Descriptor initializer macros */
 #define D_INTERFACE(_n,_numEndpoints,_class,_subClass,_protocol) \
     { 9, 4, _n, 0, _numEndpoints, _class, _subClass, _protocol, 0 }
 
 #define D_ENDPOINT(_addr,_attr,_packetSize,_interval) \
     { 7, 5, _addr, _attr, _packetSize, _interval }
+
+#define D_IAD(_firstInterface, _count, _class, _subClass, _protocol) \
+    { 8, 11, _firstInterface, _count, _class, _subClass, _protocol, 0 }
 
 #endif /* USBCORE_COMPAT_DEFINED */

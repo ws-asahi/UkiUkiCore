@@ -3,7 +3,9 @@
  * Public USB stack API
  *
  * Uses official USB_EP_TABLE_t and bit definitions from ioavr64du32.h.
- * Architecture: polled (no ISRs) — call usbPoll() from loop().
+ * Architecture: fully interrupt-driven (USB0_BUSEVENT + USB0_TRNCOMPL).
+ * A sketch needs no usbPoll() calls; usbPoll() is a no-op kept only for
+ * source compatibility.
  */
 #ifndef USB_CORE_H
 #define USB_CORE_H
@@ -55,7 +57,8 @@ void usbcore_acc_load_P(const uint8_t *src_pgm, uint16_t n);
 const uint8_t *usbcore_acc_buf(void);
 uint16_t       usbcore_acc_len(void);
 
-/* Call frequently from loop() — drives all USB activity */
+/* No-op kept for source compatibility. The stack is interrupt-driven, so
+ * calling this from loop() is neither required nor has any effect. */
 void usbPoll(void);
 
 /* ============================================================
@@ -84,7 +87,7 @@ extern uint8_t  g_remote_wakeup_enabled;
 
 /* Diagnostic counters */
 
-/* diagnostic snapshot globals (set by usbPoll) */
+/* diagnostic snapshot globals (captured at the end of the TRNCOMPL ISR) */
 
 /* ============================================================
  * Internal helpers (shared between USB modules)

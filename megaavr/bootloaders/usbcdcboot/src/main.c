@@ -89,16 +89,42 @@ static volatile uint16_t s_dbltap_flag __attribute__((section(".noinit")));
 #endif
 #define BL_LED_PIN_BM        (1u << BL_LED_PIN)
 
+/* LED polarity (compile-time).  Two explicit, mutually-exclusive options
+ * select how the DFU-status LED is driven:
+ *
+ *     -DLED_AH   active-HIGH : LED lights when the pin is driven HIGH.
+ *                              This is the DxCore / classic Arduino "D13"
+ *                              convention (Wazamono Tsurugi).
+ *     -DLED_AL   active-LOW  : LED lights when the pin is driven LOW.
+ *                              The Pro Micro RX/TX LED convention
+ *                              (Wazamono Tachi).
+ *
+ * If NEITHER option is defined, the LED defaults to active-LOW.  If BOTH are
+ * defined, LED_AH takes precedence.  Each Wazamono board passes its option
+ * explicitly at build time, so the fallback default can change in future
+ * without affecting any existing board.  Only the drive levels change here;
+ * DIR and toggle are polarity-independent. */
+#if defined(LED_AH)
+#define BL_LED_DRIVE_ON      OUTSET   /* on  = output high (active HIGH) */
+#define BL_LED_DRIVE_OFF     OUTCLR   /* off = output low                */
+#elif defined(LED_AL)
+#define BL_LED_DRIVE_ON      OUTCLR   /* on  = output low (active LOW)   */
+#define BL_LED_DRIVE_OFF     OUTSET   /* off = output high               */
+#else  /* neither specified -> fallback default: active-LOW */
+#define BL_LED_DRIVE_ON      OUTCLR
+#define BL_LED_DRIVE_OFF     OUTSET
+#endif
+
 static uint16_t s_led_period_counts;   /* main-loop iters per toggle */
 
 static inline void bl_led_init(uint16_t period_counts) {
     s_led_period_counts = period_counts;
     BL_LED_PORT.DIRSET = BL_LED_PIN_BM;
-    BL_LED_PORT.OUTSET = BL_LED_PIN_BM;   /* LED off (output high) */
+    BL_LED_PORT.BL_LED_DRIVE_OFF = BL_LED_PIN_BM;   /* LED off */
 }
 
 static inline void bl_led_deinit(void) {
-    BL_LED_PORT.OUTSET = BL_LED_PIN_BM;   /* off */
+    BL_LED_PORT.BL_LED_DRIVE_OFF = BL_LED_PIN_BM;   /* off */
     BL_LED_PORT.DIRCLR = BL_LED_PIN_BM;   /* back to input */
 }
 
@@ -107,11 +133,11 @@ static inline void bl_led_toggle(void) {
 }
 
 static inline void bl_led_on(void) {
-    BL_LED_PORT.OUTCLR = BL_LED_PIN_BM;   /* active LOW */
+    BL_LED_PORT.BL_LED_DRIVE_ON = BL_LED_PIN_BM;   /* on */
 }
 
 static inline void bl_led_off_state(void) {
-    BL_LED_PORT.OUTSET = BL_LED_PIN_BM;
+    BL_LED_PORT.BL_LED_DRIVE_OFF = BL_LED_PIN_BM;
 }
 
 /* ------------------------------------------------------------------
@@ -151,7 +177,7 @@ static void bl_dbltap_window(void) {
         bl_led_off_state();
         bl_wait_ms_4mhz(25);
     }
-    BL_LED_PORT.OUTSET = BL_LED_PIN_BM;   /* off */
+    BL_LED_PORT.BL_LED_DRIVE_OFF = BL_LED_PIN_BM;   /* off */
     BL_LED_PORT.DIRCLR = BL_LED_PIN_BM;   /* release the LED pin for the application */
 }
 

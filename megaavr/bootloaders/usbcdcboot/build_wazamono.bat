@@ -10,14 +10,23 @@ REM  This does NOT modify the clean-room bootloader source. The only
 REM  board difference from the generic 64du build is the DFU-status
 REM  LED pin, which is passed in at build time:
 REM
-REM    board            MCU         LED   note
-REM    ---------------  ----------  ----  ----------------------------
-REM    Wazamono Tachi   avr64du32   PD5   RX LED / LED_BUILTIN, act-LOW
-REM    (Wazamono Tsurugi to be added later: avr64du32, LED PD6)
+REM    board             MCU         LED   pol     USB ident (VID:PID)
+REM    ----------------  ----------  ----  ------  -------------------
+REM    Wazamono Tachi    avr64du32   PD5   act-LO  0x1209:0x0005
+REM    Wazamono Tsurugi  avr64du32   PD6   act-LO  0x1209:0x0007
 REM
-REM  main.c defaults the LED to PA7 and drives it active-LOW; the
-REM  Wazamono RX/TX LEDs are also active-LOW (Pro Micro convention),
-REM  so only the pin needs to move - no polarity change.
+REM  Per-board build differences are passed in at build time; the
+REM  clean-room source is NOT edited per board:
+REM    - LED pin    : LED_PORT / LED_PIN
+REM    - LED polarity: LED_ACTIVE_HIGH=1   (default = active-LOW)
+REM    - USB identity: BOARD=TACHI | TSURUGI  (selects PID + product string)
+REM
+REM  main.c defaults the LED to PA7 and drives it active-LOW; the Wazamono
+REM  RX/TX LEDs are also active-LOW (Pro Micro convention).
+REM
+REM  NOTE on the Tsurugi LED polarity: this build assumes active-LOW.  The
+REM  classic Arduino Uno "D13" LED is active-HIGH - if the Tsurugi schematic
+REM  uses that, add "AH" as the 6th argument to its :build call below.
 REM
 REM  The signature is read from SIGROW at runtime (stk500.c), so the
 REM  single avr64du32 hex serves every Wazamono board that shares the
@@ -42,8 +51,11 @@ if not exist "%GCCBIN%\avr-gcc.exe" (
 set "PATH=%GCCBIN%;%PATH%"
 if not defined MAKE set MAKE=make
 
-REM            class           mcu         LEDport LEDpin
-call :build wazamonotachi   avr64du32   PORTD   5
+REM            class             mcu        LEDport LEDpin board     [LEDpol]
+call :build wazamonotachi     avr64du32  PORTD   5      TACHI
+call :build wazamonotsurugi   avr64du32  PORTD   6      TSURUGI AH
+REM  ^ if the Tsurugi D13 LED is active-HIGH, append "AH" as the 6th arg:
+REM      call :build wazamonotsurugi   avr64du32  PORTD   6      TSURUGI   AH
 
 echo.
 echo === collecting hex files into ..\hex\ ===
@@ -58,11 +70,13 @@ endlocal
 goto :eof
 
 :build
-REM  %1=class tag   %2=mcu   %3=LED port   %4=LED pin
+REM  %1=class tag  %2=mcu  %3=LED port  %4=LED pin  %5=board tag  %6=LED pol (AH=active-high, optional)
+set "POLFLAG="
+if /i "%~6"=="AH" set "POLFLAG=LED_ACTIVE_HIGH=1"
 echo.
-echo ------ building %2  -^> usbcdcboot_%1.hex  (LED %3 %4) ------
+echo ------ building %2  -^> usbcdcboot_%1.hex  (LED %3 %4, board %5 %6) ------
 del /q src\*.o 2>nul
 del /q usbcdcboot_%1.elf usbcdcboot_%1.hex usbcdcboot_%1.lst usbcdcboot_%1.map 2>nul
-"%MAKE%" MCU=%2 TARGET=usbcdcboot_%1 LED_PORT=%3 LED_PIN=%4 all
-"%MAKE%" MCU=%2 TARGET=usbcdcboot_%1 size
+"%MAKE%" MCU=%2 TARGET=usbcdcboot_%1 LED_PORT=%3 LED_PIN=%4 BOARD=%5 %POLFLAG% all
+"%MAKE%" MCU=%2 TARGET=usbcdcboot_%1 BOARD=%5 %POLFLAG% size
 goto :eof

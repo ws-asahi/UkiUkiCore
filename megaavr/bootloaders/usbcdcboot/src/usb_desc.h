@@ -17,16 +17,23 @@
  *      IF 0   CDC Communication
  *      IF 1   CDC Data
  *
- *    VID / PID = 0x1209 / 0x0001  (pid.codes test PID)
+ *    VID / PID = 0x1209 / per-board  (pid.codes test range; Tachi 0x0005,
+ *                                     Tsurugi 0x0007 - see Identity below)
  */
 #ifndef AVRDU_BL_USB_DESC_H
 #define AVRDU_BL_USB_DESC_H
 
 #include <stdint.h>
 
-/* Identity */
+/* Identity.  VID is shared (pid.codes test range); the bootloader PID is
+ * per-board so each Wazamono board enumerates with its own bootloader identity.
+ * Select the board at build time with -DWAZAMONO_BOARD_TSURUGI (default Tachi). */
 #define USB_BL_VID              0x1209
+#if defined(WAZAMONO_BOARD_TSURUGI)
+#define USB_BL_PID              0x0007   /* Wazamono Tsurugi bootloader */
+#else  /* default: WAZAMONO_BOARD_TACHI */
 #define USB_BL_PID              0x0005   /* Wazamono Tachi bootloader */
+#endif
 #define USB_BL_DEVICE_VER       0x0100
 
 /* Endpoints */

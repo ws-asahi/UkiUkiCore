@@ -72,6 +72,28 @@ ifneq ($(strip $(LED_PIN)),)
 CFLAGS += -DBL_LED_PIN=$(LED_PIN)
 endif
 
+# --- Board selection (per-build) ------------------------------------
+# Selects the per-board USB bootloader identity.  VID is shared (0x1209);
+# the PID and the USB product string differ per board (see src/usb_desc.h
+# and src/usb_desc.c).  Pass the board tag, e.g.:
+#   make ... BOARD=TSURUGI      (unset / BOARD=TACHI = the default Tachi identity)
+ifneq ($(strip $(BOARD)),)
+CFLAGS += -DWAZAMONO_BOARD_$(BOARD)
+endif
+
+# --- LED polarity (per-build) ---------------------------------------
+# Two explicit options select the DFU LED drive polarity:
+#   make ... LED_AH=1   -> active-HIGH (DxCore / Arduino "D13" convention)
+#   make ... LED_AL=1   -> active-LOW  (Pro Micro RX/TX LED convention)
+# If neither is given the bootloader falls back to active-LOW; if both are
+# given, LED_AH wins (resolved in src/main.c).
+ifneq ($(strip $(LED_AH)),)
+CFLAGS += -DLED_AH
+endif
+ifneq ($(strip $(LED_AL)),)
+CFLAGS += -DLED_AL
+endif
+
 # The toolchain's specs-avr64du32 file handles the avrxmega2 paths
 # automatically when -mmcu=avr64du32 is set, so we don't need any
 # explicit -B options here.

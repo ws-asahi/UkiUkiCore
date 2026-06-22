@@ -1,8 +1,8 @@
 # Wazamono 太刀（Tachi）
 
-**Arduino Pro Micro 後継機 — AVR64DU32 / USB-C**
+**Pro Micro 後継機 — AVR64DU32 / USB-C**
 
-Wazamono Tachi は、Arduino Pro Micro と同じフォームファクタを USB ネイティブな AVR `AVR64DU32` で再設計したボードです。
+Wazamono Tachi は、SparkFun Pro Micro と同じフォームファクタを USB ネイティブな AVR `AVR64DU32` で再設計したボードです。
 USB-シリアル変換チップを搭載せず、マイコン単体で USB-C により PC と直接つながります。
 
 > このページは Wazamono Tachi 1 機種のドキュメントです。コア全体の概要は [README](../../README.md) を参照してください。
@@ -13,7 +13,7 @@ USB-シリアル変換チップを搭載せず、マイコン単体で USB-C に
 
 | 項目 | 内容 |
 |------|------|
-| 由来 | Arduino Pro Micro 後継 |
+| 由来 | Pro Micro 後継 |
 | MCU | AVR64DU32（TQFP-32） |
 | フォームファクタ | Pro Micro 互換（L 側 1×12 / R 側 1×13 ピンヘッダ） |
 | USB | USB-C（USB 2.0 Full-Speed、マイコン内蔵） |
@@ -48,7 +48,7 @@ USB-シリアル変換チップを搭載せず、マイコン単体で USB-C に
 
 ## ATmega32U4 との比較
 
-Wazamono Tachi が置き換える Arduino Pro Micro / Leonardo は **ATmega32U4** を搭載しています。
+Wazamono Tachi が置き換える Pro Micro / Arduino Leonardo は **ATmega32U4** を搭載しています。
 両者とも USB 内蔵 AVR ですが、AVR64DU32 は新世代の **AVRxt コア**で、クロック・メモリ・周辺機能が大きく強化されています。
 
 | 項目 | Wazamono Tachi (AVR64DU32) | Pro Micro 等 (ATmega32U4) |

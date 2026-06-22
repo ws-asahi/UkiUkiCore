@@ -101,3 +101,86 @@ wazamonotachi.build.highestcb=B2
 wazamonotachi.upload.maximum_size=61440
 wazamonotachi.upload.maximum_data_size=8192
 wazamonotachi.bootloader.class=usbcdcboot_wazamonotachi
+##############################################################
+
+# =====================  Wazamono Tsurugi (AVR64DU32)  ===============
+#  Arduino Uno R3 form factor. Same AVR64DU32 + USB-CDC bootloader as
+#  the Tachi; differs in pin layout (Uno R3 compatible) and timer use:
+#  millis() is on TCB1 so TCB0 is free for D4 PWM (TCB0 ALT1 = PF4).
+wazamonotsurugi.name=Wazamono Tsurugi (AVR64DU32)
+
+wazamonotsurugi.upload.tool=avrdude
+wazamonotsurugi.upload.prog_interlock=
+wazamonotsurugi.vid.0=0x1209
+wazamonotsurugi.pid.0=0x0008
+wazamonotsurugi.vid.1=0x1209
+wazamonotsurugi.pid.1=0x0007
+wazamonotsurugi.build.board=avrdu
+wazamonotsurugi.build.core=dxcore
+wazamonotsurugi.build.f_cpu={build.speed}000000L
+wazamonotsurugi.build.text_section_start=.text=0x1000
+wazamonotsurugi.build.defaultswaps=
+wazamonotsurugi.build.extra_flags= {build.defaultswaps} -DUSING_AVRDU_CDC_BOOTLOADER -DUSING_OPTIBOOT
+wazamonotsurugi.build.export_merged_output=false
+wazamonotsurugi.build.printf=
+wazamonotsurugi.build.flmapopts=
+wazamonotsurugi.build.attachmode=-DCORE_ATTACH_ALL
+wazamonotsurugi.bootloader.tool=avrdude
+wazamonotsurugi.bootloader.WDTCFG=0b{bootloader.wdtwindowbits}{bootloader.wdttimeoutbits}
+wazamonotsurugi.bootloader.wdtwindowbits=0000
+wazamonotsurugi.bootloader.BODCFG=0x00
+wazamonotsurugi.bootloader.updipinbit=1
+wazamonotsurugi.bootloader.SYSCFG0=0b110{bootloader.updipinbit}{bootloader.resetpinbits}00{bootloader.eesavebit}
+wazamonotsurugi.bootloader.SYSCFG1=0b00001{bootloader.sutbits}
+wazamonotsurugi.bootloader.CODESIZE=0x00
+wazamonotsurugi.bootloader.BOOTSIZE=0x08
+wazamonotsurugi.bootloader.OSCCFG=0b00000000
+
+# ---- Locked option defaults (menus removed; values fixed for the product) ----
+wazamonotsurugi.bootloader.wdttimeoutbits=0000
+wazamonotsurugi.bootloader.eesavebit=1
+wazamonotsurugi.bootloader.resetpinbit=1
+wazamonotsurugi.bootloader.sutbits=100
+# Compile-time options: millis=TCB1 (so TCB0/D4 PWM stays free), Wire=single.
+wazamonotsurugi.build.millistimer=B1
+wazamonotsurugi.build.wiremode=MORS_SINGLE
+wazamonotsurugi.bootloader.resetpinbits={bootloader.resetpinbit}
+wazamonotsurugi.bootloader.avrdudefuse5="-Ufuse5:w:{bootloader.SYSCFG0}:m"
+wazamonotsurugi.program.avrdudefuse5="-Ufuse5:w:{bootloader.SYSCFG0}:m"
+wazamonotsurugi.bootloader.avrdudestring=-Uflash:w:{bootloader.file}:i
+wazamonotsurugi.bootloader.pymcuprogstring=-aerase
+wazamonotsurugi.build.mcupostfix=
+wazamonotsurugi.build.printfabr=
+wazamonotsurugi.build.flmapabr=.ful
+wazamonotsurugi.build.attachabr=
+wazamonotsurugi.build.wireabr=.wO
+wazamonotsurugi.build.appspmabr=
+wazamonotsurugi.upload.protocol=arduino
+wazamonotsurugi.upload.speed=115200
+wazamonotsurugi.upload.extra_params=-D
+wazamonotsurugi.upload.use_1200bps_touch=true
+wazamonotsurugi.upload.wait_for_upload_port=true
+wazamonotsurugi.bootloader.file={runtime.platform.path}/bootloaders/hex/{bootloader.class}.hex
+wazamonotsurugi.bootloader.appspm=
+
+# --- Clock: WITH 24 MHz crystal (default) or WITHOUT (internal OSCHF) ---
+wazamonotsurugi.menu.clock.24crystal=24 MHz external crystal (default)
+wazamonotsurugi.menu.clock.24crystal.build.speed=24
+wazamonotsurugi.menu.clock.24crystal.build.clocksource=1
+wazamonotsurugi.menu.clock.24internal=24 MHz internal (no crystal)
+wazamonotsurugi.menu.clock.24internal.build.speed=24
+wazamonotsurugi.menu.clock.24internal.build.clocksource=0
+wazamonotsurugi.menu.clock.20internal=20 MHz internal (no crystal)
+wazamonotsurugi.menu.clock.20internal.build.speed=20
+wazamonotsurugi.menu.clock.20internal.build.clocksource=0
+wazamonotsurugi.menu.clock.16internal=16 MHz internal (no crystal)
+wazamonotsurugi.menu.clock.16internal.build.speed=16
+wazamonotsurugi.menu.clock.16internal.build.clocksource=0
+
+# --- Locked to AVR64DU32. Variant + bootloader hex fixed to Wazamono Tsurugi. ---
+wazamonotsurugi.build.mcu=avr64du32
+wazamonotsurugi.build.variant=WazamonoTsurugi
+wazamonotsurugi.build.highestcb=B2
+wazamonotsurugi.upload.maximum_size=61440
+wazamonotsurugi.upload.maximum_data_size=8192
+wazamonotsurugi.bootloader.class=usbcdcboot_wazamonotsurugi

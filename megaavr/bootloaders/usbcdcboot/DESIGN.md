@@ -140,14 +140,21 @@ Features dropped from the runtime stack:
  - Remote wakeup / suspend / resume handling (bootloader stays running)
 
 The descriptor set is rebuilt for the bootloader to advertise only the
-two CDC interfaces (control + data), and uses a different product
-string ("AVRDU CDC Bootloader") so the host can distinguish.
+two CDC interfaces (control + data), and uses a board-specific product
+string (e.g. "Wazamono Tachi Bootloader" / "Wazamono Tsurugi Bootloader")
+so the host can distinguish it from the running application.
 
-VID/PID:
+VID/PID (pid.codes test range; the bootloader PID and product string are
+selected per board at build time via `-DWAZAMONO_BOARD_*` - see
+src/usb_desc.h / src/usb_desc.c):
 
- - VID = 0x1209 (pid.codes)
- - PID = 0xDA33 (one more than the runtime's 0xDA32, so it appears as a
-   separate COM port and avrdude can target it explicitly)
+ - VID = 0x1209 (pid.codes), shared by all Wazamono boards
+ - PID (bootloader) = 0x0005 (Tachi) / 0x0007 (Tsurugi)
+ - The running application uses a different PID (0x0006 / 0x0008), so the
+   bootloader and the sketch appear as separate COM ports and avrdude can
+   target the bootloader explicitly.
+ - These are development PIDs; replace with a registered VID/PID before
+   any commercial release.
 
 ---
 

@@ -215,6 +215,33 @@ USB 用の 48 MHz（CLK_USB）は内蔵 PLL48M が生成し、USB の SOF に同
 
 ---
 
+## ソフトウェア互換性（Pro Micro）
+
+Tachi は Pro Micro からの移植の手間を最小化することを目指しています。
+
+### ウォッチドッグ
+
+古典 AVR（ATmega32U4）の `<avr/wdt.h>` を用いたコードがそのままビルド・動作します。AVR DU のウォッチドッグはレジスタ構成が異なりますが、コアが互換層（`wdt_compat.h`）を自動適用し、`WDTO_*` 定数を DU の時間設定へ正しく変換します。
+
+```cpp
+#include <avr/wdt.h>
+
+void setup() {
+  wdt_enable(WDTO_2S);   // 2秒のタイムアウト（Pro Micro と同じ書き方）
+}
+
+void loop() {
+  // 処理が2秒以内に終わるなら…
+  wdt_reset();           // ウォッチドッグをリセット（餌やり）
+}
+```
+
+`wdt_enable(WDTO_*)` / `wdt_reset()` / `wdt_disable()` がそのまま使えます。タイムアウトは 15ms〜8s（`WDTO_15MS`〜`WDTO_8S`）。
+
+> 注: `MCUSR`（リセット要因フラグ）は古典 AVR 固有のため対象外です。`MCUSR = 0;` を含む初期化コードは別途読み替えが必要です（DU では `RSTCTRL.RSTFR`）。
+
+---
+
 ## 主要部品
 
 | 記号 | 種別 | 型番 | 備考 |

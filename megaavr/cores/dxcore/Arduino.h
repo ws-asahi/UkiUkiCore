@@ -38,6 +38,11 @@
 #include <avr/pgmspace.h>
 #include <avr/interrupt.h>
 
+/* Pro Micro (classic-AVR) <avr/wdt.h> compatibility for the AVR DU watchdog.
+ * Must be included here so it pulls in <avr/wdt.h> and re-maps wdt_enable()/
+ * WDTO_* before the sketch's own "#include <avr/wdt.h>" is reached. */
+#include "wdt_compat.h"
+
 
 
 

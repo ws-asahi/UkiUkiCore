@@ -4,6 +4,27 @@ WazamonoCore の変更履歴です。WazamonoCore は [DxCore](https://github.co
 
 ---
 
+## v0.0.3 — ウォッチドッグの Pro Micro 互換対応
+
+SparkFun Pro Micro（ATmega32U4）向けのウォッチドッグコードを、無修正でビルド・動作できるようにしました。
+
+### 追加
+
+- コアに `cores/dxcore/wdt_compat.h` を追加し、`Arduino.h` から自動インクルード。`#include <avr/wdt.h>` を用いる古典 AVR のコードがそのまま動作します。
+  - `wdt_enable(WDTO_*)` … 古典 `WDTO_*`（15ms〜8s）を AVR DU の `WDT.CTRLA` PERIOD 符号へ正しく変換（WDTO_2S→2.0s 等）。avr-libc 版は変換しないため誤った時間や未定義になる問題を解消。
+  - `wdt_disable()` … `WDT_PERIOD_OFF_gc` を書き込み WDT を停止。
+  - `wdt_reset()` … `WDR` 命令（古典・モダン共通、avr-libc 版をそのまま使用）。
+  - `WDTO_15MS`〜`WDTO_8S` を古典値（0〜9）で定義。
+- データシート DS40002548A §21.3.6「SYNCBUSY=1 の間は `WDT.CTRLA` 書き込み禁止」に従い、書き込み前に SYNCBUSY を待機。連続した `wdt_enable()`/`wdt_disable()` でも確実に反映されます（素朴な実装で起きる「2回目の書き込みが無視される」問題を回避）。
+
+### 補足
+
+- 既存の `DxCore` ライブラリの `ResetWithWDT()` 等はそのまま利用可能です。
+- 本互換層はコア全体（Tachi / Tsurugi 両方）に適用されます。
+- `MCUSR`（古典 AVR のリセットフラグ）は本対応の対象外です。`MCUSR = 0;` を含むコードは別途リセットフラグ互換が必要です。
+
+---
+
 ## v0.0.2 — Wazamono Tsurugi（ベータ）追加
 
 Arduino Uno R3 後継機 **Wazamono Tsurugi** のソフトウェア対応を追加しました。

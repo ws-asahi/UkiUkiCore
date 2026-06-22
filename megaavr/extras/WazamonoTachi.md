@@ -1,8 +1,9 @@
 # Wazamono 太刀（Tachi）
 
-**Arduino Pro Micro 後継機 — AVR64DU32 / USB-C / Grove**
+**Arduino Pro Micro 後継機 — AVR64DU32 / USB-C**
 
-Wazamono Tachi は、Arduino Pro Micro と同じフォームファクタを USB ネイティブな AVR `AVR64DU32` で再設計したボードです。USB-シリアル変換チップを搭載せず、マイコン単体で USB-C により PC と直接つながります。
+Wazamono Tachi は、Arduino Pro Micro と同じフォームファクタを USB ネイティブな AVR `AVR64DU32` で再設計したボードです。
+USB-シリアル変換チップを搭載せず、マイコン単体で USB-C により PC と直接つながります。
 
 > このページは Wazamono Tachi 1 機種のドキュメントです。コア全体の概要は [README](../../README.md) を参照してください。
 
@@ -18,7 +19,6 @@ Wazamono Tachi は、Arduino Pro Micro と同じフォームファクタを USB 
 | USB | USB-C（USB 2.0 Full-Speed、マイコン内蔵） |
 | クロック | 24 MHz 水晶（既定）／内蔵オシレータ切替可 |
 | 電源 | USB 5V、または基板上 LDO による 3.3V（J3 で切替） |
-| 拡張 | Grove I2C コネクタ（PA2/PA3） |
 | 書き込み | USB CDC ブートローダ（STK500v1、1200bps タッチ） |
 
 ---
@@ -46,6 +46,42 @@ Wazamono Tachi は、Arduino Pro Micro と同じフォームファクタを USB 
 
 ---
 
+## ATmega32U4 との比較
+
+Wazamono Tachi が置き換える Arduino Pro Micro / Leonardo は **ATmega32U4** を搭載しています。
+両者とも USB 内蔵 AVR ですが、AVR64DU32 は新世代の **AVRxt コア**で、クロック・メモリ・周辺機能が大きく強化されています。
+
+| 項目 | Wazamono Tachi (AVR64DU32) | Pro Micro 等 (ATmega32U4) |
+|------|----------------------------|----------------------------|
+| コア | AVRxt（命令タイミング改善） | 旧来 AVR |
+| 最大クロック | 24 MHz（1.8–5.5V 全域） | 16 MHz（4.5V 以上）／3.3V では通常 8 MHz |
+| Flash | 64 KB | 32 KB |
+| SRAM | 8 KB | 2.5 KB |
+| EEPROM | 256 B | 1 KB |
+| ADC | 10-bit・21 ch・170 ksps | 10-bit・12 ch |
+| タイマ | 16-bit TCA ×1 + TCB ×2 | 8/16/16/10-bit ×4 |
+| USART | 2 | 1 |
+| SPI / I2C | 各 1 | 各 1 |
+| CCL（論理ブロック） | 4 LUT | なし |
+| イベントシステム | 6 ch | なし |
+| USB | Full-Speed デバイス（16 EP アドレス） | Full-Speed デバイス（6 EP） |
+
+### 性能上の主な利点
+
+- **クロックと処理速度** — 24 MHz 動作（ATmega32U4は 16 MHz）に加え、AVRxt コアは一部命令のタイミングが改善されており、同一クロックでもわずかに高速です。
+- **複数電圧への対応** — AVRxtのコア特性を活かして 5V または 3.3V の切り替えを**周辺部品の変更なしに可能**です。3.3V 動作時、ATmega32U4 は通常 8 MHz に制限されるのに対し、AVR64DU32 は全電圧範囲で 24 MHz を維持できるため、3.3V では最大で約 3 倍の差になります。
+- **メモリ** — Flash 2 倍（64 KB）、SRAM 約 3.2 倍（8 KB）。大きなバッファ、USB 複合デバイス、ライブラリを多用するスケッチで余裕が生まれます。
+- **新世代の周辺機能** — CCL（3 つの論理ブロック）とイベントシステム（3 チャネル）により、CPU を介さないハードウェアレベルの信号処理・自動ルーティングが可能です。ATmega32U4 にはいずれもありません。
+（Tachiでは2つのCCLと3つのイベントシステムが使用可能です）
+- **アナログ** — ADC チャネルが 12 → 21 に増加し、全チャネルがアナログ入力に対応します。
+- **追加のUART** — 2系統のUARTシリアル通信を利用可能です。
+
+### 留意点
+
+- **EEPROM 容量は ATmega32U4 のほうが大きい**（1 KB 対 256 B）。多くの不揮発データを EEPROM に保存する用途では、保存方法の見直し（User Row やフラッシュの活用など）が必要になる場合があります。
+
+---
+
 ## ピンマッピング
 
 論理ピン番号（`D#`）と MCU ピン、機能の対応です。Pro Micro と同様に D11–D13・D22–D29 は欠番です。
@@ -54,8 +90,8 @@ Wazamono Tachi は、Arduino Pro Micro と同じフォームファクタを USB 
 |----|-----|--------------|--------|----------|
 | D0 | PD7 | A30 | AIN7 | **Serial1 RX**（USART1 ALT2）／イベント出力(EVOUTD) |
 | D1 | PD6 | A31 | AIN6 | **Serial1 TX**（USART1 ALT2） |
-| D2 | PA2 | A32 | AIN22 | **I2C SDA**（Grove）／Serial2 TX（USART0 ALT2）／EVOUTA |
-| D3 | PA3 | A33 | AIN23 | **I2C SCL**（Grove）／Serial2 RX（USART0 ALT2）／~PWM(TCB1) |
+| D2 | PA2 | A32 | AIN22 | **I2C SDA**／Serial2 TX（USART0 ALT2）／EVOUTA |
+| D3 | PA3 | A33 | AIN23 | **I2C SCL**／Serial2 RX（USART0 ALT2）／~PWM(TCB1) |
 | D4 | PA7 | A6 | AIN27 | SPI **SS** ／ AC0 出力 |
 | D5 | PF0 | A34 | AIN16 | ~PWM(TCA0 WO0) ／ CCL |
 | D6 | PF1 | A7 | AIN17 | ~PWM(TCA0 WO1) ／ CCL |
@@ -79,17 +115,13 @@ Wazamono Tachi は、Arduino Pro Micro と同じフォームファクタを USB 
 
 ---
 
-## ペリフェラル割り当て
-
-variant 側でピン割り当てが確定済みのため、スケッチで `swap()` を指定する必要はありません。
-
 ### シリアルポート
 
 | オブジェクト | 実体 | ピン | 備考 |
 |--------------|------|------|------|
 | `Serial` | USB CDC | USB-C | シリアルモニタ（仮想 COM） |
 | `Serial1` | USART1（ALT2 固定） | D0(RX) / D1(TX) | Pro Micro 互換ハードウェア UART |
-| `Serial2` | USART0（ALT2 固定） | D2(SDA) / D3(SCL) | 予備 UART。Grove I2C とピン共有・**排他利用** |
+| `Serial2` | USART0（ALT2 固定） | D2(SDA) / D3(SCL) | 予備 UART。I2C とピン共有・**排他利用** |
 
 > `Serial0` は DxCore 内部での USART0 の名称です。ユーザ向けには `Serial2` を使用してください。
 
@@ -104,14 +136,14 @@ variant 側でピン割り当てが確定済みのため、スケッチで `swap
 
 チップセレクトは任意の GPIO を使用してください（SS ピンは AC0 出力と共用）。
 
-### I2C（Grove コネクタ）
+### I2C
 
 | 信号 | ピン |
 |------|------|
 | SDA | D2（PA2） |
 | SCL | D3（PA3） |
 
-Grove コネクタに直結されています。前述のとおり `Serial2`（USART0）とピンを共有します。
+前述のとおり `Serial2`（USART0）とピンを共有します。
 
 ### PWM（`analogWrite()`）
 
@@ -128,7 +160,9 @@ Grove コネクタに直結されています。前述のとおり `Serial2`（U
 
 ## クロック
 
-USB 用の 48 MHz（CLK_USB）は内蔵 PLL48M が生成し、USB の SOF に同期して自動調整されます。**システムクロックの選択とは独立**しているため、内蔵オシレータ動作でも USB は機能します。
+USB 用の 48 MHz（CLK_USB）は内蔵 PLL48M が生成し、USB の SOF に同期して自動調整されます。
+**システムクロックの選択とは独立**しているため、内蔵オシレータ動作でも USB は機能します。
+そのため外部水晶を取り除いた廉価版の構築も可能です。
 
 ボードメニュー「Clock Speed」で選択できます。
 
@@ -146,9 +180,13 @@ USB 用の 48 MHz（CLK_USB）は内蔵 PLL48M が生成し、USB の SOF に同
 ## 電源
 
 - **入力:** USB-C（5V）。理想ダイオード（Torex XC8110AA01）で逆流保護。
+従来のProMicroに対して、ホストの破損を防ぎつつ 5V 電圧を供給可能。
 - **3.3V 動作:** 基板上の LDO（Torex XC6503A331、3.3V/500mA）。
-- **電圧切替:** ジャンパパッド **J3**（5V / 3.3V）。AVR64DU32 は 1.8–5.5V の全範囲で 24 MHz 動作が可能です。
 - USB データライン（D+/D-）は TVS（Toshiba DF2B6M4CT）で ESD 保護。
+- **電圧切替:** ジャンパパッド **J3**（5V / 3.3V）。AVR64DU32 は 1.8–5.5V の全範囲で 24 MHz 動作が可能です。
+
+<sub>電圧選択のためにはJ3のパッドを望む電圧側とはんだ付けします。
+1mmピッチのピンヘッダを取り付けて切り替えることも可能です。</sub>
 
 ---
 
@@ -171,7 +209,7 @@ USB 用の 48 MHz（CLK_USB）は内蔵 PLL48M が生成し、USB の SOF に同
 2. Arduino IDE からスケッチを書き込みます。書き込み開始時に **1200bps タッチ**が行われ、USB CDC ブートローダへ自動遷移します。
 3. 自動遷移しない場合は、**リセットボタンのダブルタップ**でブートローダに入れます。
 
-初回のみ、または USB ブートローダを書き込み直す場合は、UPDI プログラマ（PICkit 4/5、Atmel-ICE、jtag2updi 等）を UPDI パッド（PF7、直列 470Ω 経由）に接続して書き込みます。
+初回のみ、または USB ブートローダを書き込み直す場合は、UPDI プログラマ（PICkit 4/5、Atmel-ICE、jtag2updi 等）を UPDI パッドに接続して書き込みます。
 
 <sub>開発用 VID/PID は pid.codes のテスト範囲（アプリ `0x1209:0x0006` / ブートローダ `0x1209:0x0005`）を使用しています。製品出荷前に正式な VID/PID へ置き換えてください。</sub>
 

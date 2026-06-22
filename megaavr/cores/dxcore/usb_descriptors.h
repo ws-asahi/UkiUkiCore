@@ -18,7 +18,9 @@
  *    IF 3   HID Mouse
  *    IF 4   HID Gamepad
  *
- *  VID/PID: pid.codes test PID (0x1209:0x0002)
+ *  VID/PID: pid.codes test VID 0x1209, Wazamono Tachi app PID 0x0006
+ *           (bootloader uses 0x0005). pid.codes IDs are development-only;
+ *           obtain a commercial VID/PID before product release.
  */
 #ifndef USB_DESCRIPTORS_H
 #define USB_DESCRIPTORS_H
@@ -38,7 +40,7 @@ extern "C" {
   #define USB_VID               0x1209
 #endif
 #ifndef USB_PID
-  #define USB_PID               0x0002
+  #define USB_PID               0x0006   /* Wazamono Tachi application */
 #endif
 #define USB_DEVICE_VER          0x0100
 
@@ -125,7 +127,7 @@ extern const uint8_t g_device_descriptor[18] PROGMEM;
 extern const uint8_t g_config_descriptor[CONFIG_TOTAL_LEN] PROGMEM;
 extern const uint8_t g_string_langid[4] PROGMEM;
 extern const uint8_t g_string_manufacturer[2 + 14 * 2] PROGMEM;
-extern const uint8_t g_string_product[2 + 9 * 2] PROGMEM;
+extern const uint8_t g_string_product[2 + 14 * 2] PROGMEM;
 extern const uint8_t g_string_serial[2 + 8 * 2] PROGMEM;
 
 #define g_string_manufacturer_len  ((uint8_t)sizeof(g_string_manufacturer))

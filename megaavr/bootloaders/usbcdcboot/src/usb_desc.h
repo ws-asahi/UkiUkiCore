@@ -26,7 +26,7 @@
 
 /* Identity */
 #define USB_BL_VID              0x1209
-#define USB_BL_PID              0x0001
+#define USB_BL_PID              0x0005   /* Wazamono Tachi bootloader */
 #define USB_BL_DEVICE_VER       0x0100
 
 /* Endpoints */

@@ -142,19 +142,19 @@ const uint8_t g_bl_string_langid[4] = {
     0x09, 0x04                          /* LANGID = 0x0409 (en-US)       */
 };
 
-/* Manufacturer "Anthropic-clean-room" (placeholder; users can edit
- * before building if they want a different name on the COM port).  */
+/* Manufacturer "Workshop Asahi" - 14 ASCII chars */
 const uint8_t g_bl_string_manufacturer[] = {
-    2 + 2*7, DESC_TYPE_STRING,
-    'A',0, 'V',0, 'R',0, 'D',0, 'U',0, 'B',0, 'L',0
+    2 + 2*14, DESC_TYPE_STRING,
+    'W',0, 'o',0, 'r',0, 'k',0, 's',0, 'h',0, 'o',0, 'p',0,
+    ' ',0, 'A',0, 's',0, 'a',0, 'h',0, 'i',0
 };
 const uint8_t g_bl_string_manufacturer_len = sizeof(g_bl_string_manufacturer);
 
-/* Product "AVRDU CDC Bootloader" - 20 ASCII chars */
+/* Product "Wazamono Tachi Bootloader" - 25 ASCII chars */
 const uint8_t g_bl_string_product[] = {
-    2 + 2*20, DESC_TYPE_STRING,
-    'A',0, 'V',0, 'R',0, 'D',0, 'U',0, ' ',0,
-    'C',0, 'D',0, 'C',0, ' ',0,
+    2 + 2*25, DESC_TYPE_STRING,
+    'W',0, 'a',0, 'z',0, 'a',0, 'm',0, 'o',0, 'n',0, 'o',0, ' ',0,
+    'T',0, 'a',0, 'c',0, 'h',0, 'i',0, ' ',0,
     'B',0, 'o',0, 'o',0, 't',0, 'l',0, 'o',0, 'a',0, 'd',0, 'e',0, 'r',0
 };
 const uint8_t g_bl_string_product_len = sizeof(g_bl_string_product);

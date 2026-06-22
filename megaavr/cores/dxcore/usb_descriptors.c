@@ -124,14 +124,15 @@ const uint8_t g_string_langid[4] PROGMEM = { 4, DESC_TYPE_STRING, 0x09, 0x04 };
 
 const uint8_t g_string_manufacturer[2 + 14 * 2] PROGMEM = {
     2 + 14 * 2, DESC_TYPE_STRING,
-    'D', 0, 'x', 0, 'C', 0, 'o', 0, 'r', 0, 'e', 0, ' ', 0, '-', 0,
-    ' ', 0, 'A', 0, 'V', 0, 'R', 0, 'D', 0, 'U', 0
+    'W', 0, 'o', 0, 'r', 0, 'k', 0, 's', 0, 'h', 0, 'o', 0, 'p', 0,
+    ' ', 0, 'A', 0, 's', 0, 'a', 0, 'h', 0, 'i', 0
 };
 /* g_string_manufacturer_len replaced by a #define in usb_descriptors.h (sizeof at every call site, zero RAM). */
 
-const uint8_t g_string_product[2 + 9 * 2] PROGMEM = {
-    2 + 9 * 2, DESC_TYPE_STRING,
-    'A', 0, 'V', 0, 'R', 0, 'D', 0, 'U', 0, ' ', 0, 'C', 0, 'D', 0, 'C', 0
+const uint8_t g_string_product[2 + 14 * 2] PROGMEM = {
+    2 + 14 * 2, DESC_TYPE_STRING,
+    'W', 0, 'a', 0, 'z', 0, 'a', 0, 'm', 0, 'o', 0, 'n', 0, 'o', 0,
+    ' ', 0, 'T', 0, 'a', 0, 'c', 0, 'h', 0, 'i', 0
 };
 /* g_string_product_len replaced by a #define in usb_descriptors.h (sizeof at every call site, zero RAM). */
 

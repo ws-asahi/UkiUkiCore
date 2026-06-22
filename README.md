@@ -160,6 +160,31 @@ Arduino Leonardo / Pro Micro と同じ「**`Serial` = USB**」方式です。
 
 ---
 
+## 動作検証済みのライブラリ
+
+WazamonoCore（AVR64DU32）上で **動作を確認した** 主要なサードパーティライブラリです。
+
+| ライブラリ | 用途 | 備考 |
+|------------|------|------|
+| [HID-Project](https://github.com/NicoHood/HID)（NicoHood） | USB HID（Keyboard / Mouse / Gamepad / RawHID / BootKeyboard / System など） | 各機能の動作を確認（BootKeyboard の `getLeds`、System HID のリモートウェイクアップ含む）。AVR-DU に存在しない 32U4 固有レジスタ `UEDATX` を参照する箇所があり、ガードを追加する小修正が必要（上流 NicoHood/HID へ [PR #472](https://github.com/NicoHood/HID/pull/472) 提出済み）。 |
+| [MIDIUSB](https://github.com/arduino-libraries/MIDIUSB)（Arduino） | USB-MIDI（MIDI メッセージの送受信） | RX / TX 双方向を MIDI-OX で確認。単体構成および IAD ベースのコンポジット構成で動作。`megaavr` アーキテクチャ対応の修正が必要（上流 arduino-libraries/MIDIUSB へ [PR #132](https://github.com/arduino-libraries/MIDIUSB/pull/132) 提出済み・CLA 署名済み）。 |
+
+---
+
+## 移植不可能なライブラリ
+
+WazamonoCore（AVR-DU）へ **移植できないことが確認された** サードパーティライブラリを記録します。更新が停止しており、かつクラシック AVR 固有のレジスタに密結合しているなど、AVR-DU への対応追加（または上流への PR）が現実的でないものをここに挙げます。今後、同様に確認されたものを追記していきます。
+
+> **掲載基準**: メンテナンスが停止しており、かつ AVR-DU の現行ペリフェラル API では対応の追加・移植が困難なもの。代替が存在する場合は併記します。
+
+| ライブラリ | 状態 | 移植不可能な理由 | 推奨代替 |
+|------------|------|------------------|----------|
+| [analogComp](https://github.com/leomil72/analogComp)（leomil72） | 更新停止（v1.2.4 / 2018年） | クラシック AVR の `ACSR` / `ADCSRB` / `ADMUX` レジスタ前提の実装で、AVR-DU の AC0（`AC0.CTRLA` / `MUXCTRL` / `DACREF` / `STATUS`）とは構造が全く異なる。`analogComp.h` が対応 MCU をマクロでゲートしており、非対応部品ではビルド自体が通らない。UNO R4 等の非クラシック系も非対応で、作者も約 8 年非活動のため上流 PR も現実的でない。 | **Comparator** ライブラリ（DxCore / WazamonoCore 同梱・MCUdude 作） |
+
+> アナログコンパレータ（AC）・CCL・EVSYS の各ペリフェラル **自体** は、DxCore 由来の **Comparator / Logic / Event** ライブラリで利用できます。ここに挙げているのは、それらを置き換えようとして移植不可能と判明した特定のサードパーティライブラリのみです。
+
+---
+
 ## ライセンスとクレジット
 
 WazamonoCore は [DxCore](https://github.com/SpenceKonde/DxCore)（© Spence Konde、LGPL 2.1）から派生した **製品専用フォーク**です。本コアも **LGPL 2.1** で配布されます。

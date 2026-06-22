@@ -12,6 +12,12 @@
  *      ...
  *      wdt_disable();
  *
+ *  It additionally maps MCUSR / WDRF (second section, below) so the classic
+ *  watchdog-reset-detection idiom also works unmodified:
+ *
+ *      if (MCUSR & _BV(WDRF)) { ... recovered from a watchdog reset ... }
+ *      MCUSR = 0;
+ *
  *  On the AVR DU (and every modern AVR with the new WDT peripheral) the
  *  watchdog is controlled through the lock/CCP-protected WDT.CTRLA register
  *  using WDT_PERIOD_*_gc time-out codes - a completely different encoding from
@@ -34,21 +40,48 @@
  *
  *  License: same as the rest of the core (LGPL 2.1).
  */
-#ifndef WAZAMONO_WDT_COMPAT_H
-#define WAZAMONO_WDT_COMPAT_H
+#ifndef WDT_COMPAT_H
+#define WDT_COMPAT_H
 
 /* Bring in avr-libc's <avr/wdt.h> first.  This sets that header's include
  * guard, so a later "#include <avr/wdt.h>" from the sketch becomes a no-op and
  * our re-definitions below remain in effect.  It also provides a correct
  * wdt_reset() (the WDR instruction is identical on classic and modern AVR). */
+#include <avr/io.h>     /* make WDT_CTRLA (the gate symbol) visible regardless
+                         * of whether <avr/wdt.h> pulls <avr/io.h> in here */
 #include <avr/wdt.h>
 
 /* Only modern-AVR parts (Dx / DU / megaAVR-0 / tinyAVR) have the new WDT
  * peripheral and need remapping.  On a classic AVR, avr-libc's <avr/wdt.h> is
- * already Pro Micro compatible, so leave everything untouched there. */
-#if defined(WDT_PERIOD_OFF_gc)
+ * already Pro Micro compatible, so leave everything untouched there.
+ *
+ * Gate on WDT_CTRLA - the flat register macro that avr-libc itself uses to
+ * detect the new WDT (its <avr/wdt.h> branches on "#if defined(WDT_CTRLA)").
+ * WDT_CTRLA is present on every modern AVR and absent on classic AVR (which
+ * has WDTCSR instead).  We must NOT gate on WDT_PERIOD_OFF_gc: the AVR DU io
+ * headers, unlike the Dx headers, do not define the WDT_PERIOD_*_gc group
+ * codes at all, so that test was false on the DU and this entire block was
+ * skipped - which is exactly why WDTO_4S came out undefined. */
+#if defined(WDT_CTRLA)
 
 #include <stdint.h>
+
+/* The AVR DU io headers omit the WDT PERIOD group codes and the SYNCBUSY mask
+ * that the Dx headers provide (avr-libc copes by using WDT_PERIOD_gm + raw
+ * values).  Supply the few we need from the data sheet so this header never
+ * depends on those names existing; if the toolchain does define them, these
+ * #ifndef guards leave the real definitions in place.
+ *   DS40002548A 21.5.1: WDT.CTRLA PERIOD[3:0] -> OFF = 0x0, 8KCLK (8 s) = 0xB
+ *   DS40002548A 21.5.2: WDT.STATUS SYNCBUSY   -> bit 0                       */
+#ifndef WDT_PERIOD_OFF_gc
+  #define WDT_PERIOD_OFF_gc    (0x00 << 0)
+#endif
+#ifndef WDT_PERIOD_8KCLK_gc
+  #define WDT_PERIOD_8KCLK_gc  (0x0B << 0)
+#endif
+#ifndef WDT_SYNCBUSY_bm
+  #define WDT_SYNCBUSY_bm      (1 << 0)
+#endif
 
 /* Map a classic WDTO_* value (0..9, i.e. 15 ms .. 8 s) to the DU's WDT.CTRLA
  * PERIOD code.  The classic time-out ladder lines up exactly with the modern
@@ -119,5 +152,53 @@ static __inline__ void _wazamono_wdt_write_ctrla(uint8_t ctrla) {
 #define WDTO_4S     8
 #define WDTO_8S     9
 
-#endif /* WDT_PERIOD_OFF_gc */
-#endif /* WAZAMONO_WDT_COMPAT_H */
+#endif /* WDT_CTRLA */
+
+/* ===========================================================================
+ *  Watchdog-reset detection:  MCUSR / WDRF  (plus PORF / BORF / EXTRF)
+ * ---------------------------------------------------------------------------
+ *  Detecting "did the watchdog reset us?" is part of using the watchdog, and
+ *  the classic Pro Micro / Leonardo idiom does it through MCUSR:
+ *
+ *      if (MCUSR & _BV(WDRF)) { ... recovered from a watchdog reset ... }
+ *      MCUSR = 0;
+ *      wdt_disable();
+ *
+ *  Classic AVR keeps the reset cause in MCUSR; the modern AVR uses
+ *  RSTCTRL.RSTFR (write-1-to-clear) instead.  The core's init_reset_flags()
+ *  (main.cpp, .init3) reads RSTFR at start-up, clears it, and stashes the value
+ *  into GPIOR0 - the Optiboot/DxCore convention - so the reset cause is waiting
+ *  in GPIOR0 by the time setup() runs, whether the board boots through the
+ *  Wazamono bootloader (USING_OPTIBOOT) or is programmed over UPDI.
+ *
+ *  Mapping MCUSR -> GPIOR0 makes the idiom above work unchanged; "MCUSR = 0"
+ *  just clears GPIOR0 (a plain R/W register).  The flag NAMES map to the modern
+ *  RSTFR bit positions, preserving meaning even though EXTRF and BORF sit in
+ *  swapped bits versus the ATmega32U4 (PORF and WDRF share the same bit number
+ *  on both):
+ *
+ *           ATmega32U4 MCUSR     AVR DU RSTFR (= GPIOR0 here)
+ *      PORF      bit 0                bit 0
+ *      BORF      bit 2                bit 1
+ *      EXTRF     bit 1                bit 2
+ *      WDRF      bit 3                bit 3
+ *
+ *  Ref: AVR64DU32 DS40002548A (RSTCTRL.RSTFR); ATmega32U4 datasheet (MCUSR).
+ * ========================================================================= */
+#if defined(RSTCTRL) && !defined(MCUSR)
+  #define MCUSR  GPIOR0
+  #ifndef PORF
+    #define PORF   RSTCTRL_PORF_bp      /* power-on reset             */
+  #endif
+  #ifndef BORF
+    #define BORF   RSTCTRL_BORF_bp      /* brown-out reset            */
+  #endif
+  #ifndef EXTRF
+    #define EXTRF  RSTCTRL_EXTRF_bp     /* external (RESET pin) reset  */
+  #endif
+  #ifndef WDRF
+    #define WDRF   RSTCTRL_WDRF_bp      /* watchdog reset             */
+  #endif
+#endif
+
+#endif /* WDT_COMPAT_H */

@@ -57,31 +57,19 @@
  *
  * Gate on WDT_CTRLA - the flat register macro that avr-libc itself uses to
  * detect the new WDT (its <avr/wdt.h> branches on "#if defined(WDT_CTRLA)").
- * WDT_CTRLA is present on every modern AVR and absent on classic AVR (which
- * has WDTCSR instead).  We must NOT gate on WDT_PERIOD_OFF_gc: the AVR DU io
- * headers, unlike the Dx headers, do not define the WDT_PERIOD_*_gc group
- * codes at all, so that test was false on the DU and this entire block was
- * skipped - which is exactly why WDTO_4S came out undefined. */
+ * WDT_CTRLA is a macro, present on every modern AVR and absent on classic AVR
+ * (which has WDTCSR instead).
+ *
+ * Do NOT gate on WDT_PERIOD_OFF_gc: the WDT_PERIOD_*_gc group codes are enum
+ * members, not macros, so #if defined() cannot see them - that test is false
+ * on EVERY modern AVR (not just the DU), which is what made this whole block
+ * get skipped and left WDTO_4S undefined.  The enum members themselves are
+ * usable from C/C++ code, so the remapping below uses WDT_PERIOD_OFF_gc and
+ * WDT_PERIOD_8KCLK_gc directly - no fallback #defines, which would shadow the
+ * enum with a macro and could break typed-enum use in C++. */
 #if defined(WDT_CTRLA)
 
 #include <stdint.h>
-
-/* The AVR DU io headers omit the WDT PERIOD group codes and the SYNCBUSY mask
- * that the Dx headers provide (avr-libc copes by using WDT_PERIOD_gm + raw
- * values).  Supply the few we need from the data sheet so this header never
- * depends on those names existing; if the toolchain does define them, these
- * #ifndef guards leave the real definitions in place.
- *   DS40002548A 21.5.1: WDT.CTRLA PERIOD[3:0] -> OFF = 0x0, 8KCLK (8 s) = 0xB
- *   DS40002548A 21.5.2: WDT.STATUS SYNCBUSY   -> bit 0                       */
-#ifndef WDT_PERIOD_OFF_gc
-  #define WDT_PERIOD_OFF_gc    (0x00 << 0)
-#endif
-#ifndef WDT_PERIOD_8KCLK_gc
-  #define WDT_PERIOD_8KCLK_gc  (0x0B << 0)
-#endif
-#ifndef WDT_SYNCBUSY_bm
-  #define WDT_SYNCBUSY_bm      (1 << 0)
-#endif
 
 /* Map a classic WDTO_* value (0..9, i.e. 15 ms .. 8 s) to the DU's WDT.CTRLA
  * PERIOD code.  The classic time-out ladder lines up exactly with the modern
@@ -93,7 +81,7 @@
  *     WDTO_8S   (9) -> 8KCLK (0xB) =  8.0   s
  * Anything above WDTO_8S is clamped to the 8 s maximum. */
 __attribute__((__unused__))
-static __inline__ uint8_t _wazamono_wdt_period_from_wdto(uint8_t wdto) {
+static __inline__ uint8_t _wdt_period_from_wdto(uint8_t wdto) {
     uint8_t period = (uint8_t)(wdto + 2u);
     if (period > WDT_PERIOD_8KCLK_gc) {
         period = WDT_PERIOD_8KCLK_gc;
@@ -107,7 +95,7 @@ static __inline__ uint8_t _wazamono_wdt_period_from_wdto(uint8_t wdto) {
  * also makes back-to-back wdt_enable()/wdt_disable() calls reliable - the
  * naive "_PROTECTED_WRITE only" form can silently drop the second write. */
 __attribute__((__unused__))
-static __inline__ void _wazamono_wdt_write_ctrla(uint8_t ctrla) {
+static __inline__ void _wdt_write_ctrla(uint8_t ctrla) {
     while (WDT.STATUS & WDT_SYNCBUSY_bm) {
         /* busy-wait: clears within a few CLK_WDT cycles (~ms at 1.024 kHz) */
     }
@@ -118,9 +106,9 @@ static __inline__ void _wazamono_wdt_write_ctrla(uint8_t ctrla) {
 #undef wdt_enable
 #undef wdt_disable
 #define wdt_enable(timeout) \
-    _wazamono_wdt_write_ctrla(_wazamono_wdt_period_from_wdto((uint8_t)(timeout)))
+    _wdt_write_ctrla(_wdt_period_from_wdto((uint8_t)(timeout)))
 #define wdt_disable() \
-    _wazamono_wdt_write_ctrla(WDT_PERIOD_OFF_gc)
+    _wdt_write_ctrla(WDT_PERIOD_OFF_gc)
 
 /* wdt_reset() = the WDR instruction, identical on every AVR.  Keep avr-libc's
  * definition, but provide a fallback in case it was not defined for this part. */

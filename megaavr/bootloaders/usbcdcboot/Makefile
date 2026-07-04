@@ -112,6 +112,25 @@ LDFLAGS := -mmcu=$(MCU) \
 # if we wanted finer control over .data init image placement.  For a
 # 4 KB bootloader the default link with .text=0 is sufficient.
 
+# --- rodata placement (per-MCU) --------------------------------------
+# GCC >= 14 places .rodata in the FLMAP-mapped flash window by default
+# on 64 KB+ parts (avrxmega2: avr64du28/32).  That is wrong for THIS
+# program:
+#  (1) the bootloader must be fully contained in the 4 KB BOOT section,
+#      but windowed .rodata lands at flash 0x8000 - inside the app area,
+#      where any app image larger than 28 KB would overwrite it;
+#  (2) nvm.c retargets NVMCTRL.CTRLB.FLMAP while erasing/writing app
+#      pages, so window-resident .rodata (USB descriptors!) would be
+#      unreadable mid-upload while the interrupt-driven USB still runs.
+# -mrodata-in-ram restores the classic layout: .rodata is copied to RAM
+# by __do_copy_data (~0.3 KB of 8 KB RAM) and never depends on FLMAP.
+# Fully-mapped avrxmega3 parts (avr16/32du*) reject the option and do
+# not need it: their .rodata stays inside the contiguous 4 KB image.
+ifneq (,$(findstring avr64,$(MCU)))
+CFLAGS  += -mrodata-in-ram
+LDFLAGS += -mrodata-in-ram
+endif
+
 # --- Build rules ----------------------------------------------------
 .PHONY: all clean size
 

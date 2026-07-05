@@ -30,10 +30,10 @@
  *   D15  PA6   SCK                                  A37, AIN26
  *   D16  PA4   MOSI                                 A38, AIN24
  *   D17  PD5   RX LED + LED_BUILTIN (on-board, no header)   AIN5
- *   D18  PD3   A0                                   AIN3
- *   D19  PD2   A1                                   AIN2
- *   D20  PD1   A2                                   AIN1
- *   D21  PD0   A3                                   AIN0
+ *   D18  PD0   A0                                   AIN0
+ *   D19  PD1   A1                                   AIN1
+ *   D20  PD2   A2                                   AIN2
+ *   D21  PD3   A3                                   AIN3
  *   D22..D29   (do not exist - gap)
  *   D30  PD4   TX LED (on-board, no header)         AIN4
  *   --- not on the Pro Micro header (appended so the arrays are complete) ---
@@ -96,10 +96,10 @@
 #define PIN_PA6 (15)  // D15 SCK
 #define PIN_PA4 (16)  // D16 MOSI
 #define PIN_PD5 (17)  // D17 RX LED + LED_BUILTIN
-#define PIN_PD3 (18)  // D18 A0
-#define PIN_PD2 (19)  // D19 A1
-#define PIN_PD1 (20)  // D20 A2
-#define PIN_PD0 (21)  // D21 A3
+#define PIN_PD0 (18)  // D18 A0
+#define PIN_PD1 (19)  // D19 A1
+#define PIN_PD2 (20)  // D20 A2
+#define PIN_PD3 (21)  // D21 A3
 //  no  D22..D29               (gap)
 #define PIN_PD4 (30)  // D30 TX LED
 #define PIN_PC3 (31)  // VBUS detect (not on header)
@@ -254,10 +254,10 @@
           #   # #   # #   # ####  ###   ###      #     ### #   #  # */
 /* Arduino analog aliases. Pro Micro keeps A0..A3 and A6..A10; A4/A5 do not exist
  * on the Pro Micro. The extra ADC-capable pins are exposed as A30..A38. */
-#define PIN_A0   (PIN_PD3)
-#define PIN_A1   (PIN_PD2)
-#define PIN_A2   (PIN_PD1)
-#define PIN_A3   (PIN_PD0)
+#define PIN_A0   (PIN_PD0)
+#define PIN_A1   (PIN_PD1)
+#define PIN_A2   (PIN_PD2)
+#define PIN_A3   (PIN_PD3)
 #define PIN_A4   (NOT_A_PIN)
 #define PIN_A5   (NOT_A_PIN)
 #define PIN_A6   (PIN_PA7)   // D4
@@ -316,10 +316,10 @@ static const uint8_t D14 = PIN_PA5;  // MISO
 static const uint8_t D15 = PIN_PA6;  // SCK
 static const uint8_t D16 = PIN_PA4;  // MOSI
 static const uint8_t D17 = PIN_PD5;  // RX LED / LED_BUILTIN (on-board only, no header pin)
-static const uint8_t D18 = PIN_PD3;  // A0
-static const uint8_t D19 = PIN_PD2;  // A1
-static const uint8_t D20 = PIN_PD1;  // A2
-static const uint8_t D21 = PIN_PD0;  // A3
+static const uint8_t D18 = PIN_PD0;  // A0
+static const uint8_t D19 = PIN_PD1;  // A1
+static const uint8_t D20 = PIN_PD2;  // A2
+static const uint8_t D21 = PIN_PD3;  // A3
 static const uint8_t D30 = PIN_PD4;  // TX LED (on-board only, no header pin)
 
 static const uint8_t A0   = PIN_A0;
@@ -390,10 +390,10 @@ static const uint8_t A38  = PIN_A38;
     PA,         // 15 PA6  SCK
     PA,         // 16 PA4  MOSI
     PD,         // 17 PD5  RX LED / LED_BUILTIN
-    PD,         // 18 PD3  A0
-    PD,         // 19 PD2  A1
-    PD,         // 20 PD1  A2
-    PD,         // 21 PD0  A3
+    PD,         // 18 PD0  A0
+    PD,         // 19 PD1  A1
+    PD,         // 20 PD2  A2
+    PD,         // 21 PD3  A3
     NOT_A_PORT, // 22 (gap)
     NOT_A_PORT, // 23 (gap)
     NOT_A_PORT, // 24 (gap)
@@ -430,10 +430,10 @@ static const uint8_t A38  = PIN_A38;
     PIN6_bp,   // 15 PA6
     PIN4_bp,   // 16 PA4
     PIN5_bp,   // 17 PD5
-    PIN3_bp,   // 18 PD3
-    PIN2_bp,   // 19 PD2
-    PIN1_bp,   // 20 PD1
-    PIN0_bp,   // 21 PD0
+    PIN0_bp,   // 18 PD0
+    PIN1_bp,   // 19 PD1
+    PIN2_bp,   // 20 PD2
+    PIN3_bp,   // 21 PD3
     NOT_A_PIN, // 22 (gap)
     NOT_A_PIN, // 23 (gap)
     NOT_A_PIN, // 24 (gap)
@@ -477,10 +477,10 @@ static const uint8_t A38  = PIN_A38;
     PIN6_bm,   // 15 PA6
     PIN4_bm,   // 16 PA4
     PIN5_bm,   // 17 PD5
-    PIN3_bm,   // 18 PD3
-    PIN2_bm,   // 19 PD2
-    PIN1_bm,   // 20 PD1
-    PIN0_bm,   // 21 PD0
+    PIN0_bm,   // 18 PD0
+    PIN1_bm,   // 19 PD1
+    PIN2_bm,   // 20 PD2
+    PIN3_bm,   // 21 PD3
     NOT_A_PIN, // 22 (gap)
     NOT_A_PIN, // 23 (gap)
     NOT_A_PIN, // 24 (gap)
@@ -526,10 +526,10 @@ static const uint8_t A38  = PIN_A38;
     NOT_ON_TIMER, // 15 PA6
     NOT_ON_TIMER, // 16 PA4
     NOT_ON_TIMER, // 17 PD5
-    NOT_ON_TIMER, // 18 PD3
-    NOT_ON_TIMER, // 19 PD2
-    NOT_ON_TIMER, // 20 PD1
-    NOT_ON_TIMER, // 21 PD0
+    NOT_ON_TIMER, // 18 PD0
+    NOT_ON_TIMER, // 19 PD1
+    NOT_ON_TIMER, // 20 PD2
+    NOT_ON_TIMER, // 21 PD3
     NOT_ON_TIMER, // 22 (gap)
     NOT_ON_TIMER, // 23 (gap)
     NOT_ON_TIMER, // 24 (gap)

@@ -404,7 +404,9 @@ class HardwareSerial : public Stream {
 #if defined(USART0)
   extern HardwareSerial Serial0;
 #endif
-#if defined(USART1)
+#if defined(USART1) && !defined(HWSERIAL1_SUPPRESS)
+  /* HWSERIAL1_SUPPRESS: a variant may suppress the USART1 object so it can
+   * re-point the name "Serial1" at another USART (see UART1.cpp). */
   extern HardwareSerial Serial1;
 #endif
 #if defined(USART2)

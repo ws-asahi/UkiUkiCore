@@ -56,11 +56,14 @@
  *           hardware SS is PD7 (= AREF); run SPI host with Client Select Disable
  *           (SPI0.CTRLB.SSD = 1) so the AREF level cannot flip host -> client mode.
  *   TWI0  -> default (PA2 SDA / PA3 SCL) = D18/D19 = A4/A5 (Uno I2C convention).
- *   USART0-> Serial0, ALT1 (PA4 TX / PA5 RX) = D1/D0. (The Uno R3 D0/D1 UART.)
+ *   USART0-> "Serial1" (alias of Serial0), ALT1 (PA4 TX / PA5 RX) = D1/D0.
+ *           (The Uno R3 D0/D1 UART.)
  *           The DEFAULT mux position (PA0/PA1) is D7/D20 on this board; ALT1 stays
  *           the variant default so D0/D1 behave like the classic Uno UART.
  *   USART1-> exists on the AVR DU but has NO usable pin position on UkiUkiduino
- *           (DU USART1 is only PD6/PD7, which are SPI SCK / AREF here). Inert.
+ *           (DU USART1 is only PD6/PD7, which are SPI SCK / AREF here). Its
+ *           Serial1 object is suppressed (HWSERIAL1_SUPPRESS) and the name
+ *           "Serial1" is re-pointed at USART0 (see below).
  *   AREF  -> PD7 = VREFA is wired to the Uno R3 AREF header pin, so
  *           analogReference(EXTERNAL) IS supported on this board.
  *   LED   -> on-board LED is driven by PC3, which hardware-mirrors PD6 (D13) via
@@ -71,10 +74,12 @@
  *           pressed = HIGH. Use pinMode(BTN_BUILTIN, INPUT) - no pullup needed.
  *   Serial-> native USB CDC (USBSerial), Leonardo/Micro convention.
  *
- *   NOTE on names: the Uno R3 D0/D1 UART is wired to USART0 on this board, so the
- *   hardware UART object is "Serial0". "Serial" is the native USB CDC (serial
- *   monitor), so day-to-day Serial.print() behaves exactly like a classic Uno;
- *   use "Serial0" only to talk to an external device on D0/D1.
+ *   NOTE on names: the Uno R3 D0/D1 UART is wired to USART0 on this board. The
+ *   USART1 object is suppressed and "Serial1" is aliased to USART0, so users
+ *   reach the D0/D1 hardware UART as "Serial1" (Uno-family convention;
+ *   "Serial0" refers to the same object). "Serial" is the native USB CDC
+ *   (serial monitor), so day-to-day Serial.print() behaves exactly like a
+ *   classic Uno; use "Serial1" only to talk to an external device on D0/D1.
  */
 
 #ifndef Pins_Arduino_h
@@ -234,8 +239,17 @@
 #define PIN_HWSERIAL0_XCK_PINSWAP_3     (PIN_PD6)
 #define PIN_HWSERIAL0_XDIR_PINSWAP_3    (PIN_PD7)
 
-/* ---- USART1 -> "Serial1": instantiated by the core, but NO usable pin position on
- *   UkiUkiduino (DU USART1 is only PD6/PD7 (ALT2) = SPI SCK / AREF here). Left inert. ---- */
+/* ---- USART1: NO usable pin position on UkiUkiduino (DU USART1 is only PD6/PD7
+ *   (ALT2) = SPI SCK / AREF here). Its Serial1 object is therefore SUPPRESSED
+ *   (HWSERIAL1_SUPPRESS, see cores/dxcore/UART1.cpp) and the name "Serial1" is
+ *   re-pointed at USART0 below, so the Uno R3 D0/D1 hardware UART is reachable
+ *   as "Serial1" (Uno-family convention). "Serial0" remains a valid alias of
+ *   the very same object. This include is processed from Arduino.h BEFORE
+ *   HardwareSerial.h, so both defines take effect core-wide. ---- */
+#define HWSERIAL1_SUPPRESS
+#define Serial1 Serial0
+
+/* Mux tables kept for completeness (UART_swap.h). */
 #define HWSERIAL1_MUX                   (0x00 /* PORTMUX_USART1_DEFAULT_gc - no pins */)
 #define HWSERIAL1_MUX_PINSWAP_1         (0x01 << 3 /* ALT1 absent on DU - placeholder */)
 #define HWSERIAL1_MUX_PINSWAP_2         (0x02 << 3 /* PORTMUX_USART1_ALT2_gc - PD6/PD7 (occupied) */)
@@ -519,8 +533,8 @@ static const uint8_t A19  = PIN_A19;
  *  Serial -> native USB CDC   (Leonardo/Micro convention)
  * =================================================================
  *  Serial  = USBSerial (on-chip USB CDC)              <- primary / USB serial monitor
- *  Serial0 = USART0   (D0/D1, ALT1 - the Uno R3 hardware UART)
- *  Serial1 = USART1   (exists in silicon, but no usable pins on UkiUkiduino - inert)
+ *  Serial1 = USART0   (D0/D1, ALT1 - the Uno R3 hardware UART; alias of Serial0)
+ *  (USART1 has no usable pins here; its object is suppressed - HWSERIAL1_SUPPRESS)
  *  Define HAVE_NO_USB_SERIAL_REDIRECT (from boards.txt) to keep Serial==USART0.
  */
 #if defined(USB0) && !defined(HAVE_NO_USB_SERIAL_REDIRECT)

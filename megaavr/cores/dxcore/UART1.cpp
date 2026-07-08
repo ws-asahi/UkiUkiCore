@@ -13,7 +13,10 @@
 #include "UART.h"
 #include "UART_private.h"
 
-#if defined(USART1)
+/* HWSERIAL1_SUPPRESS (defined by a variant, e.g. UkiUkiduino) removes the
+ * Serial1/USART1 object entirely so the variant can re-point the name
+ * "Serial1" at another USART (UkiUkiduino: Serial1 -> USART0 = D0/D1). */
+#if defined(USART1) && !defined(HWSERIAL1_SUPPRESS)
   #if USE_ASM_TXC == 1
     ISR(USART1_TXC_vect, ISR_NAKED) {
       __asm__ __volatile__(

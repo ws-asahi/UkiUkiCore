@@ -1,16 +1,17 @@
-/* pins_arduino.h - Variant definition for the Wazamono Tsurugi (AVR64DU32)
+/* pins_arduino.h - Variant definition for the UkiUkiduino (AVR64DU32)
  * ---------------------------------------------------------------------------
- * Part of WazamonoCore (a product-specific fork of SpenceKonde/DxCore).
- * DxCore is (C) Spence Konde 2021-2022, open source (LGPL 2.1, see LICENSE.md),
- * based on existing Arduino cores. This variant (C) Workshop Asahi 2026.
+ * Part of UkiUkiCore (a product-specific fork of WazamonoCore / SpenceKonde's
+ * DxCore). DxCore is (C) Spence Konde 2021-2022, open source (LGPL 2.1, see
+ * LICENSE.md), based on existing Arduino cores. This variant (C) Workshop
+ * Asahi 2026.
  *
- * Board   : Wazamono Tsurugi (Arduino Uno R3 form factor, AVR64DU32, USB-C)
- * MCU     : AVR64DU32  (32-pin TQFP/VQFN)
- * Clock   : external 24 MHz crystal on PA0/PA1 (XTALHF1/XTALHF2)
- *           -> boards.txt must select an external-HF-crystal clock option, so
- *              CLOCK_SOURCE & 0x03 == 1 and PA0/PA1 are removed from the GPIO map.
- *           -> USB CLK_USB (48 MHz) is still produced by OSCHF + PLL48M and is
- *              auto-tuned to the USB SOF, independently of this crystal.
+ * Board   : UkiUkiduino (Arduino Uno R3 form factor, AVR64DU32-I/PT, USB-C)
+ * MCU     : AVR64DU32  (32-pin TQFP)
+ * Clock   : CRYSTAL-LESS. Internal OSCHF fixed at 24 MHz (boards.txt sets
+ *           build.clocksource=0, no Clock menu). PA0/PA1 are therefore plain
+ *           GPIO on this board and are mapped to D7 / D20.
+ *           USB CLK_USB (48 MHz) is produced by OSCHF + PLL48M and is
+ *           auto-tuned to the USB SOF, independently of the system clock.
  *
  *  ===== Pin numbering: Arduino Uno R3 compatible (NONCANONICAL) =====
  *   D#   MCU   Uno R3 role / notes                          A#,  AIN
@@ -19,10 +20,10 @@
  *   D2   PA6   (USART0 XCK, ALT1)                           A8,  AIN26
  *   D3   PF5   ~PWM(TCB1, ALT1)                             A9,  AIN21
  *   D4   PF4   (general I/O; no PWM - TCB0 is millis)       A10, AIN20
- *   D5   PD1   ~PWM(TCA0 WO1) | CCL                         A11, AIN1
- *   D6   PD0   ~PWM(TCA0 WO0) | CCL                         A12, AIN0
- *   D7   PD7   (general I/O; ex-AREF, VREFA disabled)       A13, AIN7
- *   D8   PA7   (general I/O, native 5V; ex-PC3 header slot) A14, AIN27
+ *   D5   PD0   ~PWM(TCA0 WO0) | CCL                         A11, AIN0
+ *   D6   PD1   ~PWM(TCA0 WO1) | CCL                         A12, AIN1
+ *   D7   PA0   (general I/O; NO ADC channel - A13 is not assigned)
+ *   D8   PA7   (general I/O, native 5V)                     A14, AIN27
  *   D9   PD2   ~PWM(TCA0 WO2) | CCL | AC0 AINP0 | EVOUTD    A15, AIN2
  *   D10  PD3   ~PWM(TCA0 WO3) | CCL | AC0 AINN0 | (SS)      A16, AIN3
  *   D11  PD4   ~PWM(TCA0 WO4) | SPI MOSI                    A17, AIN4
@@ -34,15 +35,17 @@
  *   D17  PF3   A3 | CCL                                     A3,  AIN19
  *   D18  PA2   A4 | SDA (I2C)                               A4,  AIN22
  *   D19  PA3   A5 | SCL (I2C)                               A5,  AIN23
+ *   D20  PA1   BTN_BUILTIN (on-board button, external 1k pull-down,
+ *              pressed = HIGH; no header pin)
  *   --- not exposed as a numbered Dn (appended so the arrays are complete) ---
- *        PC3   BUILTIN_LED driver (CCL LUT1 mirror of PD6)  index 20  (VUSB domain)
- *        PA0   XTALHF1 (24 MHz crystal)             index 21  (NOT_A_PIN)
- *        PA1   XTALHF2 (24 MHz crystal)             index 22  (NOT_A_PIN)
- *        PF6   RESET                                index 23
- *        PF7   UPDI                                 index 24  (== PIN_PF7, highest)
+ *        PC3   BUILTIN_LED driver (CCL LUT1 mirror of PD6)  index 21  (VUSB domain)
+ *        PD7   AREF header pin = VREFA (external analog reference; AIN7)
+ *                                                           index 22
+ *        PF6   RESET                                        index 23
+ *        PF7   UPDI (Power header pin 1)                    index 24  (== PIN_PF7, highest)
  *
  *  ===== Peripheral routing (set by this variant + boards.txt) =====
- *   TCA0  -> PORTD (WO0..WO5 = PD0,PD1,PD2,PD3,PD4,PD5 = D6,D5,D9,D10,D11,D12)
+ *   TCA0  -> PORTD (WO0..WO5 = PD0,PD1,PD2,PD3,PD4,PD5 = D5,D6,D9,D10,D11,D12)
  *   TCB1  -> ALT1 (PF5 = D3)  : ~PWM on D3 (shared with tone(), see below)
  *   millis-> TCB0 : boards.txt passes -DMILLIS_USE_TIMERB0, so TCB1 is free for D3.
  *   tone()-> TCB1 : Tone.cpp auto-selects TCB1 when millis is on TCB0. tone() and
@@ -50,22 +53,28 @@
  *           (TCA0) and millis (TCB0) keep running (cf. Uno R3 Timer2 = D3+D11).
  *   SPI0  -> ALT4 (PD4 MOSI / PD5 MISO / PD6 SCK = D11/D12/D13). Board is SPI host;
  *           default CS exposed as PIN_SPI_SS = PD3 (D10, Uno convention). The ALT4
- *           hardware SS is PD7 (= D7); run SPI host with Client Select Disable
- *           (SPI0.CTRLB.SSD = 1) so a low on D7 cannot flip host -> client mode.
+ *           hardware SS is PD7 (= AREF); run SPI host with Client Select Disable
+ *           (SPI0.CTRLB.SSD = 1) so the AREF level cannot flip host -> client mode.
  *   TWI0  -> default (PA2 SDA / PA3 SCL) = D18/D19 = A4/A5 (Uno I2C convention).
  *   USART0-> Serial0, ALT1 (PA4 TX / PA5 RX) = D1/D0. (The Uno R3 D0/D1 UART.)
- *   USART1-> exists on the AVR DU but has NO usable pin position on Tsurugi
- *           (DU USART1 is only PD6/PD7, which are SPI SCK / D7 here). Inert.
+ *           The DEFAULT mux position (PA0/PA1) is D7/D20 on this board; ALT1 stays
+ *           the variant default so D0/D1 behave like the classic Uno UART.
+ *   USART1-> exists on the AVR DU but has NO usable pin position on UkiUkiduino
+ *           (DU USART1 is only PD6/PD7, which are SPI SCK / AREF here). Inert.
+ *   AREF  -> PD7 = VREFA is wired to the Uno R3 AREF header pin, so
+ *           analogReference(EXTERNAL) IS supported on this board.
  *   LED   -> on-board LED is driven by PC3, which hardware-mirrors PD6 (D13) via
- *           EVSYS -> CCL LUT1 (see wazamono_tsurugi_init.cpp), replacing the Uno R3
+ *           EVSYS -> CCL LUT1 (see ukiukiduino_init.cpp), replacing the Uno R3
  *           op-amp buffer on pin 13. PC3 is in the VUSB domain, so the LED lights
- *           only while the USB voltage regulator is on (i.e. USB-powered).
+ *           only while the USB voltage regulator is on.
+ *   BUTTON-> BTN_BUILTIN = D20 (PA1). External 1 kOhm pull-down on the board;
+ *           pressed = HIGH. Use pinMode(BTN_BUILTIN, INPUT) - no pullup needed.
  *   Serial-> native USB CDC (USBSerial), Leonardo/Micro convention.
  *
  *   NOTE on names: the Uno R3 D0/D1 UART is wired to USART0 on this board, so the
- *   hardware UART is "Serial0" (not "Serial1" as on the Tachi). "Serial" is the
- *   native USB CDC (serial monitor), so day-to-day Serial.print() behaves exactly
- *   like a classic Uno; use "Serial0" only to talk to an external device on D0/D1.
+ *   hardware UART object is "Serial0". "Serial" is the native USB CDC (serial
+ *   monitor), so day-to-day Serial.print() behaves exactly like a classic Uno;
+ *   use "Serial0" only to talk to an external device on D0/D1.
  */
 
 #ifndef Pins_Arduino_h
@@ -74,23 +83,23 @@
 #include "timers.h"
 
 /* Informational pinout tags. DU_32PIN_PINOUT keeps DU-32 feature assumptions in
- * the core; WAZAMONO_TSURUGI_PINOUT identifies this board. NONCANONICAL_PIN_NUMBERS
+ * the core; UKIUKIDUINO_PINOUT identifies this board. NONCANONICAL_PIN_NUMBERS
  * tells the core to derive (port,bit) from the tables below instead of assuming
  * pin number == port order (our numbering does not follow port order). */
 #define DU_32PIN_PINOUT
-#define WAZAMONO_TSURUGI_PINOUT
+#define UKIUKIDUINO_PINOUT
 #define NONCANONICAL_PIN_NUMBERS
 
-/* ---- Digital pin number for each MCU pin (Uno R3 layout, D0..D19 contiguous) ---- */
+/* ---- Digital pin number for each MCU pin (Uno R3 layout, D0..D20 contiguous) ---- */
 #define PIN_PA5 (0)   // D0  RX  (USART0 RX, ALT1)
 #define PIN_PA4 (1)   // D1  TX  (USART0 TX, ALT1)
 #define PIN_PA6 (2)   // D2  (USART0 XCK)
 #define PIN_PF5 (3)   // D3  ~PWM(TCB1, ALT1)
 #define PIN_PF4 (4)   // D4  general I/O (no PWM: TCB0 = millis)
-#define PIN_PD1 (5)   // D5  TCA0 WO1
-#define PIN_PD0 (6)   // D6  TCA0 WO0
-#define PIN_PD7 (7)   // D7  general I/O (was AREF; VREFA disabled)
-#define PIN_PA7 (8)   // D8  general I/O (native 5V; ex-PC3 slot)
+#define PIN_PD0 (5)   // D5  TCA0 WO0
+#define PIN_PD1 (6)   // D6  TCA0 WO1
+#define PIN_PA0 (7)   // D7  general I/O (no ADC channel; A13 not assigned)
+#define PIN_PA7 (8)   // D8  general I/O (native 5V)
 #define PIN_PD2 (9)   // D9  TCA0 WO2
 #define PIN_PD3 (10)  // D10 TCA0 WO3 / SS (Uno convention, SSD=1)
 #define PIN_PD4 (11)  // D11 TCA0 WO4 / SPI MOSI
@@ -102,30 +111,36 @@
 #define PIN_PF3 (17)  // D17 A3
 #define PIN_PA2 (18)  // D18 A4 / SDA
 #define PIN_PA3 (19)  // D19 A5 / SCL
-#define PIN_PC3 (20)  // BUILTIN_LED driver (CCL LUT1 mirror of PD6); VUSB domain; no Dn alias
-#define PIN_PA0 (21)  // XTALHF1 (crystal)
-#define PIN_PA1 (22)  // XTALHF2 (crystal)
+#define PIN_PA1 (20)  // D20 BTN_BUILTIN (on-board button; no ADC channel)
+#define PIN_PC3 (21)  // BUILTIN_LED driver (CCL LUT1 mirror of PD6); VUSB domain; no Dn alias
+#define PIN_PD7 (22)  // AREF header pin = VREFA (external reference; AIN7); no Dn alias
 #define PIN_PF6 (23)  // RESET
-#define PIN_PF7 (24)  // UPDI  (highest index -> sets NUM_DIGITAL_PINS = 25)
+#define PIN_PF7 (24)  // UPDI (Power header pin 1; highest index -> NUM_DIGITAL_PINS = 25)
 
 /* ---- Counts ---- */
 #define PINS_COUNT                     (25)  // length of the pin tables (incl. reserved)
 #define NUM_ANALOG_INPUTS              (31)  // highest ADC channel in use is AIN31 (PC3)
 // NUM_DIGITAL_PINS / NUM_TOTAL_PINS  -> auto = PIN_PF7 + 1 = 25
-// NUM_INTERNALLY_USED_PINS           -> auto = 2 (external crystal: PA0, PA1)
+// NUM_INTERNALLY_USED_PINS           -> auto = 0 (internal clock; no crystal pins)
 
 #if !defined(LED_BUILTIN)
   #define LED_BUILTIN                  (PIN_PD6)   // D13, on-board LED (Uno convention)
+#endif
+#if !defined(BTN_BUILTIN)
+  #define BTN_BUILTIN                  (PIN_PA1)   // D20, on-board button (pull-down, pressed = HIGH)
 #endif
 
 #ifdef CORE_ATTACH_OLD
   #define EXTERNAL_NUM_INTERRUPTS      (48)
 #endif
 
-/* ---- Explicit maps (NONCANONICAL numbering: arithmetic shortcuts cannot be used) ---- */
+/* ---- Explicit maps (NONCANONICAL numbering: arithmetic shortcuts cannot be used) ----
+ * PA0 (D7) and PA1 (D20) have no ADC channel on the AVR DU and are therefore
+ * absent from these maps (-> NOT_A_PIN). PD7 (AREF) keeps its AIN7 mapping so
+ * the pin can still be sampled when it is not used as the external reference. */
 #define digitalPinToAnalogInput(p)  ( \
     (p) == PIN_PD0 ?  0 : (p) == PIN_PD1 ?  1 : (p) == PIN_PD2 ?  2 : (p) == PIN_PD3 ?  3 : \
-    (p) == PIN_PD4 ?  4 : (p) == PIN_PD5 ?  5 : (p) == PIN_PD6 ?  6 : \
+    (p) == PIN_PD4 ?  4 : (p) == PIN_PD5 ?  5 : (p) == PIN_PD6 ?  6 : (p) == PIN_PD7 ?  7 : \
     (p) == PIN_PF0 ? 16 : (p) == PIN_PF1 ? 17 : (p) == PIN_PF2 ? 18 : (p) == PIN_PF3 ? 19 : \
     (p) == PIN_PF4 ? 20 : (p) == PIN_PF5 ? 21 : \
     (p) == PIN_PA2 ? 22 : (p) == PIN_PA3 ? 23 : (p) == PIN_PA4 ? 24 : (p) == PIN_PA5 ? 25 : \
@@ -133,7 +148,7 @@
 
 #define analogChannelToDigitalPin(p)  ( \
     (p) ==  0 ? PIN_PD0 : (p) ==  1 ? PIN_PD1 : (p) ==  2 ? PIN_PD2 : (p) ==  3 ? PIN_PD3 : \
-    (p) ==  4 ? PIN_PD4 : (p) ==  5 ? PIN_PD5 : (p) ==  6 ? PIN_PD6 : \
+    (p) ==  4 ? PIN_PD4 : (p) ==  5 ? PIN_PD5 : (p) ==  6 ? PIN_PD6 : (p) ==  7 ? PIN_PD7 : \
     (p) == 16 ? PIN_PF0 : (p) == 17 ? PIN_PF1 : (p) == 18 ? PIN_PF2 : (p) == 19 ? PIN_PF3 : \
     (p) == 20 ? PIN_PF4 : (p) == 21 ? PIN_PF5 : \
     (p) == 22 ? PIN_PA2 : (p) == 23 ? PIN_PA3 : (p) == 24 ? PIN_PA4 : (p) == 25 ? PIN_PA5 : \
@@ -148,7 +163,7 @@
  * D3 PWM (TCB1 ALT1 = PF5) and for tone(): Tone.cpp routes tone to TCB1 whenever
  * millis is on TCB0, so tone shares TCB1 with D3 PWM - calling tone() suspends D3
  * PWM only, while D11 PWM on TCA0 keeps running (cf. Uno R3 Timer2 = D3+D11).
- * TCA0 -> PORTD: WO0..WO5 = PD0,PD1,PD2,PD3,PD4,PD5 = D6,D5,D9,D10,D11,D12. */
+ * TCA0 -> PORTD: WO0..WO5 = PD0,PD1,PD2,PD3,PD4,PD5 = D5,D6,D9,D10,D11,D12. */
 #if defined(MILLIS_USE_TIMERB1)
   #define digitalPinHasPWMTCB(p) (0)                   /* TCB1 is millis; no TCB PWM */
 #elif defined(MILLIS_USE_TIMERB0)
@@ -160,7 +175,7 @@
     (p) == PIN_PD0 || (p) == PIN_PD1 || (p) == PIN_PD2 || \
     (p) == PIN_PD3 || (p) == PIN_PD4 || (p) == PIN_PD5 )
 
-/* TCA0 routed to PORTD: WO0..WO5 = PD0..PD5 = D6,D5,D9,D10,D11,D12. */
+/* TCA0 routed to PORTD: WO0..WO5 = PD0..PD5 = D5,D6,D9,D10,D11,D12. */
 #define TCA0_PINS                       (PORTMUX_TCA0_PORTD_gc)
 #define TCB0_PINS                       (0x00)   // TCB0 = millis; WO unused (default PA2 pos)
 #define TCB1_PINS                       (0x01)   // TCB1 WO -> ALT1 (PF5 = D3)
@@ -171,7 +186,7 @@
 
 #define digitalPinHasPWM(p)             (digitalPinHasPWMTCB(p) || digitalPinHasPWMTCA(p))
 
-/* ---- SPI (host; chip-selects are user GPIO). Tsurugi routes SPI to ALT4 (PORTD) ---- */
+/* ---- SPI (host; chip-selects are user GPIO). UkiUkiduino routes SPI to ALT4 (PORTD) ---- */
 #define SPI_INTERFACES_COUNT            (1)
 #define SPI_MUX                         (PORTMUX_SPI0_ALT4_gc)    // PD4/PD5/PD6
 #define SPI_MUX_PINSWAP_4               (PORTMUX_SPI0_ALT4_gc)
@@ -193,13 +208,15 @@
 #define PIN_WIRE_SDA_PINSWAP_3          (NOT_A_PIN)
 #define PIN_WIRE_SCL_PINSWAP_3          (NOT_A_PIN)
 
-/* ---- USART0 -> "Serial0" = the Uno R3 D0/D1 UART. Default position ALT1 (PA4/PA5) ---- */
-#define HWSERIAL0_MUX                   (0x00 /* PORTMUX_USART0_DEFAULT_gc - PA0/PA1 = crystal */)
+/* ---- USART0 -> "Serial0" = the Uno R3 D0/D1 UART. Default position ALT1 (PA4/PA5).
+ *   The DEFAULT mux (swap 0) lands on PA0/PA1 = D7/D20; it stays selectable via
+ *   Serial0.swap(0) for advanced use, but the variant default is ALT1 (D0/D1). ---- */
+#define HWSERIAL0_MUX                   (0x00 /* PORTMUX_USART0_DEFAULT_gc - PA0/PA1 = D7/D20 */)
 #define HWSERIAL0_MUX_PINSWAP_1         (0x01 /* PORTMUX_USART0_ALT1_gc - PA4..PA7 */)
 #define HWSERIAL0_MUX_PINSWAP_2         (0x02 /* PORTMUX_USART0_ALT2_gc - PA2/PA3 (= I2C) */)
 #define HWSERIAL0_MUX_PINSWAP_3         (0x03 /* PORTMUX_USART0_ALT3_gc - PD4..PD7 (= SPI/AREF) */)
 #define HWSERIAL0_MUX_PINSWAP_NONE      (0x05)
-#define HWSERIAL0_MUX_DEFAULT          (1)   /* Tsurugi default: USART0 ALT1 (PA4/PA5). DEFAULT(PA0/PA1) is the crystal. */
+#define HWSERIAL0_MUX_DEFAULT          (1)   /* UkiUkiduino default: USART0 ALT1 (PA4/PA5) = D1/D0. */
 #define PIN_HWSERIAL0_TX                (PIN_PA0)
 #define PIN_HWSERIAL0_RX                (PIN_PA1)
 #define PIN_HWSERIAL0_XCK               (PIN_PA2)
@@ -218,7 +235,7 @@
 #define PIN_HWSERIAL0_XDIR_PINSWAP_3    (PIN_PD7)
 
 /* ---- USART1 -> "Serial1": instantiated by the core, but NO usable pin position on
- *   Tsurugi (DU USART1 is only PD6/PD7 (ALT2) = SPI SCK / AREF here). Left inert. ---- */
+ *   UkiUkiduino (DU USART1 is only PD6/PD7 (ALT2) = SPI SCK / AREF here). Left inert. ---- */
 #define HWSERIAL1_MUX                   (0x00 /* PORTMUX_USART1_DEFAULT_gc - no pins */)
 #define HWSERIAL1_MUX_PINSWAP_1         (0x01 << 3 /* ALT1 absent on DU - placeholder */)
 #define HWSERIAL1_MUX_PINSWAP_2         (0x02 << 3 /* PORTMUX_USART1_ALT2_gc - PD6/PD7 (occupied) */)
@@ -238,7 +255,8 @@
 #define PIN_HWSERIAL1_XDIR_PINSWAP_2    (NOT_A_PIN)
 
 /* ---- Arduino analog aliases. Uno R3 header = A0..A5; the remaining ADC-capable
- *      pins are also reachable as A6..A19 (one per digital pin). ---- */
+ *      pins are also reachable as A6..A19. A13 is NOT assigned: D7 (PA0) has no
+ *      ADC channel on this board. ---- */
 #define PIN_A0   (PIN_PF0)   // D14
 #define PIN_A1   (PIN_PF1)   // D15
 #define PIN_A2   (PIN_PF2)   // D16
@@ -250,9 +268,9 @@
 #define PIN_A8   (PIN_PA6)   // D2
 #define PIN_A9   (PIN_PF5)   // D3
 #define PIN_A10  (PIN_PF4)   // D4
-#define PIN_A11  (PIN_PD1)   // D5
-#define PIN_A12  (PIN_PD0)   // D6
-#define PIN_A13  (PIN_PD7)   // D7
+#define PIN_A11  (PIN_PD0)   // D5
+#define PIN_A12  (PIN_PD1)   // D6
+/* (no PIN_A13 - D7 = PA0 has no ADC channel) */
 #define PIN_A14  (PIN_PA7)   // D8
 #define PIN_A15  (PIN_PD2)   // D9
 #define PIN_A16  (PIN_PD3)   // D10
@@ -260,9 +278,9 @@
 #define PIN_A18  (PIN_PD5)   // D12
 #define PIN_A19  (PIN_PD6)   // D13
 
-/* --- Uno R4 style number-prefixed digital pin aliases (header pins D0..D19) ---
- * D-number == Arduino digital pin number. Internal-only pins (PD7 AREF, PA0/PA1
- * crystal, PF6 RESET, PF7 UPDI) are intentionally NOT exposed as Dn. */
+/* --- Uno R4 style number-prefixed digital pin aliases (D0..D20) ---
+ * D-number == Arduino digital pin number. Internal-only pins (PC3 LED driver,
+ * PD7 AREF, PF6 RESET, PF7 UPDI) are intentionally NOT exposed as Dn. */
 #undef D0
 #undef D1
 #undef D2
@@ -283,14 +301,15 @@
 #undef D17
 #undef D18
 #undef D19
+#undef D20
 static const uint8_t D0  = PIN_PA5;  // RX
 static const uint8_t D1  = PIN_PA4;  // TX
 static const uint8_t D2  = PIN_PA6;
 static const uint8_t D3  = PIN_PF5;  // ~PWM(TCB1)
 static const uint8_t D4  = PIN_PF4;
-static const uint8_t D5  = PIN_PD1;
-static const uint8_t D6  = PIN_PD0;
-static const uint8_t D7  = PIN_PD7;  // ex-AREF
+static const uint8_t D5  = PIN_PD0;
+static const uint8_t D6  = PIN_PD1;
+static const uint8_t D7  = PIN_PA0;  // no ADC
 static const uint8_t D8  = PIN_PA7;  // native 5V
 static const uint8_t D9  = PIN_PD2;
 static const uint8_t D10 = PIN_PD3;  // SS (Uno convention)
@@ -303,6 +322,7 @@ static const uint8_t D16 = PIN_PF2;  // A2
 static const uint8_t D17 = PIN_PF3;  // A3
 static const uint8_t D18 = PIN_PA2;  // A4 / SDA
 static const uint8_t D19 = PIN_PA3;  // A5 / SCL
+static const uint8_t D20 = PIN_PA1;  // BTN_BUILTIN
 
 static const uint8_t A0   = PIN_A0;
 static const uint8_t A1   = PIN_A1;
@@ -317,7 +337,7 @@ static const uint8_t A9   = PIN_A9;
 static const uint8_t A10  = PIN_A10;
 static const uint8_t A11  = PIN_A11;
 static const uint8_t A12  = PIN_A12;
-static const uint8_t A13  = PIN_A13;
+/* (no A13 - see above) */
 static const uint8_t A14  = PIN_A14;
 static const uint8_t A15  = PIN_A15;
 static const uint8_t A16  = PIN_A16;
@@ -333,6 +353,7 @@ static const uint8_t A19  = PIN_A19;
 #define AIN4   ADC_CH(4)
 #define AIN5   ADC_CH(5)
 #define AIN6   ADC_CH(6)
+#define AIN7   ADC_CH(7)
 #define AIN16  ADC_CH(16)
 #define AIN17  ADC_CH(17)
 #define AIN18  ADC_CH(18)
@@ -347,7 +368,10 @@ static const uint8_t A19  = PIN_A19;
 #define AIN27  ADC_CH(27)
 #define AIN31  ADC_CH(31)
 
-/* ---- Pin arrays (ARDUINO_MAIN). Indexed by digital pin number (0..24). ---- */
+/* ---- Pin arrays (ARDUINO_MAIN). Indexed by digital pin number (0..24). ----
+ * Clock is fixed to the internal OSCHF (boards.txt build.clocksource=0), so
+ * PA0 (D7) and PA1 (D20) are unconditionally plain GPIO - no CLOCK_SOURCE
+ * conditionals are needed here. */
 #ifdef ARDUINO_MAIN
   const uint8_t digital_pin_to_port[] = {
     PA,         //  0 PA5  D0  RX/USART0 RX
@@ -355,9 +379,9 @@ static const uint8_t A19  = PIN_A19;
     PA,         //  2 PA6  D2  USART0 XCK
     PF,         //  3 PF5  D3  TCB1 PWM (ALT1)
     PF,         //  4 PF4  D4
-    PD,         //  5 PD1  D5  TCA0 WO1
-    PD,         //  6 PD0  D6  TCA0 WO0
-    PD,         //  7 PD7  D7  (ex-AREF)
+    PD,         //  5 PD0  D5  TCA0 WO0
+    PD,         //  6 PD1  D6  TCA0 WO1
+    PA,         //  7 PA0  D7  (no ADC)
     PA,         //  8 PA7  D8  (native 5V)
     PD,         //  9 PD2  D9  TCA0 WO2
     PD,         // 10 PD3  D10 TCA0 WO3 / SS
@@ -370,9 +394,9 @@ static const uint8_t A19  = PIN_A19;
     PF,         // 17 PF3  A3
     PA,         // 18 PA2  A4 / SDA
     PA,         // 19 PA3  A5 / SCL
-    PC,         // 20 PC3  BUILTIN_LED driver (CCL LUT1)
-    PA,         // 21 PA0  XTALHF1
-    PA,         // 22 PA1  XTALHF2
+    PA,         // 20 PA1  D20 BTN_BUILTIN
+    PC,         // 21 PC3  BUILTIN_LED driver (CCL LUT1)
+    PD,         // 22 PD7  AREF (VREFA)
     PF,         // 23 PF6  RESET
     PF          // 24 PF7  UPDI
   };
@@ -383,9 +407,9 @@ static const uint8_t A19  = PIN_A19;
     PIN6_bp,   //  2 PA6  D2
     PIN5_bp,   //  3 PF5  D3
     PIN4_bp,   //  4 PF4  D4
-    PIN1_bp,   //  5 PD1  D5
-    PIN0_bp,   //  6 PD0  D6
-    PIN7_bp,   //  7 PD7  D7
+    PIN0_bp,   //  5 PD0  D5
+    PIN1_bp,   //  6 PD1  D6
+    PIN0_bp,   //  7 PA0  D7
     PIN7_bp,   //  8 PA7  D8
     PIN2_bp,   //  9 PD2  D9
     PIN3_bp,   // 10 PD3  D10
@@ -398,19 +422,11 @@ static const uint8_t A19  = PIN_A19;
     PIN3_bp,   // 17 PF3  A3
     PIN2_bp,   // 18 PA2  A4
     PIN3_bp,   // 19 PA3  A5
-    PIN3_bp,   // 20 PC3  LED
-    #if ((CLOCK_SOURCE & 0x03) == 0) // internal clock -> PA0 is a usable GPIO
-      PIN0_bp, // 21 PA0
-    #else                            // external crystal/clock -> PA0 = XTALHF1
-      NOT_A_PIN,
-    #endif
-    #if ((CLOCK_SOURCE & 0x03) == 1) // external crystal also takes PA1
-      NOT_A_PIN,
-    #else
-      PIN1_bp, // 22 PA1
-    #endif
-    PIN6_bp,   // 23 PF6 RESET
-    PIN7_bp    // 24 PF7 UPDI
+    PIN1_bp,   // 20 PA1  D20 BTN_BUILTIN
+    PIN3_bp,   // 21 PC3  LED
+    PIN7_bp,   // 22 PD7  AREF
+    PIN6_bp,   // 23 PF6  RESET
+    PIN7_bp    // 24 PF7  UPDI
   };
 
   const uint8_t digital_pin_to_bit_mask[] = {
@@ -419,9 +435,9 @@ static const uint8_t A19  = PIN_A19;
     PIN6_bm,   //  2 PA6  D2
     PIN5_bm,   //  3 PF5  D3
     PIN4_bm,   //  4 PF4  D4
-    PIN1_bm,   //  5 PD1  D5
-    PIN0_bm,   //  6 PD0  D6
-    PIN7_bm,   //  7 PD7  D7
+    PIN0_bm,   //  5 PD0  D5
+    PIN1_bm,   //  6 PD1  D6
+    PIN0_bm,   //  7 PA0  D7
     PIN7_bm,   //  8 PA7  D8
     PIN2_bm,   //  9 PD2  D9
     PIN3_bm,   // 10 PD3  D10
@@ -434,32 +450,24 @@ static const uint8_t A19  = PIN_A19;
     PIN3_bm,   // 17 PF3  A3
     PIN2_bm,   // 18 PA2  A4
     PIN3_bm,   // 19 PA3  A5
-    PIN3_bm,   // 20 PC3  LED
-    #if ((CLOCK_SOURCE & 0x03) == 0)
-      PIN0_bm, // 21 PA0
-    #else
-      NOT_A_PIN,
-    #endif
-    #if ((CLOCK_SOURCE & 0x03) == 1)
-      NOT_A_PIN,
-    #else
-      PIN1_bm, // 22 PA1
-    #endif
-    PIN6_bm,   // 23 PF6 RESET
-    PIN7_bm    // 24 PF7 UPDI
+    PIN1_bm,   // 20 PA1  D20 BTN_BUILTIN
+    PIN3_bm,   // 21 PC3  LED
+    PIN7_bm,   // 22 PD7  AREF
+    PIN6_bm,   // 23 PF6  RESET
+    PIN7_bm    // 24 PF7  UPDI
   };
 
   /* TCA0 PWM is resolved dynamically from PORTMUX, so TCA0 pins are NOT_ON_TIMER
-   * here. Only the TCB output used for PWM is listed (PF4 = TCB0). TCB1 = millis. */
+   * here. Only the TCB output used for PWM is listed (PF5 = TCB1, D3). TCB0 = millis. */
   const uint8_t digital_pin_to_timer[] = {
     NOT_ON_TIMER, //  0 PA5  D0
     NOT_ON_TIMER, //  1 PA4  D1
     NOT_ON_TIMER, //  2 PA6  D2
     TIMERB1,      //  3 PF5  D3  (TCB1 - D3 PWM, ALT1)
     NOT_ON_TIMER, //  4 PF4  D4  (no PWM: TCB0 = millis)
-    NOT_ON_TIMER, //  5 PD1  D5  (TCA0 WO1, dynamic)
-    NOT_ON_TIMER, //  6 PD0  D6  (TCA0 WO0, dynamic)
-    NOT_ON_TIMER, //  7 PD7  D7
+    NOT_ON_TIMER, //  5 PD0  D5  (TCA0 WO0, dynamic)
+    NOT_ON_TIMER, //  6 PD1  D6  (TCA0 WO1, dynamic)
+    NOT_ON_TIMER, //  7 PA0  D7
     NOT_ON_TIMER, //  8 PA7  D8
     NOT_ON_TIMER, //  9 PD2  D9  (TCA0 WO2, dynamic)
     NOT_ON_TIMER, // 10 PD3  D10 (TCA0 WO3, dynamic)
@@ -472,11 +480,11 @@ static const uint8_t A19  = PIN_A19;
     NOT_ON_TIMER, // 17 PF3  A3
     NOT_ON_TIMER, // 18 PA2  A4
     NOT_ON_TIMER, // 19 PA3  A5
-    NOT_ON_TIMER, // 20 PC3  LED
-    NOT_ON_TIMER, // 21 PA0
-    NOT_ON_TIMER, // 22 PA1
-    NOT_ON_TIMER, // 23 PF6 RESET
-    NOT_ON_TIMER  // 24 PF7 UPDI
+    NOT_ON_TIMER, // 20 PA1  D20 BTN_BUILTIN
+    NOT_ON_TIMER, // 21 PC3  LED
+    NOT_ON_TIMER, // 22 PD7  AREF
+    NOT_ON_TIMER, // 23 PF6  RESET
+    NOT_ON_TIMER  // 24 PF7  UPDI
   };
 #endif
 
@@ -487,8 +495,9 @@ static const uint8_t A19  = PIN_A19;
  *  NOTE: the native USB-CDC descriptor's VID/PID/product string are taken
  *  from cores/dxcore/usb_descriptors.{h,c} (which does NOT include this
  *  file), so the values below are informational only - keep them in sync.
- *  Effective app identity: 0x1209:0x0008, product "Wazamono Tsurugi".
- *  Obtain a real product VID/PID before release (pid.codes = dev only).
+ *  Effective app identity (dev/test): 0x1209:0x000C, product "UkiUkiduino".
+ *  These are pid.codes TEST-range placeholders; replace with the official
+ *  pid.codes VID/PID before release.
  */
 #ifndef USBCON
   #define USBCON
@@ -497,13 +506,13 @@ static const uint8_t A19  = PIN_A19;
   #define USB_VID                0x1209
 #endif
 #ifndef USB_PID
-  #define USB_PID                0x0008
+  #define USB_PID                0x000C
 #endif
 #ifndef USB_MANUFACTURER
   #define USB_MANUFACTURER       "Workshop Asahi"
 #endif
 #ifndef USB_PRODUCT
-  #define USB_PRODUCT            "Wazamono Tsurugi"
+  #define USB_PRODUCT            "UkiUkiduino"
 #endif
 
 /* =================================================================
@@ -511,7 +520,7 @@ static const uint8_t A19  = PIN_A19;
  * =================================================================
  *  Serial  = USBSerial (on-chip USB CDC)              <- primary / USB serial monitor
  *  Serial0 = USART0   (D0/D1, ALT1 - the Uno R3 hardware UART)
- *  Serial1 = USART1   (exists in silicon, but no usable pins on Tsurugi - inert)
+ *  Serial1 = USART1   (exists in silicon, but no usable pins on UkiUkiduino - inert)
  *  Define HAVE_NO_USB_SERIAL_REDIRECT (from boards.txt) to keep Serial==USART0.
  */
 #if defined(USB0) && !defined(HAVE_NO_USB_SERIAL_REDIRECT)
@@ -529,13 +538,9 @@ static const uint8_t A19  = PIN_A19;
   #endif
 #endif
 
-/* ---- analogReference(): EXTERNAL disabled on Tsurugi ----
- * PD7 (the VREFA pin) is repurposed as D7, so there is no external reference
- * input. Undefining EXTERNAL turns analogReference(EXTERNAL) into a compile
- * error, steering sketches to the internal references (1.024/2.048/2.5/4.096 V)
- * or VDD. (This header is #included from Arduino.h AFTER EXTERNAL is defined.) */
-#ifdef EXTERNAL
-  #undef EXTERNAL
-#endif
+/* ---- analogReference(): EXTERNAL is SUPPORTED on UkiUkiduino ----
+ * PD7 (VREFA) is wired to the Uno R3 AREF header pin, so
+ * analogReference(EXTERNAL) works as on a classic Uno. The internal
+ * references (1.024/2.048/2.5/4.096 V) and VDD remain available. */
 
 #endif

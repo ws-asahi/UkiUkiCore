@@ -1,7 +1,8 @@
-/* wazamono_tsurugi_init.cpp - board-specific hardware init for Wazamono Tsurugi
+/* ukiukiduino_init.cpp - board-specific hardware init for the UkiUkiduino
  * ---------------------------------------------------------------------------
- * Part of WazamonoCore (a product-specific fork of SpenceKonde/DxCore).
- * (C) Workshop Asahi 2026.  DxCore is (C) Spence Konde, LGPL 2.1 (see LICENSE.md).
+ * Part of UkiUkiCore (a product-specific fork of WazamonoCore / SpenceKonde's
+ * DxCore). (C) Workshop Asahi 2026. DxCore is (C) Spence Konde, LGPL 2.1
+ * (see LICENSE.md).
  *
  * Purpose
  *   Drive the on-board LED from PC3 while mirroring D13 (PD6, the SPI SCK pin) in
@@ -13,7 +14,7 @@
  *     PD6 pin level --(PORTD EVGEN0)--(EVSYS CH0)--> CCL LUT1 IN0 (EVENTA)
  *                   --> LUT1 truth-table = buffer --> LUT1-OUT = PC3 --> LED
  *
- *   LUT1's input pins (PC0..PC2) are not bonded on the AVR64DU32 VQFN32, but that
+ *   LUT1's input pins (PC0..PC2) are not bonded on the AVR64DU32 TQFP32, but that
  *   does not matter: the input is taken from the event channel, and LUT1's OUTPUT
  *   pin (PC3) IS bonded.  Per the datasheet PORTMUX CCLROUTEA table, LUT1's default
  *   output position is PC3, so no CCLROUTEA change is needed.
@@ -27,9 +28,13 @@
  *
  * IMPORTANT (VUSB power domain)
  *   PC3 is in the VUSB power domain, so its output buffer is only powered while the
- *   USB voltage regulator is enabled.  The LED therefore lights only while the board
- *   is USB-powered / enumerated - it will NOT light at power-on before the USB stack
- *   brings up the regulator.  This is expected and is documented for the user.
+ *   USB voltage regulator is enabled (UkiUkiduino uses the internal VUSB regulator;
+ *   boards.txt passes -DUSB_VREG_INTERNAL).  The LED therefore lights only while
+ *   the USB stack has brought up the regulator - it will NOT light at power-on
+ *   before that.  This is expected and is documented for the user.
+ *
+ * Note: BTN_BUILTIN (D20 = PA1) needs no init here - it has an external 1 kOhm
+ *   pull-down on the board (pressed = HIGH) and is read as a plain input.
  *
  * Resource use
  *   Consumes EVSYS channel 0 and CCL LUT1 (and its OUT pin PC3).  Sketches that need
@@ -38,7 +43,7 @@
 
 #include <Arduino.h>
 
-#if defined(WAZAMONO_TSURUGI_PINOUT)
+#if defined(UKIUKIDUINO_PINOUT)
 
 /* ---- Force-link marker ----------------------------------------------------
  * Arduino archives variant-folder objects into core.a, and the core's main.cpp
@@ -46,9 +51,9 @@
  * a weak one already provided by a linked object, so without help this entire
  * translation unit (the strong initVariant() that sets up the CCL/EVSYS LED
  * mirror) is silently dropped at link time. boards.txt passes
- *     -Wl,-u,wazamono_tsurugi_variant_keep
+ *     -Wl,-u,ukiukiduino_variant_keep
  * which forces the linker to pull this member. (Confirmed necessary under -flto.) */
-extern "C" { __attribute__((used)) char wazamono_tsurugi_variant_keep = 0; }
+extern "C" { __attribute__((used)) char ukiukiduino_variant_keep = 0; }
 
 /* initVariant() is a weak no-op in the core (cores/dxcore/main.cpp); this strong
  * definition overrides it and runs once, immediately after init(), before setup(). */
@@ -83,4 +88,4 @@ void initVariant(void) {
   CCL.CTRLA = CCL_ENABLE_bm;
 }
 
-#endif /* WAZAMONO_TSURUGI_PINOUT */
+#endif /* UKIUKIDUINO_PINOUT */

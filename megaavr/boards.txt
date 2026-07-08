@@ -1,290 +1,101 @@
 # =====================================================================
-#  WazamonoCore - boards.txt
-#  The Wazamono product boards only (all other MCU/board families from DxCore
-#  are removed):
-#    - Wazamono Tachi    (AVR64DU32, Pro Micro form factor)
-#    - Wazamono Tsurugi  (AVR64DU32, Arduino Uno R3 form factor)
-#    - Wazamono Kunai    (AVR32DU20, Seeed XIAO form factor)
-#  Derived from DxCore's avrduusb (USB-CDC bootloader) definition;
-#  DxCore (C) Spence Konde, LGPL 2.1. Customizations (C) Workshop Asahi.
+#  UkiUkiCore - boards.txt
+#  The UkiUkiduino product board only (all other MCU/board families from
+#  DxCore / WazamonoCore are removed):
+#    - UkiUkiduino  (AVR64DU32, Arduino Uno R3 form factor, USB-C)
+#  Derived from DxCore's avrduusb (USB-CDC bootloader) definition via
+#  WazamonoCore; DxCore (C) Spence Konde, LGPL 2.1.
+#  Customizations (C) Workshop Asahi.
 #
-#  Tachi/Tsurugi (AVR64DU32) carry a 24 MHz crystal, so their Clock menu lets
-#  you pick WITH the crystal (production default) or WITHOUT it (internal OSCHF)
-#  to validate the board crystal-less. Kunai (AVR32DU20) is crystal-less by
-#  design: it has no Clock menu and is fixed to 24 MHz internal OSCHF.
+#  The UkiUkiduino is CRYSTAL-LESS by design and is aimed at beginners:
+#  there is no Clock menu - the system clock is fixed to the internal
+#  24 MHz OSCHF (build.speed / build.clocksource below), and PA0/PA1 are
+#  free GPIO (D7 / D20). USB CLK_USB (48 MHz) = OSCHF + PLL48M, SOF-tuned,
+#  independent of the system clock.
 # =====================================================================
 
-menu.clock=Clock Speed
-
-# =====================  Wazamono Tachi (AVR64DU32)  ==================
-wazamonotachi.name=Wazamono Tachi (AVR64DU32)
-
-wazamonotachi.upload.tool=avrdude
-wazamonotachi.upload.prog_interlock=
-wazamonotachi.vid.0=0x1209
-wazamonotachi.pid.0=0x0006
-wazamonotachi.vid.1=0x1209
-wazamonotachi.pid.1=0x0005
-wazamonotachi.build.board=avrdu
-wazamonotachi.build.core=dxcore
-wazamonotachi.build.f_cpu={build.speed}000000L
-wazamonotachi.build.text_section_start=.text=0x1000
-wazamonotachi.build.defaultswaps=
-wazamonotachi.build.extra_flags= {build.defaultswaps} -DUSING_AVRDU_CDC_BOOTLOADER -DUSING_OPTIBOOT
-# Force-link the variant init TU (variants/WazamonoTachi/wazamono_tachi_init.cpp).
-# Arduino archives variant objects into core.a, so its strong initVariant()/
-# activity-LED hooks would otherwise be dropped (core main.cpp has a weak
-# initVariant). -u pulls the member; the marker symbol is defined in that file.
-wazamonotachi.compiler.c.elf.extra_flags=-Wl,-u,wazamono_tachi_variant_keep -Wl,--defsym,__flmap_lock=1
-wazamonotachi.build.rodata_flags=
-wazamonotachi.build.export_merged_output=false
-wazamonotachi.build.printf=
-wazamonotachi.build.flmapopts=
-wazamonotachi.build.attachmode=-DCORE_ATTACH_ALL
-wazamonotachi.bootloader.tool=avrdude
-wazamonotachi.bootloader.WDTCFG=0b{bootloader.wdtwindowbits}{bootloader.wdttimeoutbits}
-wazamonotachi.bootloader.wdtwindowbits=0000
-wazamonotachi.bootloader.BODCFG=0x00
-wazamonotachi.bootloader.updipinbit=1
-wazamonotachi.bootloader.SYSCFG0=0b110{bootloader.updipinbit}{bootloader.resetpinbits}00{bootloader.eesavebit}
-wazamonotachi.bootloader.SYSCFG1=0b00001{bootloader.sutbits}
-wazamonotachi.bootloader.CODESIZE=0x00
-wazamonotachi.bootloader.BOOTSIZE=0x08
-wazamonotachi.bootloader.OSCCFG=0b00000000
-
-# ---- Locked option defaults (menus removed; values fixed for the product) ----
-# Bootloader fuse bits (burn-bootloader): WDT off, BOD off, EEPROM retained,
-#   reset pin = Hardware Reset, startup 8ms. (BODCFG fixed above = 0x00.)
-wazamonotachi.bootloader.wdttimeoutbits=0000
-wazamonotachi.bootloader.eesavebit=1
-wazamonotachi.bootloader.resetpinbit=1
-wazamonotachi.bootloader.sutbits=100
-# Compile-time options: millis=TCB0, Wire=Master-or-Slave(single) [.wO above].
-#   attach=all-pins, FLMAP=unlocked, printf=default already come from the
-#   board-level base values above, so menu removal keeps those defaults.
-wazamonotachi.build.millistimer=B0
-wazamonotachi.build.wiremode=MORS_SINGLE
-wazamonotachi.bootloader.resetpinbits={bootloader.resetpinbit}
-wazamonotachi.bootloader.avrdudefuse5="-Ufuse5:w:{bootloader.SYSCFG0}:m"
-wazamonotachi.program.avrdudefuse5="-Ufuse5:w:{bootloader.SYSCFG0}:m"
-wazamonotachi.bootloader.avrdudestring=-Uflash:w:{runtime.platform.path}/bootloaders/{bootloader.file}:i
-wazamonotachi.bootloader.pymcuprogstring=-aerase
-wazamonotachi.build.mcupostfix=
-wazamonotachi.build.printfabr=
-wazamonotachi.build.flmapabr=.ful
-wazamonotachi.build.attachabr=
-wazamonotachi.build.wireabr=.wO
-wazamonotachi.build.appspmabr=
-wazamonotachi.upload.protocol=arduino
-wazamonotachi.upload.speed=115200
-wazamonotachi.upload.extra_params=-D
-wazamonotachi.upload.use_1200bps_touch=true
-wazamonotachi.upload.wait_for_upload_port=true
-wazamonotachi.bootloader.file=hex/{bootloader.class}.hex
-wazamonotachi.bootloader.appspm=
-
-# --- Clock: WITH 24 MHz crystal (default) or WITHOUT (internal OSCHF) ---
-#  clocksource: 0 = internal OSCHF, 1 = external HF crystal (PA0/PA1),
-#               2 = external clock (PA0 only). USB always uses the internal
-#               PLL48M (SOF-tuned), independent of this choice.
-wazamonotachi.menu.clock.24crystal=24 MHz external crystal (default)
-wazamonotachi.menu.clock.24crystal.build.speed=24
-wazamonotachi.menu.clock.24crystal.build.clocksource=1
-wazamonotachi.menu.clock.24internal=24 MHz internal (no crystal)
-wazamonotachi.menu.clock.24internal.build.speed=24
-wazamonotachi.menu.clock.24internal.build.clocksource=0
-wazamonotachi.menu.clock.20internal=20 MHz internal (no crystal)
-wazamonotachi.menu.clock.20internal.build.speed=20
-wazamonotachi.menu.clock.20internal.build.clocksource=0
-wazamonotachi.menu.clock.16internal=16 MHz internal (no crystal)
-wazamonotachi.menu.clock.16internal.build.speed=16
-wazamonotachi.menu.clock.16internal.build.clocksource=0
-
-# --- millis()/micros() timer. TCB0 is the default so TCB1 stays free for
-#     D3 PWM and TCA0 stays free for D5-D10 PWM. ---
-
-# --- Locked to AVR64DU32 (chip submenu removed). Variant + bootloader hex
-#     fixed to Wazamono Tachi. ---
-wazamonotachi.build.mcu=avr64du32
-wazamonotachi.build.variant=WazamonoTachi
-wazamonotachi.build.highestcb=B2
-wazamonotachi.upload.maximum_size=61440
-wazamonotachi.upload.maximum_data_size=8192
-wazamonotachi.bootloader.class=usbcdcboot_wazamonotachi
-##############################################################
-
-# =====================  Wazamono Tsurugi (AVR64DU32)  ===============
-#  Arduino Uno R3 form factor. Same AVR64DU32 + USB-CDC bootloader as
-#  the Tachi; differs in pin layout (Uno R3 compatible) and timer use:
+# =====================  UkiUkiduino (AVR64DU32)  =====================
+#  Arduino Uno R3 form factor. AVR64DU32 + USB-CDC bootloader. Timer use:
 #  millis() is on TCB0 so TCB1 is free for D3 PWM (TCB1 ALT1 = PF5) and
 #  for tone() (Tone.cpp routes tone to TCB1 whenever millis is on TCB0;
 #  tone therefore shares TCB1 with D3 PWM - using tone() suspends D3 PWM
 #  only, exactly like Uno R3's Timer2, but D11 PWM (TCA0) is preserved).
-wazamonotsurugi.name=Wazamono Tsurugi (AVR64DU32)
+ukiukiduino.name=UkiUkiduino (AVR64DU32)
 
-wazamonotsurugi.upload.tool=avrdude
-wazamonotsurugi.upload.prog_interlock=
-wazamonotsurugi.vid.0=0x1209
-wazamonotsurugi.pid.0=0x0008
-wazamonotsurugi.vid.1=0x1209
-wazamonotsurugi.pid.1=0x0007
-wazamonotsurugi.build.board=avrdu
-wazamonotsurugi.build.core=dxcore
-wazamonotsurugi.build.f_cpu={build.speed}000000L
-wazamonotsurugi.build.text_section_start=.text=0x1000
-wazamonotsurugi.build.defaultswaps=
-wazamonotsurugi.build.extra_flags= {build.defaultswaps} -DUSING_AVRDU_CDC_BOOTLOADER -DUSING_OPTIBOOT -DUSB_VREG_INTERNAL
-# Force-link the variant init TU (variants/WazamonoTsurugi/wazamono_tsurugi_init.cpp).
+ukiukiduino.upload.tool=avrdude
+ukiukiduino.upload.prog_interlock=
+# --- USB identity: pid.codes TEST-range placeholders (app 0x000C / boot 0x000B).
+#     Replace with the official pid.codes VID/PID before release. Keep in sync
+#     with variants/UkiUkiduino/pins_arduino.h and the bootloader build. ---
+ukiukiduino.vid.0=0x1209
+ukiukiduino.pid.0=0x000C
+ukiukiduino.vid.1=0x1209
+ukiukiduino.pid.1=0x000B
+ukiukiduino.build.board=avrdu
+ukiukiduino.build.core=dxcore
+ukiukiduino.build.f_cpu={build.speed}000000L
+ukiukiduino.build.text_section_start=.text=0x1000
+ukiukiduino.build.defaultswaps=
+ukiukiduino.build.extra_flags= {build.defaultswaps} -DUSING_AVRDU_CDC_BOOTLOADER -DUSING_OPTIBOOT -DUSB_VREG_INTERNAL
+# Force-link the variant init TU (variants/UkiUkiduino/ukiukiduino_init.cpp).
 # Arduino archives variant objects into core.a, so its strong initVariant() that
 # sets up the CCL/EVSYS LED mirror would otherwise be dropped (core main.cpp has
 # a weak initVariant). -u pulls the member; the marker symbol is in that file.
-wazamonotsurugi.compiler.c.elf.extra_flags=-Wl,-u,wazamono_tsurugi_variant_keep -Wl,--defsym,__flmap_lock=1
-wazamonotsurugi.build.rodata_flags=
-wazamonotsurugi.build.export_merged_output=false
-wazamonotsurugi.build.printf=
-wazamonotsurugi.build.flmapopts=
-wazamonotsurugi.build.attachmode=-DCORE_ATTACH_ALL
-wazamonotsurugi.bootloader.tool=avrdude
-wazamonotsurugi.bootloader.WDTCFG=0b{bootloader.wdtwindowbits}{bootloader.wdttimeoutbits}
-wazamonotsurugi.bootloader.wdtwindowbits=0000
-wazamonotsurugi.bootloader.BODCFG=0x00
-wazamonotsurugi.bootloader.updipinbit=1
-wazamonotsurugi.bootloader.SYSCFG0=0b110{bootloader.updipinbit}{bootloader.resetpinbits}00{bootloader.eesavebit}
-wazamonotsurugi.bootloader.SYSCFG1=0b00001{bootloader.sutbits}
-wazamonotsurugi.bootloader.CODESIZE=0x00
-wazamonotsurugi.bootloader.BOOTSIZE=0x08
-wazamonotsurugi.bootloader.OSCCFG=0b00000000
+ukiukiduino.compiler.c.elf.extra_flags=-Wl,-u,ukiukiduino_variant_keep -Wl,--defsym,__flmap_lock=1
+ukiukiduino.build.rodata_flags=
+ukiukiduino.build.export_merged_output=false
+ukiukiduino.build.printf=
+ukiukiduino.build.flmapopts=
+ukiukiduino.build.attachmode=-DCORE_ATTACH_ALL
+ukiukiduino.bootloader.tool=avrdude
+ukiukiduino.bootloader.WDTCFG=0b{bootloader.wdtwindowbits}{bootloader.wdttimeoutbits}
+ukiukiduino.bootloader.wdtwindowbits=0000
+ukiukiduino.bootloader.BODCFG=0x00
+ukiukiduino.bootloader.updipinbit=1
+ukiukiduino.bootloader.SYSCFG0=0b110{bootloader.updipinbit}{bootloader.resetpinbits}00{bootloader.eesavebit}
+ukiukiduino.bootloader.SYSCFG1=0b00001{bootloader.sutbits}
+ukiukiduino.bootloader.CODESIZE=0x00
+ukiukiduino.bootloader.BOOTSIZE=0x08
+ukiukiduino.bootloader.OSCCFG=0b00000000
 
 # ---- Locked option defaults (menus removed; values fixed for the product) ----
-wazamonotsurugi.bootloader.wdttimeoutbits=0000
-wazamonotsurugi.bootloader.eesavebit=1
-wazamonotsurugi.bootloader.resetpinbit=1
-wazamonotsurugi.bootloader.sutbits=100
+# Bootloader fuse bits (burn-bootloader): WDT off, BOD off, EEPROM retained,
+#   reset pin = Hardware Reset, startup 8ms. (BODCFG fixed above = 0x00.)
+ukiukiduino.bootloader.wdttimeoutbits=0000
+ukiukiduino.bootloader.eesavebit=1
+ukiukiduino.bootloader.resetpinbit=1
+ukiukiduino.bootloader.sutbits=100
 # Compile-time options: millis=TCB0 (frees TCB1 for D3 PWM + tone), Wire=single.
-wazamonotsurugi.build.millistimer=B0
-wazamonotsurugi.build.wiremode=MORS_SINGLE
-wazamonotsurugi.bootloader.resetpinbits={bootloader.resetpinbit}
-wazamonotsurugi.bootloader.avrdudefuse5="-Ufuse5:w:{bootloader.SYSCFG0}:m"
-wazamonotsurugi.program.avrdudefuse5="-Ufuse5:w:{bootloader.SYSCFG0}:m"
-wazamonotsurugi.bootloader.avrdudestring=-Uflash:w:{runtime.platform.path}/bootloaders/{bootloader.file}:i
-wazamonotsurugi.bootloader.pymcuprogstring=-aerase
-wazamonotsurugi.build.mcupostfix=
-wazamonotsurugi.build.printfabr=
-wazamonotsurugi.build.flmapabr=.ful
-wazamonotsurugi.build.attachabr=
-wazamonotsurugi.build.wireabr=.wO
-wazamonotsurugi.build.appspmabr=
-wazamonotsurugi.upload.protocol=arduino
-wazamonotsurugi.upload.speed=115200
-wazamonotsurugi.upload.extra_params=-D
-wazamonotsurugi.upload.use_1200bps_touch=true
-wazamonotsurugi.upload.wait_for_upload_port=true
-wazamonotsurugi.bootloader.file=hex/{bootloader.class}.hex
-wazamonotsurugi.bootloader.appspm=
-
-# --- Clock: WITH 24 MHz crystal (default) or WITHOUT (internal OSCHF) ---
-wazamonotsurugi.menu.clock.24crystal=24 MHz external crystal (default)
-wazamonotsurugi.menu.clock.24crystal.build.speed=24
-wazamonotsurugi.menu.clock.24crystal.build.clocksource=1
-wazamonotsurugi.menu.clock.24internal=24 MHz internal (no crystal)
-wazamonotsurugi.menu.clock.24internal.build.speed=24
-wazamonotsurugi.menu.clock.24internal.build.clocksource=0
-wazamonotsurugi.menu.clock.20internal=20 MHz internal (no crystal)
-wazamonotsurugi.menu.clock.20internal.build.speed=20
-wazamonotsurugi.menu.clock.20internal.build.clocksource=0
-wazamonotsurugi.menu.clock.16internal=16 MHz internal (no crystal)
-wazamonotsurugi.menu.clock.16internal.build.speed=16
-wazamonotsurugi.menu.clock.16internal.build.clocksource=0
-
-# --- Locked to AVR64DU32. Variant + bootloader hex fixed to Wazamono Tsurugi. ---
-wazamonotsurugi.build.mcu=avr64du32
-wazamonotsurugi.build.variant=WazamonoTsurugi
-wazamonotsurugi.build.highestcb=B2
-wazamonotsurugi.upload.maximum_size=61440
-wazamonotsurugi.upload.maximum_data_size=8192
-wazamonotsurugi.bootloader.class=usbcdcboot_wazamonotsurugi
-##############################################################
-
-# =====================  Wazamono Kunai (AVR32DU20)  ================
-#  Seeed XIAO form factor (21 x 17.8 mm). AVR32DU20 (32 KB flash / 4 KB SRAM,
-#  20-pin VQFN) + the same USB-CDC bootloader as the other boards. Crystal-less:
-#  the internal OSCHF runs at 24 MHz, so there is no Clock menu (speed + source
-#  are fixed below) and PA0/PA1 are free GPIO. Timer use mirrors the siblings:
-#  millis() on TCB0 leaves TCB1 free for tone() and all 6 PWM channels on TCA0
-#  (PORTA, WO0..WO5 = PA0..PA5). I2C is on TWI0 ALT3 (PA0/PA1 = D4/D5); the
-#  variant's initVariant() selects that mux at boot (see WazamonoKunai variant).
-wazamonokunai.name=Wazamono Kunai (AVR32DU20)
-
-wazamonokunai.upload.tool=avrdude
-wazamonokunai.upload.prog_interlock=
-wazamonokunai.vid.0=0x1209
-wazamonokunai.pid.0=0x000A
-wazamonokunai.vid.1=0x1209
-wazamonokunai.pid.1=0x0009
-wazamonokunai.build.board=avrdu
-wazamonokunai.build.core=dxcore
-wazamonokunai.build.f_cpu={build.speed}000000L
-wazamonokunai.build.text_section_start=.text=0x1000
-wazamonokunai.build.defaultswaps=
-wazamonokunai.build.extra_flags= {build.defaultswaps} -DUSING_AVRDU_CDC_BOOTLOADER -DUSING_OPTIBOOT
-# Force-link the variant init TU (variants/WazamonoKunai/wazamono_kunai_init.cpp).
-# Arduino archives variant objects into core.a, so its strong initVariant() (which
-# selects TWI0 ALT3 so I2C lands on PA0/PA1 = D4/D5) would otherwise be dropped
-# (core main.cpp has a weak initVariant). -u pulls the member; the marker symbol
-# is defined in that file.
-wazamonokunai.compiler.c.elf.extra_flags=-Wl,-u,wazamono_kunai_variant_keep
-wazamonokunai.build.rodata_flags=
-wazamonokunai.build.export_merged_output=false
-wazamonokunai.build.printf=
-wazamonokunai.build.flmapopts=
-wazamonokunai.build.attachmode=-DCORE_ATTACH_ALL
-wazamonokunai.bootloader.tool=avrdude
-wazamonokunai.bootloader.WDTCFG=0b{bootloader.wdtwindowbits}{bootloader.wdttimeoutbits}
-wazamonokunai.bootloader.wdtwindowbits=0000
-wazamonokunai.bootloader.BODCFG=0x00
-wazamonokunai.bootloader.updipinbit=1
-wazamonokunai.bootloader.SYSCFG0=0b110{bootloader.updipinbit}{bootloader.resetpinbits}00{bootloader.eesavebit}
-wazamonokunai.bootloader.SYSCFG1=0b00001{bootloader.sutbits}
-wazamonokunai.bootloader.CODESIZE=0x00
-wazamonokunai.bootloader.BOOTSIZE=0x08
-wazamonokunai.bootloader.OSCCFG=0b00000000
-
-# ---- Locked option defaults (menus removed; values fixed for the product) ----
-wazamonokunai.bootloader.wdttimeoutbits=0000
-wazamonokunai.bootloader.eesavebit=1
-wazamonokunai.bootloader.resetpinbit=1
-wazamonokunai.bootloader.sutbits=100
-# Compile-time options: millis=TCB0 (frees TCB1 for tone), Wire=single.
-wazamonokunai.build.millistimer=B0
-wazamonokunai.build.wiremode=MORS_SINGLE
-wazamonokunai.bootloader.resetpinbits={bootloader.resetpinbit}
-wazamonokunai.bootloader.avrdudefuse5="-Ufuse5:w:{bootloader.SYSCFG0}:m"
-wazamonokunai.program.avrdudefuse5="-Ufuse5:w:{bootloader.SYSCFG0}:m"
-wazamonokunai.bootloader.avrdudestring=-Uflash:w:{runtime.platform.path}/bootloaders/{bootloader.file}:i
-wazamonokunai.bootloader.pymcuprogstring=-aerase
-wazamonokunai.build.mcupostfix=
-wazamonokunai.build.printfabr=
-wazamonokunai.build.flmapabr=.ful
-wazamonokunai.build.attachabr=
-wazamonokunai.build.wireabr=.wO
-wazamonokunai.build.appspmabr=
-wazamonokunai.upload.protocol=arduino
-wazamonokunai.upload.speed=115200
-wazamonokunai.upload.extra_params=-D
-wazamonokunai.upload.use_1200bps_touch=true
-wazamonokunai.upload.wait_for_upload_port=true
-wazamonokunai.bootloader.file=hex/{bootloader.class}.hex
-wazamonokunai.bootloader.appspm=
+ukiukiduino.build.millistimer=B0
+ukiukiduino.build.wiremode=MORS_SINGLE
+ukiukiduino.bootloader.resetpinbits={bootloader.resetpinbit}
+ukiukiduino.bootloader.avrdudefuse5="-Ufuse5:w:{bootloader.SYSCFG0}:m"
+ukiukiduino.program.avrdudefuse5="-Ufuse5:w:{bootloader.SYSCFG0}:m"
+ukiukiduino.bootloader.avrdudestring=-Uflash:w:{runtime.platform.path}/bootloaders/{bootloader.file}:i
+ukiukiduino.bootloader.pymcuprogstring=-aerase
+ukiukiduino.build.mcupostfix=
+ukiukiduino.build.printfabr=
+ukiukiduino.build.flmapabr=.ful
+ukiukiduino.build.attachabr=
+ukiukiduino.build.wireabr=.wO
+ukiukiduino.build.appspmabr=
+ukiukiduino.upload.protocol=arduino
+ukiukiduino.upload.speed=115200
+ukiukiduino.upload.extra_params=-D
+ukiukiduino.upload.use_1200bps_touch=true
+ukiukiduino.upload.wait_for_upload_port=true
+ukiukiduino.bootloader.file=hex/{bootloader.class}.hex
+ukiukiduino.bootloader.appspm=
 
 # --- Clock: fixed 24 MHz internal OSCHF (crystal-less; no Clock menu). ---
 #  clocksource 0 = internal OSCHF. USB CLK_USB (48 MHz) = OSCHF + PLL48M, SOF-tuned.
-wazamonokunai.build.speed=24
-wazamonokunai.build.clocksource=0
+ukiukiduino.build.speed=24
+ukiukiduino.build.clocksource=0
 
-# --- Locked to AVR32DU20. Variant + bootloader hex fixed to Wazamono Kunai. ---
-wazamonokunai.build.mcu=avr32du20
-wazamonokunai.build.variant=WazamonoKunai
-wazamonokunai.build.highestcb=B1
-wazamonokunai.upload.maximum_size=28672
-wazamonokunai.upload.maximum_data_size=4096
-wazamonokunai.bootloader.class=usbcdcboot_wazamonokunai
+# --- Locked to AVR64DU32. Variant + bootloader hex fixed to UkiUkiduino. ---
+ukiukiduino.build.mcu=avr64du32
+ukiukiduino.build.variant=UkiUkiduino
+ukiukiduino.build.highestcb=B2
+ukiukiduino.upload.maximum_size=61440
+ukiukiduino.upload.maximum_data_size=8192
+ukiukiduino.bootloader.class=usbcdcboot_ukiukiduino

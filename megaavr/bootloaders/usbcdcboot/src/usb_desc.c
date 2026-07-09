@@ -150,31 +150,12 @@ const uint8_t g_bl_string_manufacturer[] = {
 };
 const uint8_t g_bl_string_manufacturer_len = sizeof(g_bl_string_manufacturer);
 
-#if defined(WAZAMONO_BOARD_TSURUGI)
-/* Product "Wazamono Tsurugi Bootloader" - 27 ASCII chars */
+/* Product "UkiUkiduino Bootloader" - 22 ASCII chars */
 const uint8_t g_bl_string_product[] = {
-    2 + 2*27, DESC_TYPE_STRING,
-    'W',0, 'a',0, 'z',0, 'a',0, 'm',0, 'o',0, 'n',0, 'o',0, ' ',0,
-    'T',0, 's',0, 'u',0, 'r',0, 'u',0, 'g',0, 'i',0, ' ',0,
+    2 + 2*22, DESC_TYPE_STRING,
+    'U',0, 'k',0, 'i',0, 'U',0, 'k',0, 'i',0, 'd',0, 'u',0, 'i',0, 'n',0, 'o',0, ' ',0,
     'B',0, 'o',0, 'o',0, 't',0, 'l',0, 'o',0, 'a',0, 'd',0, 'e',0, 'r',0
 };
-#elif defined(WAZAMONO_BOARD_KUNAI)
-/* Product "Wazamono Kunai Bootloader" - 25 ASCII chars */
-const uint8_t g_bl_string_product[] = {
-    2 + 2*25, DESC_TYPE_STRING,
-    'W',0, 'a',0, 'z',0, 'a',0, 'm',0, 'o',0, 'n',0, 'o',0, ' ',0,
-    'K',0, 'u',0, 'n',0, 'a',0, 'i',0, ' ',0,
-    'B',0, 'o',0, 'o',0, 't',0, 'l',0, 'o',0, 'a',0, 'd',0, 'e',0, 'r',0
-};
-#else  /* default: Wazamono Tachi */
-/* Product "Wazamono Tachi Bootloader" - 25 ASCII chars */
-const uint8_t g_bl_string_product[] = {
-    2 + 2*25, DESC_TYPE_STRING,
-    'W',0, 'a',0, 'z',0, 'a',0, 'm',0, 'o',0, 'n',0, 'o',0, ' ',0,
-    'T',0, 'a',0, 'c',0, 'h',0, 'i',0, ' ',0,
-    'B',0, 'o',0, 'o',0, 't',0, 'l',0, 'o',0, 'a',0, 'd',0, 'e',0, 'r',0
-};
-#endif
 const uint8_t g_bl_string_product_len = sizeof(g_bl_string_product);
 
 /* Serial "BL00000001" - 10 ASCII chars (stable so the host caches the

@@ -17,25 +17,21 @@
  *      IF 0   CDC Communication
  *      IF 1   CDC Data
  *
- *    VID / PID = 0x1209 / per-board  (pid.codes test range; Tachi 0x0005,
- *                                     Tsurugi 0x0007 - see Identity below)
+ *    VID / PID = 0x1209 / 0x000B  (pid.codes test range placeholder;
+ *                                   see Identity below)
  */
 #ifndef AVRDU_BL_USB_DESC_H
 #define AVRDU_BL_USB_DESC_H
 
 #include <stdint.h>
 
-/* Identity.  VID is shared (pid.codes test range); the bootloader PID is
- * per-board so each Wazamono board enumerates with its own bootloader identity.
- * Select the board at build time with -DWAZAMONO_BOARD_TSURUGI (default Tachi). */
+/* Identity: UkiUkiduino bootloader.
+ * VID 0x1209 with a pid.codes TEST-range PID (0x000B) as a development
+ * placeholder - replace with the officially assigned pid.codes PID before
+ * release. Keep in sync with boards.txt (vid.1/pid.1) and the sketch-side
+ * identity (app PID 0x000C in cores/dxcore/usb_descriptors and boards.txt). */
 #define USB_BL_VID              0x1209
-#if defined(WAZAMONO_BOARD_TSURUGI)
-#define USB_BL_PID              0x0007   /* Wazamono Tsurugi bootloader */
-#elif defined(WAZAMONO_BOARD_KUNAI)
-#define USB_BL_PID              0x0009   /* Wazamono Kunai bootloader */
-#else  /* default: WAZAMONO_BOARD_TACHI */
-#define USB_BL_PID              0x0005   /* Wazamono Tachi bootloader */
-#endif
+#define USB_BL_PID              0x000B   /* UkiUkiduino bootloader (test range) */
 #define USB_BL_DEVICE_VER       0x0100
 
 /* Endpoints */

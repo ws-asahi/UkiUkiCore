@@ -1,22 +1,21 @@
 #!/usr/bin/env bash
 # ============================================================
-#  build_wazamono.sh
-#  WazamonoCore fork - build the USB CDC bootloader for the
-#  Wazamono product boards. POSIX counterpart of build_wazamono.bat.
+#  build_ukiukiduino.sh
+#  UkiUkiCore - build the USB CDC bootloader for the UkiUkiduino.
+#  POSIX counterpart of build_ukiukiduino.bat.
 #
-#  The clean-room bootloader source is NOT modified. The only per-board
-#  difference is passed in at build time:
+#  The clean-room bootloader source is NOT modified. Board parameters
+#  are passed in at build time:
 #
-#    board             MCU         LED   pol       USB ident (VID:PID)
-#    ----------------  ----------  ----  --------  -------------------
-#    Wazamono Tachi    avr64du32   PD5   act-LOW   0x1209:0x0005
-#    Wazamono Tsurugi  avr64du32   PC3   act-HIGH  0x1209:0x0007
-#    Wazamono Kunai    avr32du20   PD4   act-LOW   0x1209:0x0009
+#    board        MCU         LED   pol       USB ident (VID:PID)
+#    -----------  ----------  ----  --------  -----------------------------
+#    UkiUkiduino  avr64du32   PC3   act-HIGH  0x1209:0x000B (test placeholder)
 #
 #    - LED pin     : LED_PORT / LED_PIN
 #    - LED polarity: LED_AH=1 (active-HIGH) | LED_AL=1 (active-LOW)
 #                    Neither given => active-LOW; both given => LED_AH wins.
-#    - USB identity: BOARD=TACHI | TSURUGI  (selects PID + product string)
+#    - USB identity: fixed in src/usb_desc.h (replace the test PID with the
+#      officially assigned pid.codes PID before release)
 #
 #  Toolchain: by default this uses the Windows avr-gcc you copied to
 #  C:\avr-gcc (the same one the IDE uses), auto-translated to this shell's
@@ -24,14 +23,14 @@
 #  prepended to PATH.  make then runs avr-gcc(.exe) from PATH.
 #
 #  Override the toolchain, e.g. a native Linux build under WSL:
-#    GCC_BIN=$HOME/avr-gcc-build/build/avr-gcc-15.2.0-x64-linux/bin ./build_wazamono.sh
+#    GCC_BIN=$HOME/avr-gcc-build/build/avr-gcc-15.2.0-x64-linux/bin ./build_ukiukiduino.sh
 #  or skip auto-detect and use whatever avr-gcc is already on your PATH:
-#    GCC_BIN= ./build_wazamono.sh
+#    GCC_BIN= ./build_ukiukiduino.sh
 #  (Under WSL prefer the Linux toolchain above; running the Windows .exe via
 #   /mnt/c works only for source trees on a path the .exe can resolve.)
 #
 #  Usage (from this directory):
-#    ./build_wazamono.sh
+#    ./build_ukiukiduino.sh
 # ============================================================
 set -euo pipefail
 cd "$(dirname "$0")"
@@ -57,24 +56,22 @@ fi
 MAKE="${MAKE:-make}"
 TOOLROOT="${TOOLROOT:-}"
 
-build() {            # $1=class  $2=mcu  $3=LEDport  $4=LEDpin  $5=board  $6=LED polarity (AH | AL)
+build() {            # $1=class  $2=mcu  $3=LEDport  $4=LEDpin  $5=LED polarity (AH | AL)
   local polflag=""
-  if [ "${6:-}" = "AH" ]; then polflag="LED_AH=1"; fi
-  if [ "${6:-}" = "AL" ]; then polflag="LED_AL=1"; fi
+  if [ "${5:-}" = "AH" ]; then polflag="LED_AH=1"; fi
+  if [ "${5:-}" = "AL" ]; then polflag="LED_AL=1"; fi
   echo ""
-  echo "------ building $2  ->  usbcdcboot_$1.hex  (LED $3 $4, board $5, pol ${6:-}) ------"
+  echo "------ building $2  ->  usbcdcboot_$1.hex  (LED $3 $4, pol ${5:-}) ------"
   rm -f src/*.o "usbcdcboot_$1".{elf,hex,lst,map} 2>/dev/null || true
-  $MAKE ${TOOLROOT:+TOOLROOT="$TOOLROOT"} MCU="$2" TARGET="usbcdcboot_$1" LED_PORT="$3" LED_PIN="$4" BOARD="$5" $polflag all
-  $MAKE ${TOOLROOT:+TOOLROOT="$TOOLROOT"} MCU="$2" TARGET="usbcdcboot_$1" BOARD="$5" $polflag size
+  $MAKE ${TOOLROOT:+TOOLROOT="$TOOLROOT"} MCU="$2" TARGET="usbcdcboot_$1" LED_PORT="$3" LED_PIN="$4" $polflag all
+  $MAKE ${TOOLROOT:+TOOLROOT="$TOOLROOT"} MCU="$2" TARGET="usbcdcboot_$1" $polflag size
 }
 
-#     class             mcu        LEDport LEDpin board     LEDpol(AH|AL)
-build wazamonotachi   avr64du32   PORTD   5      TACHI     AL
-build wazamonotsurugi avr64du32   PORTC   3      TSURUGI   AH
-build wazamonokunai   avr32du20   PORTD   4      KUNAI     AL
+#     class        mcu        LEDport LEDpin LEDpol(AH|AL)
+build ukiukiduino avr64du32   PORTC   3      AH
 
 echo ""
 echo "=== collecting hex files into ../hex/ ==="
 mkdir -p ../hex
 mv -f usbcdcboot_*.hex ../hex/
-ls -1 ../hex/usbcdcboot_wazamono*.hex
+ls -1 ../hex/usbcdcboot_ukiukiduino.hex

@@ -1,8 +1,8 @@
-# avrdu_cdc_bl/Makefile
+# usbcdcboot/Makefile
 # --------------------------------------------------------------------
-#   Build rules for the AVRDU CDC bootloader.
-#   Produces usbcdcboot_64du.hex, .elf, .lst, .map (one hex per build
-#   class; see build_all_du.bat for the 16du/16du14/32du/32du14/64du set).
+#   Build rules for the UkiUkiduino USB CDC bootloader (AVR64DU32).
+#   Produces usbcdcboot_ukiukiduino.hex, .elf, .lst, .map
+#   (invoked by build_ukiukiduino.sh / build_ukiukiduino.bat).
 #
 #   Usage from inside this directory:
 #
@@ -18,7 +18,7 @@
 
 MCU      := avr64du32
 F_CPU    := 24000000UL
-TARGET   := usbcdcboot_64du
+TARGET   := usbcdcboot_ukiukiduino
 BOOT_BASE := 0x0000
 BOOTSIZE  := 4096           # bytes reserved for the bootloader (BOOTSIZE fuse * 512)
 
@@ -70,15 +70,6 @@ CFLAGS += -DBL_LED_PORT=$(LED_PORT)
 endif
 ifneq ($(strip $(LED_PIN)),)
 CFLAGS += -DBL_LED_PIN=$(LED_PIN)
-endif
-
-# --- Board selection (per-build) ------------------------------------
-# Selects the per-board USB bootloader identity.  VID is shared (0x1209);
-# the PID and the USB product string differ per board (see src/usb_desc.h
-# and src/usb_desc.c).  Pass the board tag, e.g.:
-#   make ... BOARD=TSURUGI      (unset / BOARD=TACHI = the default Tachi identity)
-ifneq ($(strip $(BOARD)),)
-CFLAGS += -DWAZAMONO_BOARD_$(BOARD)
 endif
 
 # --- LED polarity (per-build) ---------------------------------------

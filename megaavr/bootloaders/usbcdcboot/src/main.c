@@ -94,13 +94,12 @@ static volatile uint16_t s_dbltap_flag __attribute__((section(".noinit")));
  *
  *     -DLED_AH   active-HIGH : LED lights when the pin is driven HIGH.
  *                              This is the DxCore / classic Arduino "D13"
- *                              convention (Wazamono Tsurugi).
+ *                              convention (UkiUkiduino: LED on PC3).
  *     -DLED_AL   active-LOW  : LED lights when the pin is driven LOW.
- *                              The Pro Micro RX/TX LED convention
- *                              (Wazamono Tachi).
+ *                              The Pro Micro RX/TX LED convention.
  *
  * If NEITHER option is defined, the LED defaults to active-LOW.  If BOTH are
- * defined, LED_AH takes precedence.  Each Wazamono board passes its option
+ * defined, LED_AH takes precedence.  The build script passes the option
  * explicitly at build time, so the fallback default can change in future
  * without affecting any existing board.  Only the drive levels change here;
  * DIR and toggle are polarity-independent. */

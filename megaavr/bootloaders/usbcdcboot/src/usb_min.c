@@ -431,15 +431,11 @@ void usb_min_init(void) {
     oschf |=  (CLKCTRL_AUTOTUNE_SOF_gc | CLKCTRL_ALGSEL_INCR_gc);
     _PROTECTED_WRITE(CLKCTRL.OSCHFCTRLA, oschf);
 
-    /* VUSB regulator: derives the 3.3 V D+ pull-up reference from VDD.
-     * Enable the on-chip regulator ONLY on boards that generate VUSB internally
-     * (Tsurugi: VDD = 5 V, datasheet config 5b). Boards with an EXTERNAL 3.3 V
-     * VUSB supply (Tachi, config 3s) must NOT enable it, or the internal
-     * regulator would fight the external supply. The build passes the board tag
-     * (build_wazamono.sh: BOARD=TSURUGI -> -DWAZAMONO_BOARD_TSURUGI). */
-#if defined(WAZAMONO_BOARD_TSURUGI)
+    /* VUSB regulator: derives the 3.3 V USB transceiver supply from VDD.
+     * The UkiUkiduino generates VUSB with the ON-CHIP regulator (VDD = 5 V,
+     * datasheet self-powered config "5s"; only a 470 nF decoupling cap sits
+     * on the VUSB pin), so the regulator must be enabled here. */
     SYSCFG.VUSBCTRL = SYSCFG_USBVREG_bm;
-#endif
 
     _delay_ms(1);
 

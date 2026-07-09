@@ -1,62 +1,50 @@
-// This is a demonstration on how to use an input device to trigger changes on your neo pixels.
-// You should wire a momentary push button to connect from ground to a digital IO pin.  When you
-// press the button it will change to a new pixel animation.  Note that you need to press the
-// button once to start the first animation!
+/* buttoncycler(ボタンでアニメーション切替)
+   ボタン入力でNeoPixel(WS2812系フルカラーLED)のアニメーションを
+   切り替えるデモです。UkiUkiduinoに搭載のボタン(BTN_BUILTIN = D20)を
+   押すたびに次のアニメーションへ進みます。最初のアニメーションを
+   始めるにも1回ボタンを押してください。
+
+   接続: NeoPixelのDIN(データ入力)をD6へ、5VとGNDを電源へ接続します。
+   ※LEDの数が多い場合は外部電源を使用してください。
+
+   メモ: BTN_BUILTINは基板上でプルダウンされており「押すとHIGH」に
+   なります。pinMode(BTN_BUILTIN, INPUT)のままで使えます(プルアップ
+   前提の一般的なサンプルとは論理が逆なので注意)。
+
+   UkiUkiduino向けに移植・日本語化
+*/
 
 #include <tinyNeoPixel.h>
 
-#define BUTTON_PIN   PIN_PD4    // Digital IO pin connected to the button.
-// Chosen because this pin is omnipresent, so I can use this for compile-testing.
-// This will be
-// driven with a pull-up resistor so the switch should
-// pull the pin to ground momentarily.  On a high -> low
-// transition the button press logic will execute.
-// These pins were chosen because they are present on all parts; this sketch is used for automated testing.
-// Since 8-pin parts with UPDI enabled have only 5 available IO pins (PA1, 2, 3, 6, and 7), and PA3 is the
-// external clock pin (we detect and give an error when using external clock source if you try to use the
-// clock pin for anything else, since that doesn't work). Serial in turn is on either PA6/7 or PA1/2 (alt) so unless we
-// want to make life hard on people modifying the sketch and maybe adding serial debug logging, PA1 and PA2 are the best
-// choices for the pin in this sketch as an example and automated testing sketch.
+#define PIXEL_PIN    6    // NeoPixelのDINを接続するピン(D6)
 
-// You can use any I/O pin that is not being overridden by some peripheral for either purpose.
-// No pin is inherently better or worse than any other for either of these purposes; it's all about what
-// other things you need pins for, and whether any of them are picky about which pins are used.
+#define PIXEL_COUNT 16    // 接続するLEDの個数
 
-#define PIXEL_PIN    PIN_PC3    // Digital IO pin connected to the NeoPixels
-
-#define PIXEL_COUNT 16
-
-// Parameter 1 = number of pixels in strip,
-// Parameter 2 = pin number (most are valid)
-// Parameter 3 = color order (NEO_RGB, NEO_GRB, etc).
-// Unlike the Adafruit library there's no 400 kHz option. I don't think I have ever seen 400 kHz pixels, and they may no longer be made.
-// Because the optimizer's hands are tied when working with classes it would impose undue burdens on all users to support it, plus it would
-// need the asm routines adapted to every supported clock speed... all for the sake of a part that seems extinct in the wild.
-
-
+// 第1引数 = LEDの個数
+// 第2引数 = 接続ピン
+// 第3引数 = 色の並び順(NEO_RGB, NEO_GRBなど。多くの製品はNEO_GRB)
 tinyNeoPixel strip = tinyNeoPixel(PIXEL_COUNT, PIXEL_PIN, NEO_GRB);
 
-bool oldState = HIGH;
-int showType = 0;
+bool oldState = LOW;   // 前回のボタン状態(押していない=LOW)
+int showType = 0;      // 現在のアニメーション番号
 
 void setup() {
-  pinMode(BUTTON_PIN, INPUT_PULLUP);
+  pinMode(BTN_BUILTIN, INPUT);   // 基板上でプルダウン済みなのでINPUTでよい
   pinMode(PIXEL_PIN, OUTPUT);
-  // strip.begin();
-  strip.show(); // Initialize all pixels to 'off'
+  strip.show(); // 全LEDを消灯状態で初期化
 }
 
 void loop() {
-  // Get current button state.
-  bool newState = digitalRead(BUTTON_PIN);
+  // ボタンの現在の状態を読む(UkiUkiduinoのBTN_BUILTINは押すとHIGH)
+  bool newState = digitalRead(BTN_BUILTIN);
 
-  // Check if state changed from high to low (button press).
-  if (newState == LOW && oldState == HIGH) {
-    // Short delay to debounce button.
+  // LOW→HIGHの変化(=ボタンが押された瞬間)を検出する
+  if (newState == HIGH && oldState == LOW) {
+    // チャタリング防止のため少し待つ
     delay(20);
-    // Check if button is still low after debounce.
-    newState = digitalRead(BUTTON_PIN);
-    if (newState == LOW) {
+    // 待った後もまだ押されているか確認する
+    newState = digitalRead(BTN_BUILTIN);
+    if (newState == HIGH) {
       showType++;
       if (showType > 9) {
         showType = 0;
@@ -65,25 +53,25 @@ void loop() {
     }
   }
 
-  // Set the last button state to the old state.
+  // 今回の状態を記憶して次回の比較に使う
   oldState = newState;
 }
 
 void startShow(int i) {
   switch (i) {
-    case 0: colorWipe(strip.Color(0, 0, 0), 50);    // Black/off
+    case 0: colorWipe(strip.Color(0, 0, 0), 50);    // 消灯
       break;
-    case 1: colorWipe(strip.Color(255, 0, 0), 50);  // Red
+    case 1: colorWipe(strip.Color(255, 0, 0), 50);  // 赤
       break;
-    case 2: colorWipe(strip.Color(0, 255, 0), 50);  // Green
+    case 2: colorWipe(strip.Color(0, 255, 0), 50);  // 緑
       break;
-    case 3: colorWipe(strip.Color(0, 0, 255), 50);  // Blue
+    case 3: colorWipe(strip.Color(0, 0, 255), 50);  // 青
       break;
-    case 4: theaterChase(strip.Color(127, 127, 127), 50); // White
+    case 4: theaterChase(strip.Color(127, 127, 127), 50); // 白
       break;
-    case 5: theaterChase(strip.Color(127,   0,   0), 50); // Red
+    case 5: theaterChase(strip.Color(127,   0,   0), 50); // 赤
       break;
-    case 6: theaterChase(strip.Color(0,   0, 127), 50);   // Blue
+    case 6: theaterChase(strip.Color(0,   0, 127), 50);   // 青
       break;
     case 7: rainbow(20);
       break;
@@ -94,7 +82,7 @@ void startShow(int i) {
   }
 }
 
-// Fill the dots one after the other with a color
+// 先頭から1個ずつ指定色で塗りつぶしていく
 void colorWipe(uint32_t c, uint8_t wait) {
   for (uint16_t i = 0; i < strip.numPixels(); i++) {
     strip.setPixelColor(i, c);
@@ -103,6 +91,7 @@ void colorWipe(uint32_t c, uint8_t wait) {
   }
 }
 
+// 全体の色相を少しずつ回して虹色に変化させる
 void rainbow(uint8_t wait) {
   uint16_t i, j;
 
@@ -115,11 +104,11 @@ void rainbow(uint8_t wait) {
   }
 }
 
-// Slightly different, this makes the rainbow equally distributed throughout
+// こちらは虹がストリップ全体に均等に分布するバージョン
 void rainbowCycle(uint8_t wait) {
   uint16_t i, j;
 
-  for (j = 0; j < 256 * 5; j++) { // 5 cycles of all colors on wheel
+  for (j = 0; j < 256 * 5; j++) { // 色相環5周分
     for (i = 0; i < strip.numPixels(); i++) {
       strip.setPixelColor(i, Wheel(((i * 256 / strip.numPixels()) + j) & 255));
     }
@@ -128,44 +117,43 @@ void rainbowCycle(uint8_t wait) {
   }
 }
 
-// Theatre-style crawling lights.
+// 劇場の電飾風に流れる点滅
 void theaterChase(uint32_t c, uint8_t wait) {
-  for (int j = 0; j < 10; j++) { // do 10 cycles of chasing
+  for (int j = 0; j < 10; j++) { // 10周流す
     for (int q = 0; q < 3; q++) {
       for (uint16_t i = 0; i < strip.numPixels(); i = i + 3) {
-        strip.setPixelColor(i + q, c);  // turn every third pixel on
+        strip.setPixelColor(i + q, c);  // 3個おきに点灯
       }
       strip.show();
 
       delay(wait);
 
       for (uint16_t i = 0; i < strip.numPixels(); i = i + 3) {
-        strip.setPixelColor(i + q, 0);      // turn every third pixel off
+        strip.setPixelColor(i + q, 0);      // 3個おきに消灯
       }
     }
   }
 }
 
-// Theatre-style crawling lights with rainbow effect
+// 劇場電飾風+虹色
 void theaterChaseRainbow(uint8_t wait) {
-  for (int j = 0; j < 256; j++) {   // cycle all 256 colors in the wheel
+  for (int j = 0; j < 256; j++) {   // 色相環を一周
     for (int q = 0; q < 3; q++) {
       for (uint16_t i = 0; i < strip.numPixels(); i = i + 3) {
-        strip.setPixelColor(i + q, Wheel((i + j) % 255)); // turn every third pixel on
+        strip.setPixelColor(i + q, Wheel((i + j) % 255)); // 3個おきに点灯
       }
       strip.show();
 
       delay(wait);
 
       for (uint16_t i = 0; i < strip.numPixels(); i = i + 3) {
-        strip.setPixelColor(i + q, 0);      // turn every third pixel off
+        strip.setPixelColor(i + q, 0);      // 3個おきに消灯
       }
     }
   }
 }
 
-// Input a value 0 to 255 to get a color value.
-// The colours are a transition r - g - b - back to r.
+// 0~255の値を色に変換する(赤→緑→青→赤と一周する色相環)
 uint32_t Wheel(byte WheelPos) {
   WheelPos = 255 - WheelPos;
   if (WheelPos < 85) {

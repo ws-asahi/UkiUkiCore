@@ -1,76 +1,64 @@
-/*
-  Software serial multiple serial test
+/* TwoPortReceive(2ポート受信)
+   2つのソフトウェアシリアルポートから受信し、USBシリアル(Serial)へ
+   表示するサンプルです。
 
-  Receives from the two software serial ports,
-  sends to the hardware serial port.
+   接続: ポート1 = D10(RX)/D11(TX)、ポート2 = D8(RX)/D9(TX)。
 
-  Spence Konde: SoftwareSerial is not recommended; the library is
-  included for compatibility only.
+   重要: ソフトウェアシリアルを複数使う場合、同時に受信できるのは
+   1ポートだけです。受信したいポートをlisten()で切り替えながら
+   使います。切り替えるタイミングは「相手の送信が一区切りついた時」や
+   「バッファが空になった時」など、取りこぼしが起きにくい時を選びます。
+   このサンプルでは読み尽くしたタイミングで切り替えています。
 
-  In order to listen on a software port, you call port.listen().
-  When using two software serial ports, you have to switch ports
-  by listen()ing on each one in turn. Pick a logical time to switch
-  ports, like the end of an expected transmission, or when the
-  buffer is empty. This example switches ports when there is nothing
-  more to read from a port
+   メモ: SoftwareSerialは互換性のために収録されています。可能であれば
+   ハードウェアUART(Serial1 = D0/D1)の使用を推奨します。
 
-
-
-  created 18 Apr. 2011
-  modified 19 March 2016
-  by Tom Igoe
-  based on Mikal Hart's twoPortRXExample
-
-  This example code is in the public domain.
-
+   原作: Tom Igoe / Mikal Hart (パブリックドメイン)
+   UkiUkiduino向けに移植・日本語化
 */
 
 #include <SoftwareSerial.h>
-// software serial #1: RX = digital pin 10, TX = digital pin 11
+// ソフトウェアシリアル1: RX = D10, TX = D11
 SoftwareSerial portOne(10, 11);
 
-// software serial #2: RX = digital pin 8, TX = digital pin 9
-// on the Mega, use other pins instead, since 8 and 9 don't work on the Mega
+// ソフトウェアシリアル2: RX = D8, TX = D9
 SoftwareSerial portTwo(8, 9);
 
 void setup() {
-  // Open serial communications and wait for port to open:
+  // USBシリアルを開き、ポートが開くまで待つ
   Serial.begin(115200);
   while (!Serial) {
-    ; // wait for serial port to connect. Needed for native USB port only
+    ; // USB接続のシリアルポートが開くのを待つ
   }
 
-
-  // Start each software serial port
+  // 各ソフトウェアシリアルポートを開始する
   portOne.begin(9600);
   portTwo.begin(9600);
 }
 
 void loop() {
-  // By default, the last initialized port is listening.
-  // when you want to listen on a port, explicitly select it:
+  // 初期状態では最後にbegin()したポートが受信状態になっている。
+  // 受信したいポートをlisten()で明示的に選択する:
   portOne.listen();
   Serial.println("Data from port one:");
-  // while there is data coming in, read it
-  // and send to the hardware serial port:
+  // データが届いている間、読み取ってUSBシリアルへ送る
   while (portOne.available() > 0) {
     char inByte = portOne.read();
     Serial.write(inByte);
   }
 
-  // blank line to separate data from the two ports:
+  // 2つのポートの出力を区切る空行
   Serial.println();
 
-  // Now listen on the second port
+  // 次にポート2を受信状態にする
   portTwo.listen();
-  // while there is data coming in, read it
-  // and send to the hardware serial port:
   Serial.println("Data from port two:");
+  // データが届いている間、読み取ってUSBシリアルへ送る
   while (portTwo.available() > 0) {
     char inByte = portTwo.read();
     Serial.write(inByte);
   }
 
-  // blank line to separate data from the two ports:
+  // 2つのポートの出力を区切る空行
   Serial.println();
 }

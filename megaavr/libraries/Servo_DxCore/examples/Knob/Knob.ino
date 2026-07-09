@@ -1,26 +1,27 @@
-/*
- Controlling a servo position using a potentiometer (variable resistor)
- by Michal Rinott <http://people.interaction-ivrea.it/m.rinott>
+/* Knob(ノブ)
+   可変抵抗(ポテンショメータ)のつまみでサーボの角度を操作するサンプルです。
 
- modified on 8 Nov 2013
- by Scott Fitzgerald
- http://www.arduino.cc/en/Tutorial/Knob
+   接続: サーボの信号線をD9へ。可変抵抗は両端を5VとGNDへ、
+         中央の端子をA0へ接続します。
+
+   原作: Michal Rinott (パブリックドメイン)
+   UkiUkiduino向けに移植・日本語化
 */
 
 #include <Servo_DxCore.h>
 
-Servo myservo;  // create servo object to control a servo
+Servo myservo;  // サーボを制御するためのServoオブジェクトを作成
 
-int potpin = PIN_PD4;  // analog pin used to connect the potentiometer PIN_PD4 always exists on Dx-series
-int val;    // variable to read the value from the analog pin
+int potpin = A0;  // 可変抵抗を接続するアナログ入力ピン
+int val;          // アナログ入力の読み取り値を入れる変数
 
 void setup() {
-  myservo.attach(PIN_PC3);  // attaches the servo on pin PC3, which exists on all Dx-series
+  myservo.attach(9);  // D9に接続したサーボをオブジェクトに割り当てる
 }
 
 void loop() {
-  val = analogRead(potpin);            // reads the value of the potentiometer (value between 0 and 1023)
-  val = map(val, 0, 1023, 0, 180);     // scale it to use it with the servo (value between 0 and 180)
-  myservo.write(val);                  // sets the servo position according to the scaled value
-  delay(15);                           // waits for the servo to get there
+  val = analogRead(potpin);            // 可変抵抗の値を読む(0~1023)
+  val = map(val, 0, 1023, 0, 180);     // サーボの角度(0~180)へ変換する
+  myservo.write(val);                  // 変換した角度へサーボを動かす
+  delay(15);                           // サーボが追従するまで待つ
 }

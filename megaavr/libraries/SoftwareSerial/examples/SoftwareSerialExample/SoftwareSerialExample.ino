@@ -1,40 +1,38 @@
-/*
-  Software serial multiple serial test
+/* SoftwareSerialExample(ソフトウェアシリアルの基本)
+   ソフトウェアシリアル(任意のピンで行うシリアル通信)のテストです。
+   USBシリアル(Serial)で受けた文字をソフトウェアシリアルへ、
+   ソフトウェアシリアルで受けた文字をUSBシリアルへ転送します。
 
-  Receives from the hardware serial, sends to software serial.
-  Receives from software serial, sends to hardware serial.
+   接続: D10(RX)を相手機器のTXへ、D11(TX)を相手機器のRXへ、
+         GND同士を接続します。
 
-  On modern AVRs, any pin can be used. For best results receiving, use low-numbered pins on a port
-  (eg, PD0 is better than PD7).
+   メモ: UkiUkiduinoではどのピンでも使えます。受信(RX)には
+   ポート内でビット番号の小さいピンを使うと安定します。
+   なおD0/D1にはハードウェアUART(Serial1)があるので、
+   確実な通信が必要な場合はそちらを優先してください。
 
-  created back in the mists of time
-  modified 25 May 2012
-  by Tom Igoe
-  based on Mikal Hart's example
-
-  This example code is in the public domain.
-
+   原作: Tom Igoe / Mikal Hart (パブリックドメイン)
+   UkiUkiduino向けに移植・日本語化
 */
 #include <SoftwareSerial.h>
 
-SoftwareSerial mySerial(PIN_PD5, PIN_PD4); // RX, TX
+SoftwareSerial mySerial(10, 11); // RX = D10, TX = D11
 
 void setup() {
-  // Open serial communications and wait for port to open:
+  // USBシリアルを開き、ポートが開くまで待つ
   Serial.begin(57600);
   while (!Serial) {
-    ; // wait for serial port to connect. Needed for native USB port only
+    ; // USB接続のシリアルポートが開くのを待つ
   }
-
 
   Serial.println("Goodnight moon!");
 
-  // set the data rate for the SoftwareSerial port
+  // ソフトウェアシリアルの通信速度を設定する
   mySerial.begin(4800);
   mySerial.println("Hello, world?");
 }
 
-void loop() { // run over and over
+void loop() { // 双方向に転送し続ける
   if (mySerial.available()) {
     Serial.write(mySerial.read());
   }

@@ -1,45 +1,36 @@
-/*
- * EEPROM Clear
+/* EEPROM Clear(EEPROM全消去)
  *
- * Sets all of the bytes of the EEPROM to 0xFF (blank).
- * Please see eeprom_iteration for a more in depth
- * look at how to traverse the EEPROM.
+ * EEPROMの全バイトを0xFF(消去状態)にします。
+ * EEPROMを順に処理する方法の詳細はeeprom_iterationも参照してください。
  *
- * This example code is in the public domain.
+ * 原作はパブリックドメイン。UkiUkiduino向けに日本語化。
  */
 
 #include <EEPROM.h>
 
 void setup() {
-  // initialize the LED pin as an output - skip if LED_BUILTIN is PIN_PA3 and using external clock source. We test for this to ensure that the sketch will compile successfully and can be used for CI testing
-  #if ((CLOCK_SOURCE & 0x03) == 2) || LED_BUILTIN != PIN_PA3
+  // 完了表示用にオンボードLED(D13)を出力に設定する
   pinMode(LED_BUILTIN, OUTPUT);
-  #endif
+
   /*
-   * Iterate through each byte of the EEPROM storage.
-
-   * Larger AVR processors have larger EEPROM sizes, E.g:
-   * tinyAVR 0/1/2-series 2k flash:      64b
-   * tinyAVR 0/1/2-series 4-8k flash:    128b
-   * tinyAVR 0/1/2-series 16-32k flash:  256b
-   * megaAVR 0-series:                   256b (all flash sizes)
-   * DA, DB, EA-series:                  512b (all flash sizes)
-   * DD-series:                          256b (all flash sizes)
-
-   * Rather than hard-coding the length, you should use the pre-provided length function.
-   * This will make your code portable to all AVR processors.
+   * EEPROMの全バイトを順に処理する。
+   *
+   * EEPROMの容量はマイコンによって異なります。
+   * UkiUkiduino(AVR64DU32)の容量は256バイトです。
+   * (参考: Arduino Uno R3のATmega328Pは1024バイト)
+   *
+   * 容量を数値で直書きせず、EEPROM.length()を使うことで、
+   * どのAVRでもそのまま動くコードになります。
    */
 
   for (int i = 0 ; i < EEPROM.length() ; i++) {
     EEPROM.write(i, 0xFF);
   }
 
-  // turn the LED on when we're done
-  #if ((CLOCK_SOURCE & 0x03) == 2) || LED_BUILTIN != PIN_PA3
+  // 消去が終わったらLEDを点灯する
   digitalWrite(LED_BUILTIN, HIGH);
-  #endif
 }
 
 void loop() {
-  /* Empty loop.  */
+  /* 何もしない */
 }

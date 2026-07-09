@@ -1,13 +1,12 @@
-/* eeprom_iteration example.
+/* eeprom_iteration(EEPROMの走査方法)
  *
- * A set of example snippets highlighting the
- * simplest methods for traversing the EEPROM.
+ * EEPROMの全バイトを順に処理する、最も基本的な書き方を
+ * 3パターン示すサンプル集です。
  *
- * Running this sketch is not necessary, this is
- * simply highlighting certain programming methods.
+ * 実行すること自体に意味はなく、書き方の紹介が目的です。
  *
- * Written by Christopher Andrews 2015
- * Released under MIT licence.
+ * 原作: Christopher Andrews 2015 (MITライセンス)
+ * UkiUkiduino向けに日本語化。
  */
 
 #include <EEPROM.h>
@@ -15,42 +14,42 @@
 void setup() {
 
   /*
-   * Iterate the EEPROM using a for loop.
+   * forループでEEPROMを走査する。
    */
 
   for (int index = 0 ; index < EEPROM.length() ; index++) {
 
-    // Add one to each cell in the EEPROM
+    // 各バイトに1を足す
     EEPROM[index] += 1;
   }
 
   /*
-   * Iterate the EEPROM using a while loop.
+   * whileループでEEPROMを走査する。
    */
 
   int index = 0;
 
   while (index < EEPROM.length()) {
 
-    // Add one to each cell in the EEPROM
+    // 各バイトに1を足す
     EEPROM[index] += 1;
     index++;
   }
 
   /*
-   * Iterate the EEPROM using a do-while loop.
+   * do-whileループでEEPROMを走査する。
    */
 
-  int idx = 0;  // Used 'idx' to avoid name conflict with 'index' above.
+  int idx = 0;  // 上の'index'と名前が重ならないよう'idx'にした
 
   do {
 
-    // Add one to each cell in the EEPROM
+    // 各バイトに1を足す
     EEPROM[idx] += 1;
     idx++;
   } while (idx < EEPROM.length());
 
 
-} // End of setup function.
+} // setup関数の終わり
 
 void loop() {}

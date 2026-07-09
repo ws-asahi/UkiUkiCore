@@ -1,45 +1,42 @@
-/* eeprom_get example.
+/* eeprom_get(構造体などの読み出し)
  *
- * This shows how to use the EEPROM.get() method.
+ * EEPROM.get()の使い方を示すサンプルです。
  *
- * To pre-set the EEPROM data, run the example sketch eeprom_put.
- * This sketch will run without it, however, the values shown
- * will be shown from what ever is already on the EEPROM.
+ * 事前にeeprom_putを実行してEEPROMへデータを書き込んでおいて
+ * ください。実行していなくても動きますが、その場合はEEPROMに
+ * 元々入っていた値(不定値)が表示されます。文字列の途中に終端
+ * 文字が無いと、シリアルに長いゴミが表示されることがあります。
  *
- * This may cause the serial object to print out a large string
- * of garbage if there is no null character inside one of the strings
- * loaded.
- *
- * Written by Christopher Andrews 2015
- * Released under MIT licence.
+ * 原作: Christopher Andrews 2015 (MITライセンス)
+ * UkiUkiduino向けに日本語化。
  */
 
 #include <EEPROM.h>
 
 void setup() {
 
-  float f = 0.00f;   // Variable to store data read from EEPROM.
-  int eeAddress = 0; // EEPROM address to start reading from
+  float f = 0.00f;   // EEPROMから読んだ値を入れる変数
+  int eeAddress = 0; // 読み出しを開始するEEPROMアドレス
 
   Serial.begin(115200);
 
   Serial.print("Read float from EEPROM: ");
 
-  // Get the float data from the EEPROM at position 'eeAddress'
+  // アドレス'eeAddress'からfloat値を読み出す
   EEPROM.get(eeAddress, f);
-  Serial.println(f, 3);    // This may print 'ovf, nan' if the data inside the EEPROM is not a valid float.
+  Serial.println(f, 3);    // 有効なfloatでない場合'ovf'や'nan'と表示されることがある
 
   /*
-   * As get also returns a reference to 'f', you can use it inline.
-   * E.g: Serial.print(EEPROM.get(eeAddress, f));
+   * get()は'f'への参照も返すので、次のように一行でも書けます。
+   * 例: Serial.print(EEPROM.get(eeAddress, f));
    */
 
   /*
-   * Get can be used with custom structures too.
-   * I have separated this into an extra function.
+   * get()は自作の構造体にも使えます。
+   * その例を別関数に分けています。
    */
 
-  secondTest(); // Run the next test.
+  secondTest(); // 次のテストを実行する
 }
 
 struct MyObject {
@@ -49,9 +46,9 @@ struct MyObject {
 };
 
 void secondTest() {
-  int eeAddress = sizeof(float); // Move address to the next byte after float 'f'.
+  int eeAddress = sizeof(float); // float 'f'の次のアドレスへ進める
 
-  MyObject customVar; // Variable to store custom object read from EEPROM.
+  MyObject customVar; // EEPROMから読んだ構造体を入れる変数
   EEPROM.get(eeAddress, customVar);
 
   Serial.println("Read custom object from EEPROM: ");
@@ -61,5 +58,5 @@ void secondTest() {
 }
 
 void loop() {
-  /* Empty loop  */
+  /* 何もしない */
 }

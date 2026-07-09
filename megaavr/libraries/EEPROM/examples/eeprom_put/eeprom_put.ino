@@ -1,16 +1,14 @@
-/* eeprom_put example.
+/* eeprom_put(構造体などの書き込み)
  *
- * This shows how to use the EEPROM.put() method.
- * Also, this sketch will pre-set the EEPROM data for the
- * example sketch eeprom_get.
+ * EEPROM.put()の使い方を示すサンプルです。
+ * eeprom_getサンプル用のデータを書き込む役割も兼ねています。
  *
- * Note, unlike the single byte version EEPROM.write(),
- * the put method will use update semantics. As in a byte
- * will only be written to the EEPROM if the data is actually
- * different in order to avoid unnecessary write/erase cycles.
+ * 1バイト版のEEPROM.write()と違い、put()は「更新」方式で
+ * 動作します。つまり値が実際に変わるバイトだけを書き込むため、
+ * 不要な書き込み/消去によるEEPROMの寿命消費を避けられます。
  *
- * Written by Christopher Andrews 2015
- * Released under MIT licence.
+ * 原作: Christopher Andrews 2015 (MITライセンス)
+ * UkiUkiduino向けに日本語化。
  */
 
 #include <EEPROM.h>
@@ -25,30 +23,30 @@ void setup() {
 
   Serial.begin(115200);
 
-  float f = 123.456f;  // Variable to store in EEPROM.
-  int eeAddress = 0;   // Location we want the data to be put.
+  float f = 123.456f;  // EEPROMへ保存する値
+  int eeAddress = 0;   // 保存先アドレス
 
 
-  // One simple call, with the address first and the object second.
+  // アドレス、値の順で渡すだけで書き込める
   EEPROM.put(eeAddress, f);
 
   Serial.println("Written float data type!");
 
-  /* Put is designed for use with custom structures also. */
+  /* put()は自作の構造体にも使えます。 */
 
-  // Data to store.
+  // 保存するデータ
   MyObject customVar = {
     3.14f,
     65,
     "Working!"
   };
 
-  eeAddress += sizeof(float); // Move address to the next byte after float 'f'.
+  eeAddress += sizeof(float); // float 'f'の次のアドレスへ進める
 
   EEPROM.put(eeAddress, customVar);
   Serial.print("Written custom data type! \n\nView the example sketch eeprom_get to see how you can retrieve the values!");
 }
 
 void loop() {
-  /* Empty loop */
+  /* 何もしない */
 }

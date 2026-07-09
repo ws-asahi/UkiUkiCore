@@ -1,13 +1,12 @@
-/* EEPROM Read
+/* EEPROM Read(全バイト読み出し)
  *
- * Reads the value of each byte of the EEPROM and prints it
- * to the computer.
- * This example code is in the public domain.
+ * EEPROMの各バイトの値を読み出し、シリアルモニタへ表示します。
+ * 原作はパブリックドメイン。UkiUkiduino向けに日本語化。
  */
 
 #include <EEPROM.h>
 
-// start reading from the first byte (address 0) of the EEPROM
+// EEPROMの先頭(アドレス0)から読み始める
 int address = 0;
 byte value;
 
@@ -16,7 +15,7 @@ void setup() {
 }
 
 void loop() {
-  // read a byte from the current address of the EEPROM
+  // 現在のアドレスから1バイト読む
   value = EEPROM.read(address);
 
   Serial.print(address);
@@ -25,18 +24,11 @@ void loop() {
   Serial.println();
 
   /*
-   * Iterate through each byte of the EEPROM storage.
-
-   * Larger AVR processors have larger EEPROM sizes, E.g:
-   * tinyAVR 0/1/2-series 2k flash:      64b
-   * tinyAVR 0/1/2-series 4-8k flash:    128b
-   * tinyAVR 0/1/2-series 16-32k flash:  256b
-   * megaAVR 0-series:                   256b (all flash sizes)
-   * DA, DB, EA-series:                  512b (all flash sizes)
-   * DD-series:                          256b (all flash sizes)
-
-   * Rather than hard-coding the length, you should use the pre-provided length function.
-   * This will make your code portable to all AVR processors.
+   * EEPROMの容量はマイコンによって異なります。
+   * UkiUkiduino(AVR64DU32)の容量は256バイトです。
+   *
+   * 容量を数値で直書きせず、EEPROM.length()を使うことで、
+   * どのAVRでもそのまま動くコードになります。
    */
 
   address = address + 1;
@@ -45,9 +37,9 @@ void loop() {
   }
 
   /*
-   * As the EEPROM sizes are powers of two, wrapping (preventing overflow) of an
-   * EEPROM address is also doable by a bitwise and of the length - 1.
-
+   * EEPROM容量は2のべき乗なので、アドレスの折り返し(あふれ防止)は
+   * 「容量-1」とのビットANDでも書けます。
+   *
    * ++address &= EEPROM.length() - 1;
    */
 

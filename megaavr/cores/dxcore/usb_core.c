@@ -474,7 +474,8 @@ void usbInit(void) {
      *    config 5b). Boards with an EXTERNAL 3.3 V VUSB supply (e.g. an on-board
      *    LDO, VDD = VUSB = 3.3 V, config 3s) must NOT enable the internal
      *    regulator, or it would fight the external supply. Selected per board in
-     *    boards.txt via -DUSB_VREG_INTERNAL (set for Tsurugi, not for Tachi). */
+     *    boards.txt via -DUSB_VREG_INTERNAL (set for the UkiUkiduino, which
+     *    generates VUSB with the on-chip regulator - config 5s). */
 #if defined(USB_VREG_INTERNAL)
     SYSCFG.VUSBCTRL = SYSCFG_USBVREG_bm;
 #endif

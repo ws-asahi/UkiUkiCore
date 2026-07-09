@@ -18,9 +18,11 @@
  *    IF 3   HID Mouse
  *    IF 4   HID Gamepad
  *
- *  VID/PID: pid.codes test VID 0x1209, Wazamono Tachi app PID 0x0006
- *           (bootloader uses 0x0005). pid.codes IDs are development-only;
- *           obtain a commercial VID/PID before product release.
+ *  VID/PID: pid.codes test VID 0x1209, UkiUkiduino app PID 0x000C
+ *           (bootloader uses 0x000B). These are pid.codes TEST-range
+ *           placeholders; replace with the officially assigned pid.codes
+ *           VID/PID before product release. Keep in sync with boards.txt
+ *           (vid.0/pid.0) and variants/UkiUkiduino/pins_arduino.h.
  */
 #ifndef USB_DESCRIPTORS_H
 #define USB_DESCRIPTORS_H
@@ -40,7 +42,7 @@ extern "C" {
   #define USB_VID               0x1209
 #endif
 #ifndef USB_PID
-  #define USB_PID               0x0006   /* Wazamono Tachi application */
+  #define USB_PID               0x000C   /* UkiUkiduino application (test range) */
 #endif
 #define USB_DEVICE_VER          0x0100
 
@@ -127,7 +129,7 @@ extern const uint8_t g_device_descriptor[18] PROGMEM;
 extern const uint8_t g_config_descriptor[CONFIG_TOTAL_LEN] PROGMEM;
 extern const uint8_t g_string_langid[4] PROGMEM;
 extern const uint8_t g_string_manufacturer[2 + 14 * 2] PROGMEM;
-extern const uint8_t g_string_product[2 + 14 * 2] PROGMEM;
+extern const uint8_t g_string_product[2 + 11 * 2] PROGMEM;
 extern const uint8_t g_string_serial[2 + 8 * 2] PROGMEM;
 
 #define g_string_manufacturer_len  ((uint8_t)sizeof(g_string_manufacturer))

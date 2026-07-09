@@ -204,9 +204,9 @@ volatile uint16_t g_cdc_rx_total = 0;   /* diagnostic: raw bytes received on EP2
 volatile uint16_t g_cdc_tx_starts = 0;  /* diagnostic: EP3 IN transfers started */
 volatile uint16_t g_cdc_tx_pkts   = 0;  /* diagnostic: EP3 IN completions (host read) */
 
-/* Activity-LED hooks: weak no-op defaults. A board variant (e.g. Tachi) may
- * override these to drive RX/TX activity LEDs; boards without such LEDs
- * (Tsurugi, which uses PD4/PD5 as D11/D12) keep these no-ops. See usb_cdc.h. */
+/* Activity-LED hooks: weak no-op defaults. A board variant may override these
+ * to drive RX/TX activity LEDs; the UkiUkiduino has no TX/RX LEDs (its PD4/PD5
+ * are D11/D12), so the no-ops stay in effect. See usb_cdc.h. */
 __attribute__((weak)) void usb_cdc_on_rx_activity(void) { }
 __attribute__((weak)) void usb_cdc_on_tx_activity(void) { }
 __attribute__((weak)) void usb_cdc_on_led_tick(void)    { }

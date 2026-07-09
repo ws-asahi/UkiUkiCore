@@ -129,10 +129,10 @@ const uint8_t g_string_manufacturer[2 + 14 * 2] PROGMEM = {
 };
 /* g_string_manufacturer_len replaced by a #define in usb_descriptors.h (sizeof at every call site, zero RAM). */
 
-const uint8_t g_string_product[2 + 14 * 2] PROGMEM = {
-    2 + 14 * 2, DESC_TYPE_STRING,
-    'W', 0, 'a', 0, 'z', 0, 'a', 0, 'm', 0, 'o', 0, 'n', 0, 'o', 0,
-    ' ', 0, 'T', 0, 'a', 0, 'c', 0, 'h', 0, 'i', 0
+const uint8_t g_string_product[2 + 11 * 2] PROGMEM = {
+    2 + 11 * 2, DESC_TYPE_STRING,
+    'U', 0, 'k', 0, 'i', 0, 'U', 0, 'k', 0, 'i', 0,
+    'd', 0, 'u', 0, 'i', 0, 'n', 0, 'o', 0
 };
 /* g_string_product_len replaced by a #define in usb_descriptors.h (sizeof at every call site, zero RAM). */
 

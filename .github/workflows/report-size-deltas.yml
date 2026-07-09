@@ -1,12 +1,11 @@
 name: Report Size Deltas
 
 on:
-  schedule:
-    # Check whether any new reports are needed every 5 minutes
-    # WARNING: If you run this workflow in a private repo, it will burn through your free GitHub Actions minutes fast!
-    #          See https://github.com/arduino/report-size-deltas/README.md for recommended private repo usage option.
-    # https://docs.github.com/en/free-pro-team@latest/actions/reference/events-that-trigger-workflows#schedule
-    - cron: '*/5 * * * *'
+  # NOTE (UkiUkiCore): the upstream 5-minute cron burns GitHub Actions minutes
+  # fast on a PRIVATE repository, so the schedule trigger is disabled while
+  # this repo is private. Re-enable the cron when the repo goes public.
+  # https://github.com/arduino/report-size-deltas/README.md
+  workflow_dispatch:
 
 jobs:
   report:

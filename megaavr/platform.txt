@@ -4,7 +4,7 @@
 # github.com/SpenceKonde/DxCore       #
 #######################################
 
-name=WazamonoCore
+name=UkiUkiCore
 versionnum.major=1
 versionnum.minor=6
 versionnum.patch=3

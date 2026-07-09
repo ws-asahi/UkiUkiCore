@@ -20,7 +20,7 @@
 #  for tone() (Tone.cpp routes tone to TCB1 whenever millis is on TCB0;
 #  tone therefore shares TCB1 with D3 PWM - using tone() suspends D3 PWM
 #  only, exactly like Uno R3's Timer2, but D11 PWM (TCA0) is preserved).
-ukiukiduino.name=UkiUkiduino (AVR64DU32)
+ukiukiduino.name=UkiUkiduino
 
 ukiukiduino.upload.tool=avrdude
 ukiukiduino.upload.prog_interlock=

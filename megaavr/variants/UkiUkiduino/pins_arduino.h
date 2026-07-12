@@ -22,7 +22,7 @@
  *   D4   PF4   (general I/O; no PWM - TCB0 is millis)       A10, AIN20
  *   D5   PD0   ~PWM(TCA0 WO0) | CCL                         A11, AIN0
  *   D6   PD1   ~PWM(TCA0 WO1) | CCL                         A12, AIN1
- *   D7   PA0   (general I/O; NO ADC channel - A13 is not assigned)
+ *   D7   PC3   AC0 AINP4 | CCL LUT1-OUT                   A13, AIN31
  *   D8   PA7   (general I/O, native 5V)                     A14, AIN27
  *   D9   PD2   ~PWM(TCA0 WO2) | CCL | AC0 AINP0 | EVOUTD    A15, AIN2
  *   D10  PD3   ~PWM(TCA0 WO3) | CCL | AC0 AINN0 | (SS)      A16, AIN3
@@ -38,7 +38,8 @@
  *   D20  PA1   BTN_BUILTIN (on-board button, external 1k pull-down,
  *              pressed = HIGH; no header pin)
  *   --- not exposed as a numbered Dn (appended so the arrays are complete) ---
- *        PC3   BUILTIN_LED driver (CCL LUT1 mirror of PD6)  index 21  (VUSB domain)
+ *        PA0   BUILTIN_LED driver (software mirror of D13 writes; no ADC)
+ *                                                           index 21
  *        PD7   AREF header pin = VREFA (external analog reference; AIN7)
  *                                                           index 22
  *        PF6   RESET                                        index 23
@@ -58,18 +59,21 @@
  *   TWI0  -> default (PA2 SDA / PA3 SCL) = D18/D19 = A4/A5 (Uno I2C convention).
  *   USART0-> "Serial1" (alias of Serial0), ALT1 (PA4 TX / PA5 RX) = D1/D0.
  *           (The Uno R3 D0/D1 UART.)
- *           The DEFAULT mux position (PA0/PA1) is D7/D20 on this board; ALT1 stays
- *           the variant default so D0/D1 behave like the classic Uno UART.
+ *           The DEFAULT mux position (PA0/PA1) is the LED driver / BTN_BUILTIN
+ *           on this board - do NOT Serial1.swap(0); ALT1 stays the variant
+ *           default so D0/D1 behave like the classic Uno UART.
  *   USART1-> exists on the AVR DU but has NO usable pin position on UkiUkiduino
  *           (DU USART1 is only PD6/PD7, which are SPI SCK / AREF here). Its
  *           Serial1 object is suppressed (HWSERIAL1_SUPPRESS) and the name
  *           "Serial1" is re-pointed at USART0 (see below).
  *   AREF  -> PD7 = VREFA is wired to the Uno R3 AREF header pin, so
  *           analogReference(EXTERNAL) IS supported on this board.
- *   LED   -> on-board LED is driven by PC3, which hardware-mirrors PD6 (D13) via
- *           EVSYS -> CCL LUT1 (see ukiukiduino_init.cpp), replacing the Uno R3
- *           op-amp buffer on pin 13. PC3 is in the VUSB domain, so the LED lights
- *           only while the USB voltage regulator is on.
+ *   LED   -> on-board LED is driven by PA0, which SOFTWARE-mirrors writes made
+ *           with digitalWrite()/digitalWriteFast() to D13 (PD6): the core copies
+ *           the resulting PD6 OUT bit onto PA0 (see LED_BUILTIN_MIRROR below and
+ *           wiring_digital.c). Only software writes are mirrored - SPI (SCK)
+ *           traffic does NOT blink the LED (a deliberate difference from the
+ *           Uno R3), and direct register writes to PORTD are not mirrored.
  *   BUTTON-> BTN_BUILTIN = D20 (PA1). External 1 kOhm pull-down on the board;
  *           pressed = HIGH. Use pinMode(BTN_BUILTIN, INPUT) - no pullup needed.
  *   Serial-> native USB CDC (USBSerial), Leonardo/Micro convention.
@@ -103,7 +107,7 @@
 #define PIN_PF4 (4)   // D4  general I/O (no PWM: TCB0 = millis)
 #define PIN_PD0 (5)   // D5  TCA0 WO0
 #define PIN_PD1 (6)   // D6  TCA0 WO1
-#define PIN_PA0 (7)   // D7  general I/O (no ADC channel; A13 not assigned)
+#define PIN_PC3 (7)   // D7  A13/AIN31, AC0 AINP4, CCL LUT1-OUT
 #define PIN_PA7 (8)   // D8  general I/O (native 5V)
 #define PIN_PD2 (9)   // D9  TCA0 WO2
 #define PIN_PD3 (10)  // D10 TCA0 WO3 / SS (Uno convention, SSD=1)
@@ -117,7 +121,7 @@
 #define PIN_PA2 (18)  // D18 A4 / SDA
 #define PIN_PA3 (19)  // D19 A5 / SCL
 #define PIN_PA1 (20)  // D20 BTN_BUILTIN (on-board button; no ADC channel)
-#define PIN_PC3 (21)  // BUILTIN_LED driver (CCL LUT1 mirror of PD6); VUSB domain; no Dn alias
+#define PIN_PA0 (21)  // BUILTIN_LED driver (software mirror of D13 writes); no ADC; no Dn alias
 #define PIN_PD7 (22)  // AREF header pin = VREFA (external reference; AIN7); no Dn alias
 #define PIN_PF6 (23)  // RESET
 #define PIN_PF7 (24)  // UPDI (Power header pin 1; highest index -> NUM_DIGITAL_PINS = 25)
@@ -135,14 +139,27 @@
   #define BTN_BUILTIN                  (PIN_PA1)   // D20, on-board button (pull-down, pressed = HIGH)
 #endif
 
+/* ---- LED_BUILTIN software mirror (see wiring_digital.c) ----
+ * digitalWrite()/digitalWriteFast() on D13 (PD6) also copy the resulting PD6
+ * OUT bit onto PA0, which drives the on-board LED. Copying the RESULT (rather
+ * than the requested value) makes HIGH/LOW/CHANGE all mirror correctly.
+ * SPI SCK traffic and direct register writes are intentionally NOT mirrored. */
+#define LED_BUILTIN_MIRROR
+#define LED_MIRROR_SRC_PIN             (PIN_PD6)   /* D13 */
+#define LED_MIRROR_SRC_VPORT           VPORTD
+#define LED_MIRROR_SRC_bm              (1 << 6)
+#define LED_MIRROR_DST_VPORT           VPORTA
+#define LED_MIRROR_DST_bm              (1 << 0)
+
 #ifdef CORE_ATTACH_OLD
   #define EXTERNAL_NUM_INTERRUPTS      (48)
 #endif
 
 /* ---- Explicit maps (NONCANONICAL numbering: arithmetic shortcuts cannot be used) ----
- * PA0 (D7) and PA1 (D20) have no ADC channel on the AVR DU and are therefore
- * absent from these maps (-> NOT_A_PIN). PD7 (AREF) keeps its AIN7 mapping so
- * the pin can still be sampled when it is not used as the external reference. */
+ * PA0 (LED driver) and PA1 (D20) have no ADC channel on the AVR DU and are
+ * therefore absent from these maps (-> NOT_A_PIN). D7 (PC3) maps to AIN31 (A13).
+ * PD7 (AREF) keeps its AIN7 mapping so the pin can still be sampled when it is
+ * not used as the external reference. */
 #define digitalPinToAnalogInput(p)  ( \
     (p) == PIN_PD0 ?  0 : (p) == PIN_PD1 ?  1 : (p) == PIN_PD2 ?  2 : (p) == PIN_PD3 ?  3 : \
     (p) == PIN_PD4 ?  4 : (p) == PIN_PD5 ?  5 : (p) == PIN_PD6 ?  6 : (p) == PIN_PD7 ?  7 : \
@@ -269,8 +286,7 @@
 #define PIN_HWSERIAL1_XDIR_PINSWAP_2    (NOT_A_PIN)
 
 /* ---- Arduino analog aliases. Uno R3 header = A0..A5; the remaining ADC-capable
- *      pins are also reachable as A6..A19. A13 is NOT assigned: D7 (PA0) has no
- *      ADC channel on this board. ---- */
+ *      pins are also reachable as A6..A19 (D7 = PC3 = AIN31 = A13). ---- */
 #define PIN_A0   (PIN_PF0)   // D14
 #define PIN_A1   (PIN_PF1)   // D15
 #define PIN_A2   (PIN_PF2)   // D16
@@ -284,7 +300,7 @@
 #define PIN_A10  (PIN_PF4)   // D4
 #define PIN_A11  (PIN_PD0)   // D5
 #define PIN_A12  (PIN_PD1)   // D6
-/* (no PIN_A13 - D7 = PA0 has no ADC channel) */
+#define PIN_A13  (PIN_PC3)   // D7
 #define PIN_A14  (PIN_PA7)   // D8
 #define PIN_A15  (PIN_PD2)   // D9
 #define PIN_A16  (PIN_PD3)   // D10
@@ -323,7 +339,7 @@ static const uint8_t D3  = PIN_PF5;  // ~PWM(TCB1)
 static const uint8_t D4  = PIN_PF4;
 static const uint8_t D5  = PIN_PD0;
 static const uint8_t D6  = PIN_PD1;
-static const uint8_t D7  = PIN_PA0;  // no ADC
+static const uint8_t D7  = PIN_PC3;  // A13/AIN31
 static const uint8_t D8  = PIN_PA7;  // native 5V
 static const uint8_t D9  = PIN_PD2;
 static const uint8_t D10 = PIN_PD3;  // SS (Uno convention)
@@ -351,7 +367,7 @@ static const uint8_t A9   = PIN_A9;
 static const uint8_t A10  = PIN_A10;
 static const uint8_t A11  = PIN_A11;
 static const uint8_t A12  = PIN_A12;
-/* (no A13 - see above) */
+static const uint8_t A13  = PIN_A13;
 static const uint8_t A14  = PIN_A14;
 static const uint8_t A15  = PIN_A15;
 static const uint8_t A16  = PIN_A16;
@@ -395,7 +411,7 @@ static const uint8_t A19  = PIN_A19;
     PF,         //  4 PF4  D4
     PD,         //  5 PD0  D5  TCA0 WO0
     PD,         //  6 PD1  D6  TCA0 WO1
-    PA,         //  7 PA0  D7  (no ADC)
+    PC,         //  7 PC3  D7  (A13/AIN31, AC0 AINP4, LUT1-OUT)
     PA,         //  8 PA7  D8  (native 5V)
     PD,         //  9 PD2  D9  TCA0 WO2
     PD,         // 10 PD3  D10 TCA0 WO3 / SS
@@ -409,7 +425,7 @@ static const uint8_t A19  = PIN_A19;
     PA,         // 18 PA2  A4 / SDA
     PA,         // 19 PA3  A5 / SCL
     PA,         // 20 PA1  D20 BTN_BUILTIN
-    PC,         // 21 PC3  BUILTIN_LED driver (CCL LUT1)
+    PA,         // 21 PA0  BUILTIN_LED driver (software mirror)
     PD,         // 22 PD7  AREF (VREFA)
     PF,         // 23 PF6  RESET
     PF          // 24 PF7  UPDI
@@ -423,7 +439,7 @@ static const uint8_t A19  = PIN_A19;
     PIN4_bp,   //  4 PF4  D4
     PIN0_bp,   //  5 PD0  D5
     PIN1_bp,   //  6 PD1  D6
-    PIN0_bp,   //  7 PA0  D7
+    PIN3_bp,   //  7 PC3  D7
     PIN7_bp,   //  8 PA7  D8
     PIN2_bp,   //  9 PD2  D9
     PIN3_bp,   // 10 PD3  D10
@@ -437,7 +453,7 @@ static const uint8_t A19  = PIN_A19;
     PIN2_bp,   // 18 PA2  A4
     PIN3_bp,   // 19 PA3  A5
     PIN1_bp,   // 20 PA1  D20 BTN_BUILTIN
-    PIN3_bp,   // 21 PC3  LED
+    PIN0_bp,   // 21 PA0  LED
     PIN7_bp,   // 22 PD7  AREF
     PIN6_bp,   // 23 PF6  RESET
     PIN7_bp    // 24 PF7  UPDI
@@ -451,7 +467,7 @@ static const uint8_t A19  = PIN_A19;
     PIN4_bm,   //  4 PF4  D4
     PIN0_bm,   //  5 PD0  D5
     PIN1_bm,   //  6 PD1  D6
-    PIN0_bm,   //  7 PA0  D7
+    PIN3_bm,   //  7 PC3  D7
     PIN7_bm,   //  8 PA7  D8
     PIN2_bm,   //  9 PD2  D9
     PIN3_bm,   // 10 PD3  D10
@@ -465,7 +481,7 @@ static const uint8_t A19  = PIN_A19;
     PIN2_bm,   // 18 PA2  A4
     PIN3_bm,   // 19 PA3  A5
     PIN1_bm,   // 20 PA1  D20 BTN_BUILTIN
-    PIN3_bm,   // 21 PC3  LED
+    PIN0_bm,   // 21 PA0  LED
     PIN7_bm,   // 22 PD7  AREF
     PIN6_bm,   // 23 PF6  RESET
     PIN7_bm    // 24 PF7  UPDI
@@ -481,7 +497,7 @@ static const uint8_t A19  = PIN_A19;
     NOT_ON_TIMER, //  4 PF4  D4  (no PWM: TCB0 = millis)
     NOT_ON_TIMER, //  5 PD0  D5  (TCA0 WO0, dynamic)
     NOT_ON_TIMER, //  6 PD1  D6  (TCA0 WO1, dynamic)
-    NOT_ON_TIMER, //  7 PA0  D7
+    NOT_ON_TIMER, //  7 PC3  D7
     NOT_ON_TIMER, //  8 PA7  D8
     NOT_ON_TIMER, //  9 PD2  D9  (TCA0 WO2, dynamic)
     NOT_ON_TIMER, // 10 PD3  D10 (TCA0 WO3, dynamic)
@@ -495,7 +511,7 @@ static const uint8_t A19  = PIN_A19;
     NOT_ON_TIMER, // 18 PA2  A4
     NOT_ON_TIMER, // 19 PA3  A5
     NOT_ON_TIMER, // 20 PA1  D20 BTN_BUILTIN
-    NOT_ON_TIMER, // 21 PC3  LED
+    NOT_ON_TIMER, // 21 PA0  LED
     NOT_ON_TIMER, // 22 PD7  AREF
     NOT_ON_TIMER, // 23 PF6  RESET
     NOT_ON_TIMER  // 24 PF7  UPDI

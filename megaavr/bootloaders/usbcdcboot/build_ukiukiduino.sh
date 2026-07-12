@@ -9,7 +9,7 @@
 #
 #    board        MCU         LED   pol       USB ident (VID:PID)
 #    -----------  ----------  ----  --------  -----------------------------
-#    UkiUkiduino  avr64du32   PC3   act-HIGH  0x1209:0x000B (test placeholder)
+#    UkiUkiduino  avr64du32   PA0   act-HIGH  0x1209:0x000B (test placeholder)
 #
 #    - LED pin     : LED_PORT / LED_PIN
 #    - LED polarity: LED_AH=1 (active-HIGH) | LED_AL=1 (active-LOW)
@@ -68,7 +68,7 @@ build() {            # $1=class  $2=mcu  $3=LEDport  $4=LEDpin  $5=LED polarity 
 }
 
 #     class        mcu        LEDport LEDpin LEDpol(AH|AL)
-build ukiukiduino avr64du32   PORTC   3      AH
+build ukiukiduino avr64du32   PORTA   0      AH
 
 echo ""
 echo "=== collecting hex files into ../hex/ ==="

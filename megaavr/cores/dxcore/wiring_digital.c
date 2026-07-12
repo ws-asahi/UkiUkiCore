@@ -181,6 +181,20 @@ void digitalWrite(uint8_t pin, uint8_t val) {
    * PORT->OUTCLR)
    * Since there's no penalty, why make a glitch we don't have to? */
   turnOffPWM(pin);
+
+  #if defined(LED_BUILTIN_MIRROR)
+  /* Board LED mirror (e.g. UkiUkiduino): a digitalWrite() to the mirror source
+   * pin (D13/PD6) also copies the pin's resulting OUT bit onto the LED driver
+   * pin. Copying the RESULT makes HIGH/LOW/CHANGE all mirror correctly. Costs
+   * one compare for every other pin, and two VPORT ops when it matches. */
+  if (pin == LED_MIRROR_SRC_PIN) {
+    if (LED_MIRROR_SRC_VPORT.OUT & LED_MIRROR_SRC_bm) {
+      LED_MIRROR_DST_VPORT.OUT |= LED_MIRROR_DST_bm;
+    } else {
+      LED_MIRROR_DST_VPORT.OUT &= ~LED_MIRROR_DST_bm;
+    }
+  }
+  #endif
 }
 
 inline __attribute__((always_inline)) void digitalWriteFast(uint8_t pin, uint8_t val) {
@@ -210,6 +224,18 @@ inline __attribute__((always_inline)) void digitalWriteFast(uint8_t pin, uint8_t
   else // HIGH
     vport->OUT |= mask;
 
+  #if defined(LED_BUILTIN_MIRROR)
+  /* Board LED mirror (see digitalWrite above). pin is a compile-time constant
+   * here, so this whole block folds away except when writing the mirror source
+   * pin, where it adds a single bit-test + set/clear - still "fast". */
+  if (pin == LED_MIRROR_SRC_PIN) {
+    if (LED_MIRROR_SRC_VPORT.OUT & LED_MIRROR_SRC_bm) {
+      LED_MIRROR_DST_VPORT.OUT |= LED_MIRROR_DST_bm;
+    } else {
+      LED_MIRROR_DST_VPORT.OUT &= ~LED_MIRROR_DST_bm;
+    }
+  }
+  #endif
 }
 
 int8_t digitalRead(uint8_t pin) {

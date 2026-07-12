@@ -10,7 +10,7 @@ REM  parameters are passed in at build time:
 REM
 REM    board        MCU         LED   pol       USB ident (VID:PID)
 REM    -----------  ----------  ----  --------  -----------------------------
-REM    UkiUkiduino  avr64du32   PC3   act-HIGH  0x1209:0x000B (test placeholder)
+REM    UkiUkiduino  avr64du32   PA0   act-HIGH  0x1209:0x000B (test placeholder)
 REM
 REM    - LED pin     : LED_PORT / LED_PIN
 REM    - LED polarity: LED_AH=1 (active-HIGH) | LED_AL=1 (active-LOW)
@@ -18,7 +18,7 @@ REM                    Neither given => active-LOW; both given => LED_AH wins.
 REM    - USB identity: fixed in src/usb_desc.h (replace the test PID with the
 REM      officially assigned pid.codes PID before release)
 REM
-REM  The UkiUkiduino LED (PC3) is active-HIGH (Arduino Uno "D13" convention).
+REM  The UkiUkiduino LED (PA0) is active-HIGH (Arduino Uno "D13" convention).
 REM
 REM  The signature is read from SIGROW at runtime (stk500.c), so the single
 REM
@@ -45,7 +45,7 @@ set "PATH=%GCCBIN%;%PATH%"
 if not defined MAKE set MAKE=make
 
 REM            class             mcu        LEDport LEDpin LEDpol(AH|AL)
-call :build ukiukiduino       avr64du32  PORTC   3      AH
+call :build ukiukiduino       avr64du32  PORTA   0      AH
 
 echo.
 echo === collecting hex files into ..\hex\ ===

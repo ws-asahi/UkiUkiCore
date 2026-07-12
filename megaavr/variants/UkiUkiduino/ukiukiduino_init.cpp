@@ -5,40 +5,29 @@
  * (see LICENSE.md).
  *
  * Purpose
- *   Drive the on-board LED from PC3 while mirroring D13 (PD6, the SPI SCK pin) in
- *   hardware, so the LED never loads the SCK line.  This replaces the unity-gain
- *   op-amp buffer that a classic Arduino Uno R3 puts between pin 13 (SCK) and its
- *   LED.  The mirror is a pure hardware path - zero CPU, and it tracks PD6 whether
- *   PD6 is driven by digitalWrite(13, ...) or by the SPI peripheral (SCK):
+ *   Prepare PA0 as the on-board LED driver pin.  The LED itself follows
+ *   digitalWrite()/digitalWriteFast() calls made to D13 (PD6): the core copies
+ *   the resulting PD6 OUT bit onto PA0 (software mirror; see LED_BUILTIN_MIRROR
+ *   in pins_arduino.h and the hooks in wiring_digital.c).  This replaces the
+ *   op-amp buffer that a classic Arduino Uno R3 puts between pin 13 (SCK) and
+ *   its LED, without loading the D13/SCK line with the LED at all.
  *
- *     PD6 pin level --(PORTD EVGEN0)--(EVSYS CH0)--> CCL LUT1 IN0 (EVENTA)
- *                   --> LUT1 truth-table = buffer --> LUT1-OUT = PC3 --> LED
+ *   Design note: only software writes are mirrored.  SPI (SCK) traffic does
+ *   NOT blink the LED - a deliberate difference from the Uno R3.  A hardware
+ *   mirror onto PA0 is not possible on the AVR64DU32: PA0 carries only CCL
+ *   LUT0-IN0 (an input), and has no CCL output or EVOUT function (datasheet
+ *   DS40002548A, I/O multiplexing table).  PC3 - the only spare pin with a CCL
+ *   output (LUT1-OUT) - is exposed on the header as D7 instead, where its ADC
+ *   channel (AIN31 = A13), AC0 AINP4 and LUT1-OUT are available to the user.
+ *   PA0 is a plain VDD-domain 5V GPIO, as is PC3 (per datasheet section 6.1,
+ *   VDD powers all I/O lines; VUSB powers only the DM/DP transceiver).
  *
- *   LUT1's input pins (PC0..PC2) are not bonded on the AVR64DU32 TQFP32, but that
- *   does not matter: the input is taken from the event channel, and LUT1's OUTPUT
- *   pin (PC3) IS bonded.  Per the datasheet PORTMUX CCLROUTEA table, LUT1's default
- *   output position is PC3, so no CCLROUTEA change is needed.
- *
- * Datasheet references (DS40002548A)
- *   - PORTMUX 17.3.2 (CCLROUTEA): LUT1 default OUT = PC3, IN0..IN2 = none.
- *   - CCL 30.2.2.1 (INSEL): IN0 = EVENTA selects EVSYS event channel A.
- *   - EVSYS: PORTD EVGENn pin-level generator; channel generator code for
- *     PORTD EVGEN0 = 0x40 | (port<<1) = 0x40 | (3<<1) = 0x46.
- *   - PORT EVGENCTRLA: EVGEN0SEL picks which PORTD pin feeds EVGEN0 (6 = PD6).
- *
- * IMPORTANT (VUSB power domain)
- *   PC3 is in the VUSB power domain, so its output buffer is only powered while the
- *   USB voltage regulator is enabled (UkiUkiduino uses the internal VUSB regulator;
- *   boards.txt passes -DUSB_VREG_INTERNAL).  The LED therefore lights only while
- *   the USB stack has brought up the regulator - it will NOT light at power-on
- *   before that.  This is expected and is documented for the user.
+ * Resource use
+ *   None. Unlike the earlier CCL-based design, no EVSYS channel and no CCL LUT
+ *   is consumed - EVSYS CH0 and CCL LUT1 are fully available to user sketches.
  *
  * Note: BTN_BUILTIN (D20 = PA1) needs no init here - it has an external 1 kOhm
  *   pull-down on the board (pressed = HIGH) and is read as a plain input.
- *
- * Resource use
- *   Consumes EVSYS channel 0 and CCL LUT1 (and its OUT pin PC3).  Sketches that need
- *   the Event/Logic libraries should avoid EVSYS channel 0 and CCL LUT1.
  */
 
 #include <Arduino.h>
@@ -49,43 +38,19 @@
  * Arduino archives variant-folder objects into core.a, and the core's main.cpp
  * supplies a *weak* initVariant(). An archived strong symbol does NOT override
  * a weak one already provided by a linked object, so without help this entire
- * translation unit (the strong initVariant() that sets up the CCL/EVSYS LED
- * mirror) is silently dropped at link time. boards.txt passes
+ * translation unit is silently dropped at link time. boards.txt passes
  *     -Wl,-u,ukiukiduino_variant_keep
- * which forces the linker to pull this member. (Confirmed necessary under -flto.) */
+ * which forces the linker to pull this member. */
 extern "C" { __attribute__((used)) char ukiukiduino_variant_keep = 0; }
 
 /* initVariant() is a weak no-op in the core (cores/dxcore/main.cpp); this strong
  * definition overrides it and runs once, immediately after init(), before setup(). */
 void initVariant(void) {
-  /* Keep PD6's digital input buffer enabled (ISC = INTDISABLE = 0) so the PORT
-   * event generator can sense its pin level even while PD6 is driven as an output
-   * (SPI SCK or digitalWrite). Preserves PULLUPEN/INVEN bits. */
-  PORTD.PIN6CTRL &= ~PORT_ISC_gm;
-
-  /* PORTD EVGEN0 follows PD6.  EVGENCTRLA = (EVGEN1SEL<<4)|EVGEN0SEL; 6 -> PD6. */
-  PORTD.EVGENCTRLA = (0x0 << PORT_EVGEN1SEL_gp) | (0x6 << PORT_EVGEN0SEL_gp);
-
-  /* Route PORTD EVGEN0 onto EVSYS channel 0, then feed channel 0 to CCL LUT1 in A.
-   *   CHANNEL0 generator   = 0x46  (PORTD EVGEN0; see header)
-   *   USERCCLLUT1A         = 0x01  (channel index + 1; channel 0) */
-  EVSYS.CHANNEL0     = 0x46;
-  EVSYS.USERCCLLUT1A = 0x01;
-
-  /* CCL LUT1 inputs: IN0 = EVENTA (0x3), IN1 = MASK (0x0), IN2 = MASK (0x0).
-   *   LUT1CTRLB[3:0]=INSEL0, LUT1CTRLB[7:4]=INSEL1, LUT1CTRLC[3:0]=INSEL2. */
-  CCL.LUT1CTRLB = (0x0 << 4) | 0x3;   /* INSEL1=MASK, INSEL0=EVENTA */
-  CCL.LUT1CTRLC = 0x0;                /* INSEL2=MASK                */
-
-  /* Truth table = buffer of IN0 (with IN1=IN2=0, index == IN0): TRUTH[1]=1. */
-  CCL.TRUTH1 = 0x02;
-
-  /* Enable LUT1 output to its OUT pin (PC3, CCLROUTEA default) and enable the LUT.
-   * Asynchronous pass-through: FILTSEL/EDGEDET left at reset (disabled). */
-  CCL.LUT1CTRLA = CCL_OUTEN_bm | CCL_ENABLE_bm;
-
-  /* Enable the CCL peripheral. */
-  CCL.CTRLA = CCL_ENABLE_bm;
+  /* LED driver pin PA0: output, LED off (LED is active-HIGH via R7).
+   * The pin stays an output permanently; pinMode(13, ...) only affects PD6,
+   * so the LED simply holds its last mirrored state if D13 is made an input. */
+  VPORTA.OUT &= ~(1 << 0);
+  VPORTA.DIR |= (1 << 0);
 }
 
 #endif /* UKIUKIDUINO_PINOUT */

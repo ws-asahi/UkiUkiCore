@@ -1,40 +1,45 @@
-/* CustomLogic / SetResetLatch
+/* CustomLogic / SetResetLatch(セット/リセットラッチ)
  *
- * A logic block can look at its own output. That is what turns a gate into
- * a memory: press SET and the output stays HIGH after you let go; press
- * RESET and it stays LOW. A latch made of nothing but hardware - no code
- * runs in loop(), and it keeps working while the CPU sleeps.
+ * ロジックブロックは自分自身の出力を見ることができます。これが
+ * ゲートを「記憶素子」に変えます: SETを押すと、離した後も出力は
+ * HIGHのまま。RESETを押すとLOWのままになります。ハードウェアだけで
+ * できたラッチです - loop()では何のコードも動かず、CPUがスリープ
+ * していても動き続けます。
  *
- *   IN0 = SET button   (pin)
- *   IN1 = RESET button (pin)
- *   IN2 = this unit's own output   <- LOGIC_OWN_OUTPUT, no pin used
+ *   IN0 = SETボタン   (ピン)
+ *   IN1 = RESETボタン (ピン)
+ *   IN2 = このユニット自身の出力   <- LOGIC_OWN_OUTPUT、ピン不使用
  *
- * Wiring (buttons to GND - the inputs are pulled up, so pressed = LOW):
- *   SET   -> IN0: Tachi A3 / Tsurugi D5  / Kunai D4
- *   RESET -> IN1: Tachi A2 / Tsurugi D6  / Kunai D5
- *   LED   -> OUT: Tachi A0 / Tsurugi D10 / Kunai D2
+ * 配線(ボタンはGNDへ - 入力はプルアップ済みなので押下=LOW):
+ *   SET   -> IN0: D5
+ *   RESET -> IN1: D6
+ *   LED   -> OUT: D10 (抵抗を直列にしてGNDへ)
  *
- * The truth table below says: if SET is pressed the output is HIGH; else if
- * RESET is pressed it is LOW; else it keeps whatever it had (its own output).
- * Bit i is the output when the inputs spell i, with IN2 = bit 2:
+ * 下の真理値表の意味: SETが押されていれば出力HIGH。そうでなく
+ * RESETが押されていればLOW。どちらでもなければ今の値(自身の出力)を
+ * 保持。ビットiは入力が数値iのときの出力で、IN2=ビット2です:
  *
- *   IN2(self) IN1(RESET) IN0(SET) | i | OUT
- *       0          0        0     | 0 |  1   SET pressed
- *       0          0        1     | 1 |  0   RESET pressed
- *       0          1        0     | 2 |  1   SET pressed
- *       0          1        1     | 3 |  0   hold (was LOW)
- *       1          0        0     | 4 |  1   SET pressed
- *       1          0        1     | 5 |  0   RESET pressed
- *       1          1        0     | 6 |  1   SET pressed
- *       1          1        1     | 7 |  1   hold (was HIGH)
+ *   IN2(自身) IN1(RESET) IN0(SET) | i | OUT
+ *       0          0        0     | 0 |  1   SET押下
+ *       0          0        1     | 1 |  0   RESET押下
+ *       0          1        0     | 2 |  1   SET押下
+ *       0          1        1     | 3 |  0   保持(LOWだった)
+ *       1          0        0     | 4 |  1   SET押下
+ *       1          0        1     | 5 |  0   RESET押下
+ *       1          1        0     | 6 |  1   SET押下
+ *       1          1        1     | 7 |  1   保持(HIGHだった)
  *
- * -> 0b11010101 (SET wins if both are pressed).
+ * -> 0b11010101 (両方押されたらSETが勝つ)
+ *
+ * ※押下=LOWなので、ビット位置の0が「押されている」ことに注意。
+ *
+ * UkiUkiduino向けに日本語化
  */
 #include <CustomLogic.h>
 
 void setup() {
   Serial.begin(115200);
-  CustomLogic.setInputIN2(LOGIC_OWN_OUTPUT);      // IN2 = our own output
+  CustomLogic.setInputIN2(LOGIC_OWN_OUTPUT);      // IN2 = 自身の出力
   CustomLogic.beginTruthTable(0b11010101, 3);
 }
 

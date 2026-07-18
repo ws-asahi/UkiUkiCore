@@ -1,20 +1,19 @@
-/* CustomLogic / ThreeInputOR
+/* CustomLogic / ThreeInputOR(3入力OR)
  *
- * A 3-input OR gate: OUT is HIGH while at least one input is HIGH.
- * Three-input logic is written as two operations, applied left to
- * right: begin(logic1, logic2) means OUT = (IN0 logic1 IN1) logic2 IN2.
+ * 3入力ORゲート: どれか1つでも入力がHIGHの間、OUTがHIGHになります。
+ * 3入力のロジックは2つの演算を左から右へ適用する形で書きます:
+ * begin(logic1, logic2) は OUT = (IN0 logic1 IN1) logic2 IN2 の意味です。
  *
- *   begin(OR, OR)    -> IN0 OR IN1 OR IN2       (this example)
+ *   begin(OR, OR)    -> IN0 OR IN1 OR IN2       (このサンプル)
  *   begin(AND, AND)  -> IN0 AND IN1 AND IN2
  *   begin(AND, OR)   -> (IN0 AND IN1) OR IN2
- *   begin(XOR, XOR)  -> 3-input parity
- *   begin(NOP, OR)   -> IN1 OR IN2  (IN0 unused)
+ *   begin(XOR, XOR)  -> 3入力パリティ
+ *   begin(NOP, OR)   -> IN1 OR IN2  (IN0は不使用)
  *
- * Pins of the CustomLogic unit:
- *            IN0        IN1        IN2        OUT
- *   Tachi    A3         A2         A1         A0
- *   Tsurugi  D5         D6         D9         D10
- *   Kunai    D4         D5         D3         D2
+ * CustomLogicユニットのピン(UkiUkiduino):
+ *   IN0 = D5    IN1 = D6    IN2 = D9    OUT = D10
+ *
+ * UkiUkiduino向けに日本語化
  */
 #include <CustomLogic.h>
 
@@ -24,7 +23,7 @@ void setup() {
 }
 
 void loop() {
-  // read() reports the current state of the OUT pin.
+  // read()はOUTピンの現在の状態を返す
   Serial.println(CustomLogic.read() ? "OUT = HIGH" : "OUT = LOW");
   delay(500);
 }

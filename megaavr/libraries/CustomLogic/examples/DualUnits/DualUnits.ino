@@ -1,27 +1,23 @@
-/* CustomLogic / DualUnits
+/* CustomLogic / DualUnits(2ユニット同時使用)
  *
- * Tachi and Tsurugi have a second unit, CustomLogic1, that works
- * independently of the first - two hardware gates at the same time.
- * (Kunai has a single unit, so this example uses just CustomLogic there.)
+ * UkiUkiduinoには第1ユニットと独立に動く第2ユニット
+ * 「CustomLogic1」があります - ハードウェアゲートを同時に2つ
+ * 使えるということです。
  *
+ * ピン(UkiUkiduino):
  *                 IN0   IN1   OUT
- *   CustomLogic
- *     Tachi       A3    A2    A0
- *     Tsurugi     D5    D6    D10
- *     Kunai       D4    D5    D2
- *   CustomLogic1
- *     Tachi       D5    D6    D8
- *     Tsurugi     A0    A1    A3
+ *   CustomLogic   D5    D6    D10
+ *   CustomLogic1  A0    A1    A3
+ *
+ * UkiUkiduino向けに日本語化
  */
 #include <CustomLogic.h>
 
 void setup() {
-  CustomLogic.begin(AND);     // unit 0: OUT high only while IN0 and IN1 are high
-  #if !defined(WAZAMONO_BOARD_KUNAI)
-  CustomLogic1.begin(OR);     // unit 1: OUT high while IN0 or IN1 is high
-  #endif
+  CustomLogic.begin(AND);     // ユニット0: IN0とIN1が両方HIGHの間だけOUTがHIGH
+  CustomLogic1.begin(OR);     // ユニット1: IN0かIN1がHIGHの間OUTがHIGH
 }
 
 void loop() {
-  // Both gates run in hardware at the same time - nothing to do.
+  // 2つのゲートが同時にハードウェアで動作中 - することはない
 }

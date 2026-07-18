@@ -1,41 +1,32 @@
-/* CustomLogic / MultipleOutputs
+/* CustomLogic / MultipleOutputs(複数ピンへの同時出力)
  *
- * The result of a logic block does not have to stay on its own OUT pin.
- * addOutput() sends the same result to another pin as well - the library
- * wires it through the event system for you, so it appears on both pins at
- * the same instant, still with no CPU involvement at all.
+ * ロジックブロックの結果は自分のOUTピンだけに留まりません。
+ * addOutput()で同じ結果を別のピンにも出せます - ライブラリが
+ * イベントシステム経由の配線を代行するので、両方のピンに同じ瞬間に
+ * 現れ、CPUはやはり一切関与しません。
  *
- * Output pins of the CustomLogic unit (event-output pins are FIXED per
- * board by its pin-configuration table):
- *                   OUT           OUT (alt)     event outputs
- *   Tachi           A0  (PD3)     D1  (PD6)     D2, D0, D7
- *   Tsurugi         D10 (PD3)     D13 (PD6)     D8, D9, A2
- *   Kunai           D2  (PA3)     D8  (PA6)     D0, D7
+ * CustomLogicユニットの出力ピン(UkiUkiduino。イベント出力ピンは
+ * ボードのピン構成表で固定されています):
+ *   OUT = D10 (PD3)    OUT(代替) = D13 (PD6)
+ *   イベント出力に使えるピン = D8, D9, A2
  *
- * setOutput(pin)  - the result appears on that pin only
- * addOutput(pin)  - ...and on this one too (dedicated pin + one pin per port)
- * disableOutput() - nowhere; the block still works for interrupts and for
- *                   feeding the other unit
+ * setOutput(pin)  - 結果をそのピンだけに出す
+ * addOutput(pin)  - ...に加えてこのピンにも出す(専用ピン+各ポート1本)
+ * disableOutput() - どこにも出さない。割り込みや、もう一方のユニットへの
+ *                   供給には引き続き使える
  *
- * Here the AND gate drives its own OUT pin AND the event output on PA2, so
- * two LEDs (or an LED and a downstream circuit) follow the same result.
+ * ここではANDゲートが自分のOUTピン(D10)とイベント出力D8の両方を
+ * 駆動します。2つのLED(またはLEDと後段回路)が同じ結果に追従します。
+ *
+ * UkiUkiduino向けに日本語化
  */
 #include <CustomLogic.h>
 
 void setup() {
   Serial.begin(115200);
 
-  CustomLogic.begin(AND);          // OUT pin, as usual
-
-  #if defined(WAZAMONO_BOARD_TACHI)
-    CustomLogic.addOutput(2);      // ...and also on D2 (PA2, EVOUTA)
-  #elif defined(WAZAMONO_BOARD_TSURUGI)
-    CustomLogic.addOutput(8);      // ...and also on D8 (PA7, EVOUTA)
-  #elif defined(WAZAMONO_BOARD_KUNAI)
-    CustomLogic.addOutput(0);      // ...and also on D0 (PA7, EVOUTA)
-  #else
-    #error "This example supports Wazamono boards only."
-  #endif
+  CustomLogic.begin(AND);          // OUTピンへはいつも通り出力
+  CustomLogic.addOutput(8);        // ...加えてD8(PA7, EVOUTA)にも出力
 }
 
 void loop() {

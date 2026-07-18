@@ -1,20 +1,19 @@
-/* CustomLogic / TwoInputAND
+/* CustomLogic / TwoInputAND(2入力AND)
  *
- * A hardware AND gate: the OUT pin goes HIGH only while both inputs are
- * HIGH. Once begin() has run, the gate works entirely in hardware -
- * loop() can be empty, or even asleep, and the gate keeps working.
+ * ハードウェアANDゲート: 両方の入力がHIGHの間だけOUTピンがHIGHに
+ * なります。begin()を実行した後はゲートが完全にハードウェアだけで
+ * 動作します。loop()が空でも、CPUがスリープ中でも、ゲートは
+ * 動き続けます。
  *
- * Pins of the CustomLogic unit:
- *            IN0        IN1        OUT
- *   Tachi    A3         A2         A0
- *   Tsurugi  D5         D6         D10
- *   Kunai    D4         D5         D2
+ * CustomLogicユニットのピン(UkiUkiduino):
+ *   IN0 = D5    IN1 = D6    OUT = D10
  *
- * The inputs have pull-ups, so for a quick test just wire two push
- * buttons from IN0/IN1 to GND and an LED (with a resistor) from OUT to
- * GND: the LED lights only while NEITHER button is pressed - both
- * inputs are HIGH thanks to the pull-ups. Press either button and it
- * goes out.
+ * 入力にはプルアップが効いているので、手軽に試すならIN0/IN1から
+ * GNDへ押しボタンを2つ、OUTからGNDへLED(+抵抗)を配線して
+ * ください。どちらのボタンも押していない間だけLEDが点灯します
+ * (プルアップにより両入力がHIGHのため)。どちらかを押すと消えます。
+ *
+ * UkiUkiduino向けに日本語化
  */
 #include <CustomLogic.h>
 
@@ -23,5 +22,5 @@ void setup() {
 }
 
 void loop() {
-  // Nothing to do - the gate runs by itself.
+  // 何もしない - ゲートは勝手に動き続ける
 }

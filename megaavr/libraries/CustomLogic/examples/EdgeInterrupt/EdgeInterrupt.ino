@@ -1,13 +1,15 @@
-/* CustomLogic / EdgeInterrupt
+/* CustomLogic / EdgeInterrupt(出力エッジで割り込み)
  *
- * Runs a function the moment the gate output changes - the logic is
- * evaluated in hardware, and your code is only called on the edges.
+ * ゲート出力が変化した瞬間に関数を実行します - 論理の評価は
+ * ハードウェアが行い、コードはエッジのときだけ呼ばれます。
  *
- * Here a 2-input NAND is used as an "alarm": with the pull-ups, OUT
- * falls to LOW only at the moment both inputs are HIGH (both buttons
- * released) - and onAlarm() counts how many times that happened.
+ * ここでは2入力NANDを「警報」として使います: プルアップにより、
+ * 両方の入力がHIGHになった瞬間(両方のボタンを離した瞬間)にだけ
+ * OUTがLOWへ落ちます - onAlarm()はその回数を数えます。
  *
- * Pins: same as TwoInputAND (IN0/IN1/OUT).
+ * ピン: TwoInputANDと同じです(IN0=D5 / IN1=D6 / OUT=D10)。
+ *
+ * UkiUkiduino向けに日本語化
  */
 #include <CustomLogic.h>
 
@@ -20,7 +22,7 @@ void onAlarm() {
 void setup() {
   Serial.begin(115200);
   CustomLogic.begin(NAND);                       // OUT = NOT (IN0 AND IN1)
-  CustomLogic.attachInterrupt(onAlarm, FALLING); // both inputs became HIGH
+  CustomLogic.attachInterrupt(onAlarm, FALLING); // 両入力がHIGHになった
 }
 
 void loop() {

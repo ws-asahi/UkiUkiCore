@@ -2,7 +2,7 @@
 setlocal
 pushd "%~dp0"
 REM ============================================================
-REM  build_ukiukiduino.bat   (cmd-native, ASCII-only auto-detect)
+REM  build_ukiukiduino.bat   (cmd-native, ASCII-only source)
 REM  UkiUkiCore - build the USB CDC bootloader for the UkiUkiduino.
 REM
 REM  This does NOT modify the clean-room bootloader source. Board
@@ -15,35 +15,64 @@ REM
 REM    - LED pin     : LED_PORT / LED_PIN
 REM    - LED polarity: LED_AH=1 (active-HIGH) | LED_AL=1 (active-LOW)
 REM                    Neither given => active-LOW; both given => LED_AH wins.
+REM    - VREG        : 1 = internal VUSB regulator (the UkiUkiduino)
 REM    - USB identity: fixed in src/usb_desc.h (replace the test PID with the
 REM      officially assigned pid.codes PID before release)
 REM
 REM  The UkiUkiduino LED (PA0) is active-HIGH (Arduino Uno "D13" convention).
 REM
-REM  The signature is read from SIGROW at runtime (stk500.c), so the single
+REM  --- Toolchain search order (first hit wins) -----------------------
+REM    0) %AVRGCC_ROOT%                     explicit override
+REM    1) Board Manager install (UkiUkiCore first, then WazamonoCore -
+REM       both packages ship the same wazamono toolchain):
+REM       %LOCALAPPDATA%\Arduino15\packages\UkiUkiCore\tools\avr-gcc\*
+REM       %LOCALAPPDATA%\Arduino15\packages\WazamonoCore\tools\avr-gcc\*
+REM    2) Sketchbook tools folder, resolved RELATIVE to this script so the
+REM       ASCII-only source still finds a Japanese profile path:
+REM       ..\..\..\..\..\tools\avr-gcc\*-wazamono*
+REM       (usbcdcboot -> bootloaders -> megaavr -> UkiUkiCore -> hardware
+REM        -> Arduino\tools)
+REM    3) Legacy stock build at C:\avr-gcc\avr-gcc-*
+REM  Wazamono builds (*-wazamonoN) run from any path (uniform ANSI codepage
+REM  + binutils >= 2.46.1); a stock build should stay on an ASCII path.
 REM
 REM  Put this in  UkiUkiCore\megaavr\bootloaders\usbcdcboot\  and run.
 REM ============================================================
 
-REM --- find avr-gcc under C:\avr-gcc (version auto-detected) ------------
-REM  The avr-gcc 15.2 toolchain lives at  C:\avr-gcc\avr-gcc-15.2.0\ .
-REM  Override the root with:  set "AVRGCC_ROOT=D:\path"  before running.
 if not defined AVRGCC_ROOT set "AVRGCC_ROOT=C:\avr-gcc"
 set "GCCBIN="
-for /d %%d in ("%AVRGCC_ROOT%\avr-gcc-*") do set "GCCBIN=%%~fd\bin"
-if not defined GCCBIN if exist "%AVRGCC_ROOT%\bin\avr-gcc.exe" set "GCCBIN=%AVRGCC_ROOT%\bin"
+
+REM 0) explicit override: accept <root>\bin, <root>\avr-gcc-*, <root>\*-wazamono*
+if defined AVRGCC_ROOT (
+  for /d %%d in ("%AVRGCC_ROOT%\*-wazamono*") do set "GCCBIN=%%~fd\bin"
+  if not defined GCCBIN for /d %%d in ("%AVRGCC_ROOT%\avr-gcc-*") do set "GCCBIN=%%~fd\bin"
+  if not defined GCCBIN if exist "%AVRGCC_ROOT%\bin\avr-gcc.exe" set "GCCBIN=%AVRGCC_ROOT%\bin"
+)
+REM 1) Board Manager install (UkiUkiCore, then WazamonoCore)
+if not defined GCCBIN for /d %%d in ("%LOCALAPPDATA%\Arduino15\packages\UkiUkiCore\tools\avr-gcc\*") do set "GCCBIN=%%~fd\bin"
+if not defined GCCBIN for /d %%d in ("%LOCALAPPDATA%\Arduino15\packages\WazamonoCore\tools\avr-gcc\*") do set "GCCBIN=%%~fd\bin"
+REM 2) sketchbook tools, relative to this script
+if not defined GCCBIN for /d %%d in ("%~dp0..\..\..\..\..\tools\avr-gcc\*-wazamono*") do set "GCCBIN=%%~fd\bin"
+
 if not defined GCCBIN (
-  echo ERROR: no avr-gcc-*\bin found under "%AVRGCC_ROOT%"
-  echo   Put the toolchain at  C:\avr-gcc\avr-gcc-15.2.0\   ^(or set AVRGCC_ROOT^).
+  echo ERROR: no avr-gcc toolchain found. Looked in:
+  echo   "%AVRGCC_ROOT%"  ^(override root^)
+  echo   "%LOCALAPPDATA%\Arduino15\packages\UkiUkiCore\tools\avr-gcc\*\bin"
+  echo   "%LOCALAPPDATA%\Arduino15\packages\WazamonoCore\tools\avr-gcc\*\bin"
+  echo   "%~dp0..\..\..\..\..\tools\avr-gcc\*-wazamono*\bin"
+  echo   "C:\avr-gcc\avr-gcc-*\bin"
+  echo Install UkiUkiCore/WazamonoCore via the Board Manager, or set AVRGCC_ROOT.
   popd ^& exit /b 1
 )
 if not exist "%GCCBIN%\avr-gcc.exe" (
   echo ERROR: avr-gcc.exe missing in "%GCCBIN%"
   popd ^& exit /b 1
 )
+echo Using avr-gcc: %GCCBIN%\avr-gcc.exe
 set "PATH=%GCCBIN%;%PATH%"
 if not defined MAKE set MAKE=make
 
+REM            class             mcu        LEDport LEDpin LEDpol(AH|AL) VREG(0|1)
 call :build ukiukiduino       avr64du32  PORTA   0      AH      1
 
 echo.
@@ -64,7 +93,7 @@ set "POLFLAG="
 if /i "%~5"=="AH" set "POLFLAG=LED_AH=1"
 if /i "%~5"=="AL" set "POLFLAG=LED_AL=1"
 set "VREGVAL=%~6"
-if "%VREGVAL%"=="" set "VREGVAL=1"
+if not defined VREGVAL set "VREGVAL=1"
 echo.
 echo ------ building %2  -^> usbcdcboot_%1.hex  (LED %3 %4, pol %5, VREG %VREGVAL%) ------
 del /q src\*.o 2>nul

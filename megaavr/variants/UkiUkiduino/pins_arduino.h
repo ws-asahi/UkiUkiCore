@@ -64,8 +64,8 @@
  *           default so D0/D1 behave like the classic Uno UART.
  *   USART1-> exists on the AVR DU but has NO usable pin position on UkiUkiduino
  *           (DU USART1 is only PD6/PD7, which are SPI SCK / AREF here). Its
- *           Serial1 object is suppressed (HWSERIAL1_SUPPRESS) and the name
- *           "Serial1" is re-pointed at USART0 (see below).
+ *           object is omitted and "Serial1" is a linker alias of Serial0
+ *           (WAZAMONO_SERIAL1_IS_USART0, set in boards.txt; see below).
  *   AREF  -> PD7 = VREFA is wired to the Uno R3 AREF header pin, so
  *           analogReference(EXTERNAL) IS supported on this board.
  *   LED   -> on-board LED is driven by PA0, which SOFTWARE-mirrors writes made
@@ -257,16 +257,13 @@
 #define PIN_HWSERIAL0_XDIR_PINSWAP_3    (PIN_PD7)
 
 /* ---- USART1: NO usable pin position on UkiUkiduino (DU USART1 is only PD6/PD7
- *   (ALT2) = SPI SCK / AREF here). Its Serial1 object is therefore SUPPRESSED
- *   (HWSERIAL1_SUPPRESS, see cores/dxcore/UART1.cpp) and the name "Serial1" is
- *   re-pointed at USART0 below, so the Uno R3 D0/D1 hardware UART is reachable
- *   as "Serial1" (Uno-family convention). "Serial0" remains a valid alias of
- *   the very same object. This include is processed from Arduino.h BEFORE
- *   HardwareSerial.h, so both defines take effect core-wide. ---- */
-#define HWSERIAL1_SUPPRESS
-#define Serial1 Serial0
-
-/* Mux tables kept for completeness (UART_swap.h). */
+ *   (ALT2) = SPI SCK / AREF here). boards.txt therefore builds with
+ *   -DWAZAMONO_SERIAL1_IS_USART0 (mechanism inherited from WazamonoCore):
+ *   UART1.cpp skips the USART1 object entirely and UART0.cpp emits
+ *       extern HardwareSerial Serial1 __attribute__((alias("Serial0")));
+ *   so "Serial1" IS the USART0 object (a true linker alias, not a macro) and
+ *   the Uno R3 D0/D1 hardware UART is reachable as "Serial1" (Uno-family
+ *   convention). "Serial0" remains a valid name for the same object. ---- */
 #define HWSERIAL1_MUX                   (0x00 /* PORTMUX_USART1_DEFAULT_gc - no pins */)
 #define HWSERIAL1_MUX_PINSWAP_1         (0x01 << 3 /* ALT1 absent on DU - placeholder */)
 #define HWSERIAL1_MUX_PINSWAP_2         (0x02 << 3 /* PORTMUX_USART1_ALT2_gc - PD6/PD7 (occupied) */)
@@ -550,7 +547,8 @@ static const uint8_t A19  = PIN_A19;
  * =================================================================
  *  Serial  = USBSerial (on-chip USB CDC)              <- primary / USB serial monitor
  *  Serial1 = USART0   (D0/D1, ALT1 - the Uno R3 hardware UART; alias of Serial0)
- *  (USART1 has no usable pins here; its object is suppressed - HWSERIAL1_SUPPRESS)
+ *  (USART1 has no usable pins here; its object is omitted - see
+ *   WAZAMONO_SERIAL1_IS_USART0 above)
  *  Define HAVE_NO_USB_SERIAL_REDIRECT (from boards.txt) to keep Serial==USART0.
  */
 #if defined(USB0) && !defined(HAVE_NO_USB_SERIAL_REDIRECT)

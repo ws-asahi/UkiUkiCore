@@ -864,13 +864,28 @@ inline __attribute__((always_inline)) void check_valid_digital_pin(pin_size_t pi
         }
       #endif
     #elif ((CLOCK_SOURCE & 0x03) == 1)
+      /* Compare against the PIN_PA0/PA1 macros, not "pin < 2": on boards with
+       * non-canonical pin numbering (all Wazamono boards) digital pins 0 and 1
+       * are NOT PA0/PA1. */
+      #if defined(PIN_PA0) && defined(PIN_PA1)
+      if (pin == PIN_PA0 || pin == PIN_PA1) {
+        badArg("Pin PA0 and PA1 cannot be used for digital I/O because those are used for external crystal clock.");
+      }
+      #else
       if (pin < 2) {
         badArg("Pin PA0 and PA1 cannot be used for digital I/O because those are used for external crystal clock.");
       }
+      #endif
     #elif defined(XTAL_PINS_HARDWIRED)
+      #if defined(PIN_PA0) && defined(PIN_PA1)
+      if (pin == PIN_PA0 || pin == PIN_PA1) {
+        badArg("On the selected board, PA0 and PA1 are hardwired to the crystal. They may not be used for other purposes.");
+      }
+      #else
       if (pin < 2) {
         badArg("On the selected board, PA0 and PA1 are hardwired to the crystal. They may not be used for other purposes.");
       }
+      #endif
     #endif
     }
 }

@@ -2413,12 +2413,12 @@ has once worked for the same thing as meaning that thing */
   /* Add a feature - yay!
    * Rename registers so people can't carry code back and forth - booo!
    */
-  // Apparently this was backported to Dx too, so all parts need this one, not just EB/EA
-  #if 1
-    #define CCL_INSEL0_IN0_gc CCL_INSEL0_IO_gc
-    #define CCL_INSEL1_IN1_gc CCL_INSEL1_IO_gc
-    #define CCL_INSEL2_IN2_gc CCL_INSEL2_IO_gc
-  #endif
+  /* The avr-libc DU headers already use the new CCL_INSELn_INn_gc names.
+   * Provide the legacy ..._IO_gc spellings as aliases for old code instead
+   * of the (broken) reverse mapping that upstream DxCore used. */
+  #define CCL_INSEL0_IO_gc CCL_INSEL0_IN0_gc
+  #define CCL_INSEL1_IO_gc CCL_INSEL1_IN1_gc
+  #define CCL_INSEL2_IO_gc CCL_INSEL2_IN2_gc
   // TCA V1.0 - tinyAVR 0/1, megaAVR 0
   // this only has one event input, but code needs to be able to run on newer parts too
   // so we define macros named after he the new version pointing to the old version of event input A.

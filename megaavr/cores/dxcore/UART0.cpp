@@ -83,6 +83,10 @@
     }
   #endif
 
+  #if defined(WAZAMONO_SERIAL1_IS_USART0)
+  extern HardwareSerial Serial1 __attribute__((alias("Serial0")));
+#endif
+
   #if !(defined(USE_ASM_RXC) && (USE_ASM_RXC == 1 || USE_ASM_RXC == 2) && \
        (SERIAL_RX_BUFFER_SIZE == 256 || SERIAL_RX_BUFFER_SIZE == 128 || SERIAL_RX_BUFFER_SIZE == 64 || SERIAL_RX_BUFFER_SIZE == 32 || SERIAL_RX_BUFFER_SIZE == 16) /* && defined(USART1)*/)
     ISR(USART0_RXC_vect) {

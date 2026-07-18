@@ -36,7 +36,7 @@ ukiukiduino.build.core=dxcore
 ukiukiduino.build.f_cpu={build.speed}000000L
 ukiukiduino.build.text_section_start=.text=0x1000
 ukiukiduino.build.defaultswaps=
-ukiukiduino.build.extra_flags= {build.defaultswaps} -DUSING_AVRDU_CDC_BOOTLOADER -DUSING_OPTIBOOT -DUSB_VREG_INTERNAL
+ukiukiduino.build.extra_flags= {build.defaultswaps} -DUSING_AVRDU_CDC_BOOTLOADER -DUSING_OPTIBOOT -DUSB_VREG_INTERNAL -DWAZAMONO_SERIAL1_IS_USART0
 # Force-link the variant init TU (variants/UkiUkiduino/ukiukiduino_init.cpp).
 # Arduino archives variant objects into core.a, so its strong initVariant() that
 # sets up the CCL/EVSYS LED mirror would otherwise be dropped (core main.cpp has

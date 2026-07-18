@@ -1,24 +1,26 @@
-# Compile Examples - UkiUkiCore CI
-#   UkiUkiCore has exactly ONE board (ukiukiduino, AVR64DU32) with all
-#   build options locked in boards.txt (clock fixed to 24 MHz internal,
-#   millis=TCB0, wiremode=MORS_SINGLE, ...), so there is no build matrix:
-#   every sketch is compiled once against the single product FQBN.
+# UkiUkiCore - Compile Examples
 #
-#   The DxCore Boards Manager package is installed first to provide the
-#   avr-gcc toolchain, then the platform is overwritten with this
-#   repository's megaavr/ tree (same vendor/arch, so the FQBN stays
-#   DxCore:megaavr:ukiukiduino inside CI).
+# Lean regression CI for the UkiUkiduino (the only board in this core).
+# Follows the WazamonoCore approach: one compile workflow, no lint/format/
+# spell side-jobs.
+#
+# How it works:
+#   1. The Wazamono package index installs the WazamonoCore toolchain
+#      (avr-gcc 15.2.0-wazamono1, avrdude 8.1-wazamono1) + the released
+#      platform, so ctags and other builtin tools are also pulled in.
+#      (UkiUkiCore shares the wazamono toolchain; it has no package index
+#      of its own yet.)
+#   2. `source-path: megaavr` then overlays the checked-out working tree on
+#      top, so the examples are compiled against the code in this commit/PR.
+#      The overlay keeps the installed platform name, so the FQBN vendor in
+#      CI is "WazamonoCore" even though this is UkiUkiCore.
+#
+# To broaden/narrow coverage, edit the `sketch-paths` list. Each entry is a
+# directory; every .ino under it is compiled.
 
 name: Compile Examples
 
 on:
-  pull_request:
-    paths:
-      - ".github/workflows/compile-examples.yml"
-      - "megaavr/libraries/**"
-      - "megaavr/cores/**"
-      - "megaavr/variants/**"
-      - "megaavr/*.txt"
   push:
     paths:
       - ".github/workflows/compile-examples.yml"
@@ -26,130 +28,49 @@ on:
       - "megaavr/cores/**"
       - "megaavr/variants/**"
       - "megaavr/*.txt"
-  # workflow_dispatch event allows the workflow to be triggered manually
+  pull_request:
+    paths:
+      - ".github/workflows/compile-examples.yml"
+      - "megaavr/libraries/**"
+      - "megaavr/cores/**"
+      - "megaavr/variants/**"
+      - "megaavr/*.txt"
   workflow_dispatch:
-  # repository_dispatch event allows the workflow to be triggered via the GitHub API
-  repository_dispatch:
 
 jobs:
   compile-examples:
     runs-on: ubuntu-latest
 
-    env:
-      platform-name: DxCore:megaavr
-
-      # Everything below must compile for the UkiUkiduino (AVR64DU32).
-      # Family-specific example sets from the DxCore workflows (ZCD / Opamp /
-      # PTC = DA/DB-only, Flash = optiboot appspm) are intentionally omitted,
-      # as is Wire/two_master_write (needs dual-mode Wire; the UkiUkiduino
-      # locks wiremode=MORS_SINGLE).
-      sketch-paths: |
-        - megaavr/extras/ci/test-sketch/all/dummysketch
-        - megaavr/extras/ci/test-sketch/all/macros
-        - megaavr/extras/ci/test-sketch/all/math_macros
-        - megaavr/extras/ci/test-sketch/all/test_analog
-        - megaavr/extras/ci/test-sketch/all/test_digital
-        - megaavr/extras/ci/test-sketch/all/test_tone
-        - megaavr/extras/ci/test-sketch/all/test_PWM
-        - megaavr/extras/ci/test-sketch/all/test_timekeeping
-        - megaavr/libraries/AnalogComp/examples/EdgeInterrupt
-        - megaavr/libraries/AnalogComp/examples/OutputPin
-        - megaavr/libraries/AnalogComp/examples/ReadState
-        - megaavr/libraries/AnalogComp/examples/Threshold
-        - megaavr/libraries/CustomLogic/examples/AnalogCompInput
-        - megaavr/libraries/CustomLogic/examples/DualUnits
-        - megaavr/libraries/CustomLogic/examples/EdgeInterrupt
-        - megaavr/libraries/CustomLogic/examples/MultipleOutputs
-        - megaavr/libraries/CustomLogic/examples/SetResetLatch
-        - megaavr/libraries/CustomLogic/examples/ThreeInputOR
-        - megaavr/libraries/CustomLogic/examples/TruthTable
-        - megaavr/libraries/CustomLogic/examples/TwoInputAND
-        - megaavr/libraries/DxCore/examples/EnhancedIODemo
-        - megaavr/libraries/DxCore/examples/ModernRevSer
-        - megaavr/libraries/DxCore/examples/SAMPLENdemo
-        - megaavr/libraries/DxCore/examples/TCA0Demo
-        - megaavr/libraries/DxCore/examples/TCA0Demo2
-        - megaavr/libraries/DxCore/examples/TCA0Demo3
-        - megaavr/libraries/DxCore/examples/TCA0Demo4
-        - megaavr/libraries/DxCore/examples/PWMTest
-        - megaavr/libraries/EEPROM/examples/eeprom_clear
-        - megaavr/libraries/EEPROM/examples/eeprom_crc
-        - megaavr/libraries/EEPROM/examples/eeprom_get
-        - megaavr/libraries/EEPROM/examples/eeprom_iteration
-        - megaavr/libraries/EEPROM/examples/eeprom_put
-        - megaavr/libraries/EEPROM/examples/eeprom_read
-        - megaavr/libraries/EEPROM/examples/eeprom_update
-        - megaavr/libraries/EEPROM/examples/eeprom_write
-        - megaavr/libraries/EventSystem/examples/CompToPin
-        - megaavr/libraries/EventSystem/examples/PinToLogic
-        - megaavr/libraries/EventSystem/examples/PinToPin
-        - megaavr/libraries/EventSystem/examples/SoftwareTrigger
-        - megaavr/libraries/Flash/examples/FlashDemo
-        - megaavr/libraries/Flash/examples/FlashWriteTest
-        - megaavr/libraries/HID-Project/examples/Consumer
-        - megaavr/libraries/HID-Project/examples/Gamepad
-        - megaavr/libraries/HID-Project/examples/Keyboard
-        - megaavr/libraries/HID-Project/examples/Mouse
-        - megaavr/libraries/HID-Project/examples/RawHID
-        - megaavr/libraries/MIDIUSB/examples/MIDIUSB_buzzer
-        - megaavr/libraries/MIDIUSB/examples/MIDIUSB_clock
-        - megaavr/libraries/MIDIUSB/examples/MIDIUSB_loop
-        - megaavr/libraries/MIDIUSB/examples/MIDIUSB_read
-        - megaavr/libraries/MIDIUSB/examples/MIDIUSB_write
-        - megaavr/libraries/Servo/examples/Knob
-        - megaavr/libraries/Servo/examples/ServoMaxTest
-        - megaavr/libraries/Servo/examples/Sweep
-        - megaavr/libraries/Servo_DxCore/examples/Knob
-        - megaavr/libraries/Servo_DxCore/examples/ServoMaxTest
-        - megaavr/libraries/Servo_DxCore/examples/Sweep
-        - megaavr/libraries/SoftwareSerial/examples/SoftwareSerialExample
-        - megaavr/libraries/SoftwareSerial/examples/TwoPortReceive
-        - megaavr/libraries/SPI/examples/BarometricPressureSensor
-        - megaavr/libraries/SPI/examples/DigitalPotControl
-        - megaavr/libraries/tinyNeoPixel/examples/buttoncycler
-        - megaavr/libraries/tinyNeoPixel/examples/simple
-        - megaavr/libraries/tinyNeoPixel/examples/strandtest
-        - megaavr/libraries/tinyNeoPixel/examples/RGBWstrandtest
-        - megaavr/libraries/tinyNeoPixel_Static/examples/buttoncycler
-        - megaavr/libraries/tinyNeoPixel_Static/examples/simple
-        - megaavr/libraries/tinyNeoPixel_Static/examples/strandtest
-        - megaavr/libraries/USERSIG/examples/UsersigTest
-        - megaavr/libraries/Wire/examples/digital_potentiometer
-        - megaavr/libraries/Wire/examples/master_read
-        - megaavr/libraries/Wire/examples/master_write
-        - megaavr/libraries/Wire/examples/SFRRanger_reader
-        - megaavr/libraries/Wire/examples/slave_read
-        - megaavr/libraries/Wire/examples/slave_write
-        - megaavr/libraries/Wire/examples/slave_secondary_address
-        - megaavr/libraries/Wire/examples/slave_address_mask
-        - megaavr/libraries/Wire/examples/master_multi_address_write
-        - megaavr/libraries/Wire/examples/register_model
-        - megaavr/libraries/Wire/examples/register_model_master
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      # See: https://github.com/arduino/compile-sketches/README.md
-      - name: Compile examples (UkiUkiduino, locked product configuration)
-        uses: arduino/compile-sketches@main
+      - name: Compile examples (UkiUkiduino)
+        uses: arduino/compile-sketches@v1
         with:
-          cli-version: 0.33.0
-          fqbn: ${{ env.platform-name }}:ukiukiduino
+          fqbn: "WazamonoCore:megaavr:ukiukiduino"
           sketch-paths: |
-            ${{ env.sketch-paths }}
+            - megaavr/libraries/EEPROM/examples
+            - megaavr/libraries/USERSIG/examples
+            - megaavr/libraries/EventSystem/examples
+            - megaavr/libraries/CustomLogic/examples
+            - megaavr/libraries/AnalogComp/examples
+            - megaavr/libraries/Wire/examples
+            - megaavr/libraries/SPI/examples
+            - megaavr/libraries/Servo/examples
+            - megaavr/libraries/tinyNeoPixel_Static/examples
+            - megaavr/libraries/SoftwareSerial/examples
+            - megaavr/libraries/HID-Project/examples
+            - megaavr/libraries/MIDIUSB/examples
           platforms: |
-            # Install DxCore via Boards Manager for the toolchain
-            - source-url: http://drazzy.com/package_drazzy.com_index.json
-              name: ${{ env.platform-name }}
-            # Overwrite the DxCore release version with the platform from the local path
+            # Pull the WazamonoCore toolchain + released platform (also
+            # provides builtin tools such as ctags).
+            - source-url: https://raw.githubusercontent.com/ws-asahi/WazamonoCore/main/docs/package_wazamono_index.json
+              name: WazamonoCore:megaavr
+            # Overlay the working tree so this commit's code is what gets built.
             - source-path: megaavr
-              name: ${{ env.platform-name }}
+              name: WazamonoCore:megaavr
           libraries: |
-            # The sketches don't have any external library dependencies, so just define an empty array
+            # Examples have no external library dependencies.
             -
           verbose: false
-          enable-deltas-report: true
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          enable-warnings-report: true
-          sketches-report-path: sketches-reports

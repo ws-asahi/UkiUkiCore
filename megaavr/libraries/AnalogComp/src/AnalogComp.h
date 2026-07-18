@@ -21,18 +21,19 @@
  *              plus (+)             minus (-)
  *   Tachi      A1  (PD2, AINP0)     A0  (PD3, AINN0)
  *   Tsurugi    D9  (PD2, AINP0)     D10 (PD3, AINN0)
+ *   UkiUkiduino D9 (PD2, AINP0)     D10 (PD3, AINN0)
  *   Kunai      D6  (PD6, AINP3)     D7  (PD7, AINN2)
  *
  * The comparator output can be driven onto PA7 with enableOutput()
- * (Tachi: D4 / Tsurugi: D8 / Kunai: D0).
+ * (Tachi: D4 / Tsurugi: D8 / Kunai: D0 / UkiUkiduino: D8).
  */
 #ifndef ANALOGCOMP_H
 #define ANALOGCOMP_H
 
 #include <Arduino.h>
 
-#if !defined(WAZAMONO_BOARD_TACHI) && !defined(WAZAMONO_BOARD_TSURUGI) && !defined(WAZAMONO_BOARD_KUNAI)
-  #error "AnalogComp supports Wazamono boards only."
+#if !defined(WAZAMONO_BOARD_TACHI) && !defined(WAZAMONO_BOARD_TSURUGI) && !defined(WAZAMONO_BOARD_KUNAI) && !defined(WAZAMONO_BOARD_UKIUKIDUINO)
+  #error "AnalogComp supports Wazamono-family boards only."
 #endif
 
 /* Hysteresis levels for setHysteresis() */
@@ -64,9 +65,9 @@ public:
 
   /* Select other input pins before or after begin(). Valid pins:
    *   plus:  PD2 (Tachi A1 / Tsurugi D9), PD6 (Tachi D1* / Tsurugi D13 / Kunai D6),
-   *          PC3 (Tsurugi D7 only)
-   *   minus: PD3 (Tachi A0 / Tsurugi D10), PD0 (Tachi A3 / Tsurugi D5),
-   *          PD7 (Tachi D0 / Kunai D7 / Tsurugi: the AREF pin)
+   *          PC3 (Tsurugi / UkiUkiduino D7 only)
+   *   minus: PD3 (Tachi A0 / Tsurugi・UkiUkiduino D10), PD0 (Tachi A3 / Tsurugi・UkiUkiduino D5),
+   *          PD7 (Tachi D0 / Kunai D7 / Tsurugi・UkiUkiduino: the AREF pin)
    * (* Tachi D1/D0 are the Serial1 pins - usable when Serial1 is not.)
    * Returns false and leaves the setting unchanged if a pin is not a
    * valid comparator input on this board. */
@@ -82,7 +83,7 @@ public:
   void setHysteresis(uint8_t level);
 
   /* Drive the comparator result onto the output pin PA7
-   * (Tachi: D4 / Tsurugi: D8 / Kunai: D0). invert=true for active-low. */
+   * (Tachi: D4 / Tsurugi: D8 / Kunai: D0 / UkiUkiduino: D8). invert=true for active-low. */
   void enableOutput(bool invert = false);
   void disableOutput();
 

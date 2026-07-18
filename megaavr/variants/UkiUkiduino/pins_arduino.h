@@ -97,6 +97,10 @@
  * pin number == port order (our numbering does not follow port order). */
 #define DU_32PIN_PINOUT
 #define UKIUKIDUINO_PINOUT
+/* Board tag for the bundled Wazamono-family libraries (AnalogComp,
+ * CustomLogic, EventSystem): selects the UkiUkiduino pin mapping, which for
+ * these peripherals matches the Wazamono Tsurugi (PD/PF/PA7/PC3 layout). */
+#define WAZAMONO_BOARD_UKIUKIDUINO
 #define NONCANONICAL_PIN_NUMBERS
 
 /* ---- Digital pin number for each MCU pin (Uno R3 layout, D0..D20 contiguous) ---- */

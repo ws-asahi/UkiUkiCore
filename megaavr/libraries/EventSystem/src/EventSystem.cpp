@@ -57,7 +57,7 @@ static uint8_t evoutPortmuxBit(uint8_t idx) {
 
 /* ---- the CustomLogic event inputs --------------------------------------- */
 /* EVENT_TO_LOGIC_A/_B -> the CustomLogic unit's LUT; _1A/_1B -> CustomLogic1.
- * CustomLogic is LUT2 on Tachi/Tsurugi and LUT0 on Kunai; CustomLogic1 is
+ * CustomLogic is LUT2 on Tachi/Tsurugi/UkiUkiduino and LUT0 on Kunai; CustomLogic1 is
  * LUT3 and does not exist on Kunai. */
 static volatile uint8_t *logicUser(uint8_t n /* 0..3 */) {
   #if defined(WAZAMONO_BOARD_KUNAI)

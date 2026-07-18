@@ -7,9 +7,9 @@ AnalogCompClass AnalogComp;
 #if defined(WAZAMONO_BOARD_KUNAI)
   #define AC_DEFAULT_PLUS_PIN   PIN_PD6   /* D6, AINP3 */
   #define AC_DEFAULT_MINUS_PIN  PIN_PD7   /* D7, AINN2 */
-#else /* Tachi / Tsurugi */
-  #define AC_DEFAULT_PLUS_PIN   PIN_PD2   /* Tachi A1 / Tsurugi D9,  AINP0 */
-  #define AC_DEFAULT_MINUS_PIN  PIN_PD3   /* Tachi A0 / Tsurugi D10, AINN0 */
+#else /* Tachi / Tsurugi / UkiUkiduino */
+  #define AC_DEFAULT_PLUS_PIN   PIN_PD2   /* Tachi A1 / Tsurugi,UkiUkiduino D9,  AINP0 */
+  #define AC_DEFAULT_MINUS_PIN  PIN_PD3   /* Tachi A0 / Tsurugi,UkiUkiduino D10, AINN0 */
 #endif
 
 /* ---- pin -> mux/PINCTRL mapping -------------------------------------- */
@@ -18,8 +18,8 @@ static bool plusPinToMux(uint8_t pin, uint8_t *gc) {
   if (pin == PIN_PD2) { *gc = AC_MUXPOS_AINP0_gc; return true; }
   #endif
   if (pin == PIN_PD6) { *gc = AC_MUXPOS_AINP3_gc; return true; }
-  #if defined(WAZAMONO_BOARD_TSURUGI)
-  /* AINP4 = PC3 = D7: a plain, VDD-driven GPIO on Tsurugi. */
+  #if defined(WAZAMONO_BOARD_TSURUGI) || defined(WAZAMONO_BOARD_UKIUKIDUINO)
+  /* AINP4 = PC3 = D7: a plain, VDD-driven GPIO on Tsurugi / UkiUkiduino. */
   if (pin == PIN_PC3) { *gc = AC_MUXPOS_AINP4_gc; return true; }
   #else
   /* AINP4 = PC3 is not offered here: it is the VBUS divider on Tachi/Kunai. */

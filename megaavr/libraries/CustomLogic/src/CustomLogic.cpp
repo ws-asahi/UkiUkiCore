@@ -6,7 +6,7 @@
 #if defined(WAZAMONO_BOARD_KUNAI)
 static const uint8_t unit0_pins[5] = {PIN_PA0, PIN_PA1, PIN_PA2, PIN_PA3, PIN_PA6};
 CustomLogicClass CustomLogic(0, unit0_pins);   /* LUT0 */
-#else /* Tachi / Tsurugi */
+#else /* Tachi / Tsurugi / UkiUkiduino */
 static const uint8_t unit0_pins[5] = {PIN_PD0, PIN_PD1, PIN_PD2, PIN_PD3, PIN_PD6};
 static const uint8_t unit1_pins[5] = {PIN_PF0, PIN_PF1, PIN_PF2, PIN_PF3, NOT_A_PIN};
 CustomLogicClass CustomLogic(2, unit0_pins);   /* LUT2 */

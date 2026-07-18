@@ -1,52 +1,45 @@
-/* Wire Slave Secondary Address
- * by MX682X
+/* Wire Slave Secondary Address(スレーブ: 第2アドレス)
+ * 原作: MX682X
  *
- * Demonstrates use of the New Wire library
- * Receives data as an I2C/TWI slave device
- * Refer to the "Wire Two Masters Write" example (DA/DB 32+ pin)
- * or "Wire Master Multi Address Write" example (all other parts)
+ * Wireライブラリの使用例です。
+ * I2C/TWIスレーブとして「2つのアドレス」で受信します。
+ * 対向側は「Wire Master Multi Address Write」サンプルを
+ * 使用してください。
  *
- * This example prints the address which triggered the receive function
- * and the data that was sent to the slave on the Serial Monitor
+ * どちらのアドレス宛で受信したかと、受信データをシリアルモニタへ
+ * 表示します。
  *
- * Note that, for brevity and simplicity, this example writes to serial
- * in the ISR. You should NEVER DO THAT in real life, as the impact when
- * the serial buffer fills up is unpredictable, but universally very bad.
- * Set a flag that you check for in loop and print it then.
+ * 注意: このサンプルは簡潔さを優先して、受信ハンドラ(割り込み内)で
+ * シリアル出力を行っています。実際の製品コードでは絶対に避けて
+ * ください(シリアルバッファが埋まったときの影響が予測不能です)。
+ * 本来はフラグを立ててloop()側で表示します。より「正しい」書き方は
+ * 「Slave Address Mask」サンプルを参照してください。
  *
- * See the "Slave Address Mask" example for an example that handles this
- * more "properly" (and also is a bit more complex generally).
+ * 使い方: このボードのSCL(A5)/SDA(A4)を、対向ボードのSCL/SDAへ
+ * 接続します。SDA/SCLの両方に、Vccへのプルアップ抵抗が必要です。
+ * 詳しくはWireライブラリのREADME.mdを参照してください。
  *
- * To use this with the "Wire Two Master Write" example, you need
- * it connected to both sets of host pins.
- * e.g. for two AVR128DA48:
- *    SDA connected to PA2 and PF2 of master and PA2 of slave.
- *    SCL connected to PA3 and PF3 of master and PA2 of slave.
- *
- * The "Wire Master Multi-Address Write" only uses a single pair of I2C pins.
- *
- * Pullup resistors must be connected between both data lines and Vcc.
- * See the Wire library README.md for more information.
+ * UkiUkiduino向けに日本語化
  */
 #include <Wire.h>
 
 char input[32];
 int8_t len = 0;
 
-#define MySerial Serial       // The serial port connected to the to the computer.
+#define MySerial Serial       // PCと接続しているシリアルポート
 
 
 void setup() {
-  // Initializing slave with secondary address
-  // 1st argument: 1st address to listen to
-  // 2nd argument: listen to general broadcast or "general call" (address 0x00)
-  // 3rd argument: bits 7-1: second address if bit 0 is set true
-  //               or bit mask of an address if bit 0 is set false
+  // 第2アドレス付きでスレーブを初期化する
+  // 第1引数: 待ち受ける第1アドレス
+  // 第2引数: 一斉呼び出し(ゼネラルコール、アドレス0x00)を受けるか
+  // 第3引数: ビット0が1なら、ビット7~1は第2アドレス
+  //          ビット0が0なら、アドレスマスクとして扱われる
   Wire.begin(0x54, false, WIRE_ALT_ADDRESS(0x64));
   Wire.onReceive(receiveDataWire);
 
-  // Initialize serial port - if you need to swap pins, remember to do so.
-  MySerial.begin(115200);       // Uses 115200 baud - this is the 2020's, and these are modern AVRs.
+  // シリアルポートを初期化する
+  MySerial.begin(115200);
 }
 
 void loop() {
@@ -55,18 +48,18 @@ void loop() {
 
 
 
-// function that executes whenever data is received from master
-// this function is registered as an event, see setup()
+// マスタからデータを受信するたびに実行される関数
+// (setup()でイベントとして登録済み)
 void receiveDataWire(int16_t numBytes) {
-  uint8_t addr = Wire.getIncomingAddress();   // get the address that triggered this function
-  //                                          // the incoming address is leftshifted though
-  if (addr == (0x54 << 1)) {                  // if the address was 0x54, do this
+  uint8_t addr = Wire.getIncomingAddress();   // どのアドレス宛だったかを取得する
+  //                                          // 取得値は1ビット左シフトされている
+  if (addr == (0x54 << 1)) {                  // 0x54宛ならこちら
     MySerial.print("Addr 0x54: ");
     for (uint8_t i = 0; i < numBytes; i++) {
       char c = Wire.read();
       MySerial.write(c);
     }
-  } else if (addr == (0x64 << 1)) {           // if the address was 0x64, do that
+  } else if (addr == (0x64 << 1)) {           // 0x64宛ならこちら
     MySerial.print("Addr 0x64: ");
     for (uint8_t i = 0; i < numBytes; i++) {
       char c = Wire.read();

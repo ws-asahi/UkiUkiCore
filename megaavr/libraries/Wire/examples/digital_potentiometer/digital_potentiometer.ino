@@ -1,33 +1,32 @@
-// I2C Digital Potentiometer
-// by Nicholas Zambetti <http://www.zambetti.com>
-// and Shawn Bonkowski <http://people.interaction-ivrea.it/s.bonkowski/>
-
-// Demonstrates use of the Wire library
-// Controls AD5171 digital potentiometer via I2C/TWI
-
-// Created 31 March 2006
-
-// This example code is in the public domain.
-
+// I2C Digital Potentiometer(I2Cデジタルポテンショメータ)
+// 原作: Nicholas Zambetti / Shawn Bonkowski (パブリックドメイン)
+//
+// Wireライブラリの使用例です。
+// I2C接続のデジタルポテンショメータAD5171を制御します。
+//
+// 接続: AD5171のSDAをA4へ、SCLをA5へ。SDA/SCLそれぞれと5Vの間に
+//       プルアップ抵抗(4.7kΩ程度)を接続してください。
+//
+// UkiUkiduino向けに日本語化
 
 #include <Wire.h>
 
 void setup() {
-  Wire.begin(); // join i2c bus (address optional for master)
+  Wire.begin(); // I2Cバスに参加する(マスタはアドレス指定不要)
 }
 
 byte val = 0;
 
 void loop() {
-  Wire.beginTransmission(44); // transmit to device #44 (0x2c)
-  // device address is specified in datasheet
-  Wire.write(byte(0x00));            // sends instruction byte
-  Wire.write(val);             // sends potentiometer value byte
-  Wire.endTransmission();     // stop transmitting
+  Wire.beginTransmission(44); // デバイス#44(0x2C)への送信を開始する
+  // デバイスアドレスはデータシートに記載されている
+  Wire.write(byte(0x00));     // 命令バイトを送る
+  Wire.write(val);            // ポテンショメータの設定値を送る
+  Wire.endTransmission();     // 送信を完了する
 
-  val++;        // increment value
-  if (val == 64) { // if reached 64th position (max)
-    val = 0;    // start over from lowest value
+  val++;           // 値を1増やす
+  if (val == 64) { // 64段階目(最大)まで来たら
+    val = 0;       // 最小値からやり直す
   }
   delay(500);
 }

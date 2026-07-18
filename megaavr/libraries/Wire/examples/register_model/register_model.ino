@@ -1,36 +1,36 @@
-/* Wire Register Model
- * by Spence Konde
+/* Wire Register Model(レジスタ方式のスレーブ実装)
+ * 原作: Spence Konde
  *
- * Demonstrates use of the Wire library
- * Implements an example of the "register machine" type of interface provided by most I2C
- * devices, where there are "registers" much like the ones that control on-chip peripherals
- * with the "autoincrement" functionality it is typically paired with.
- * Just like on those, you write a register by writing more than one byte, with the first
- * byte being the first address to write, and the second the value to write there, and if
- * more bytes are written, those are written to successive addresses after that.
- * For a read, you write a single byte, the address of the register you want to start reading
- * from, which sets the "pointer", and then read as many bytes as you want.
- * As with the registers of a microcontroller, some are read-only, containing outputs.
+ * Wireライブラリの使用例です。
+ * 市販のI2Cデバイスの多くが採用している「レジスタマシン」方式の
+ * インターフェースを実装します。マイコン内蔵ペリフェラルの
+ * レジスタと同様に、自動インクリメント機能を持ちます。
  *
- * Here we allocate an array of bytes, DeviceRegisters[32]
- * it is, very creatively, filled with the numbers 0 through 32.
- * We also define a variable WriteMask[32] which contains a series of constants, one for each "register"
- * only bits that are a 1 can be written.
- * The others will remain unchanged.
- * 0-4 are fully writeable
- * the 5 low bits of 5 are writeable
- * 6 and 7 are fully writeable,
- * 8-11 only allow the 2 low bits in each nybble to be written
- * 12-15 are read-only
- * 16 and 17 allow only the low nybble to be written
- * 18 and 19 allow only the high nybble to be written.
+ * 書き込み: 複数バイトを書くと、先頭バイトが開始アドレス、
+ * 2バイト目以降がそのアドレスから順に書かれる値になります。
+ * 読み出し: 1バイト(読み始めたいレジスタのアドレス)を書いて
+ * 「ポインタ」を設定し、その後好きなバイト数を読み出します。
+ * マイコンのレジスタと同じく、読み出し専用のものもあります。
  *
- * The address pointer autoincrements and wraps around.
+ * ここでは32バイトの配列DeviceRegisters[32]を用意し、
+ * 0~31の値で(安直に)初期化しています。あわせてWriteMask[32]で
+ * 各「レジスタ」の書き込み可能ビットを定義しています。
+ * マスクが1のビットだけ書き換えられ、それ以外は変化しません。
+ * 0~4     全ビット書き込み可
+ * 5       下位5ビットのみ書き込み可
+ * 6~7     全ビット書き込み可
+ * 8~11    各ニブルの下位2ビットのみ書き込み可
+ * 12~15   読み出し専用
+ * 16~17   下位ニブルのみ書き込み可
+ * 18~19   上位ニブルのみ書き込み可
  *
- * There are two special registers, 4 and 5.
- * (chosen mostly at random, just to demonstrate making things in loop depend on registers)
- * 4 and 5 are the low and high bytes of the time delay used for the blinking... So by default it's 0x0504 ms
- * or 1284 ms.
+ * アドレスポインタは自動的に進み、末尾で先頭へ折り返します。
+ *
+ * 特別なレジスタが2つあります(4と5)。loop()の動作をレジスタで
+ * 制御する例として適当に選んだもので、4と5はLED点滅間隔の
+ * 下位/上位バイトです。初期値は0x0504ms = 1284msになります。
+ *
+ * UkiUkiduino向けに日本語化
  */
 #include <Wire.h>
 volatile uint8_t DeviceRegisters[32] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
@@ -46,7 +46,7 @@ const uint8_t WriteMask[32]          = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x1F, 0xFF
 volatile uint8_t WirePointer = 0;
 
 void setup() {
-  Wire.begin(0x69); // let's start off with a nice transgressive number, always a solid start right?
+  Wire.begin(0x69); // スレーブアドレス0x69で開始する
   Wire.onReceive(receiveHandler);
   Wire.onRequest(requestHandler);
   pinMode(LED_BUILTIN, OUTPUT);
@@ -62,74 +62,75 @@ void loop() {
     digitalWrite(LED_BUILTIN, CHANGE);
   }
 }
-/* Now - the receive handler is pretty straightforward. Since we will account for the bytes read in the request handler, the receive
- * handler calls it, and doesn't keep the returned value. This resets that count of bytes.
- * the line that sets the byte in the array if a write of more than just the address pointer is performed is ugly, but it's a bog
- * standard application of masks. The bits that are 1 in the mask are set to the new value, so AND the new value with that.
- * The bits that are 0 in the mask remain the same, so invert the mask, and AND that with the old value. OR the two together and set.
+/* 受信ハンドラは比較的素直です。読み出し済みバイト数の精算は要求ハンドラ側で行うため、
+ * ここではgetBytesRead()を呼んで(戻り値は使わず)カウントをリセットするだけです。
+ * アドレスポインタ以外も書かれた場合に配列を更新する行は読みにくいですが、ごく標準的な
+ * マスク処理です。マスクが1のビットは新しい値になるので、新値とマスクのANDを取る。
+ * マスクが0のビットは元のままなので、マスクを反転して旧値とANDを取る。両者のORが結果です。
  *
- * The bitwise AND of the pointer with 0x1F is to make it wrap around. It's the same as the Modulo (%) operator in that way, except
- * it only works for powers of 2 and is orders of magnitude more efficient - modulo means division, and division is slow and bulky,
- * implemented in software (specifically a routine written in assembly as part of libgcc); point is modulo = division = bad. Never do
- * division on an AVR unless you have to. I have put considerable effort into keeping it out of the micros() calculations.
+ * ポインタと0x1FのビットANDは折り返しのためです。剰余(%)演算と同じ働きですが、
+ * 2のべき乗にしか使えない代わりに桁違いに効率的です。剰余は除算を意味し、AVRの除算は
+ * ソフトウェア実装(libgcc内のアセンブラルーチン)で遅くて大きい。つまり剰余=除算=悪。
+ * AVRでは必要にならない限り除算は避けましょう。micros()の計算からも除算を排除するために
+ * かなりの労力が費やされています。
  */
 void receiveHandler(int numbytes) {
-  Wire.getBytesRead(); // reset count of bytes read. We don't do anything with it here, but a write is going to reset it to a new value.
-  WirePointer = Wire.read() & 0x1F; // make sure they can't write off the end of the array!
-  numbytes--; // we just read a byte, so we should decrement this.
-  while (numbytes > 0) { // If numbytes was more than 1, we'll execute the below loop to write to the "registers".
+  Wire.getBytesRead(); // 読み出し済みバイト数をリセットする。値自体は使わない
+  WirePointer = Wire.read() & 0x1F; // 配列の外に書き込めないようにする!
+  numbytes--; // 1バイト読んだので残数を減らす
+  while (numbytes > 0) { // アドレス以外のバイトもあれば、以下のループで「レジスタ」へ書く
 
     uint8_t unchangedbits = (DeviceRegisters[WirePointer] & ~WriteMask[WirePointer]);
     DeviceRegisters[WirePointer] = (Wire.read() & WriteMask[WirePointer]) | unchangedbits;
-    WirePointer++;          // increment the pointer.
-    WirePointer &= 0x1F;    // Wrap around if it's gone over 32;
-    numbytes--;             // decrement remaining bytes.
+    WirePointer++;          // ポインタを進める
+    WirePointer &= 0x1F;    // 32を超えたら折り返す
+    numbytes--;             // 残りバイト数を減らす
   }
 }
-/* This one is weirder. The way the onRequest behaves and what it needs to do is very counter-intuitive (and this model is probably part
- * of WHY all Arduino I2C slave devices use wire like "serial with a clock" instead of like a civilised device....)
+/* こちらは少し奇妙です。onRequestの動作と、そこでやるべきことはかなり直感に反します
+ * (Arduino製I2Cスレーブの多くが、まっとうなデバイスではなく「クロック付きシリアル」の
+ * ようにWireを使ってしまう一因でしょう)。
  *
- * the handler registered with onRequest is called when the slave gets a packet that matches it's address, set to read; This is called
- * once, and prints out all of the data that the master *might* request. It then does not fire again until the next start condition
- * followed by a matching address. There is a chance that the master might NACK a transmission before it was completed. The Arduino API does
- * not allow to track how many bytes were actually written by the Slave. This is fixed with getBytesRead().
+ * onRequestに登録したハンドラは、自分のアドレス宛の読み出しパケットを受けた時に
+ * 「一度だけ」呼ばれ、マスタが読むかもしれない全データを書き出しておきます。次の
+ * スタートコンディション+アドレス一致まで再度呼ばれることはありません。マスタは途中で
+ * NACKして転送を打ち切るかもしれませんが、Arduino APIにはスレーブが実際に何バイト
+ * 読まれたかを知る手段がありません。それを解決するのがgetBytesRead()拡張です。
  *
- * Without the getBytesRead() extension, there is no way for a slave written through the Arduino API to react to whether the master has
- * read something something - and that's a very common behaviour in commercial I2C devices.
+ * getBytesRead()が無いと、Arduino APIで書かれたスレーブは「マスタが何かを読んだか」に
+ * 反応できません。市販のI2Cデバイスではごく一般的な動作なのにです。
  *
- * Another thing to consider is that, if the there is a buffer underflow, the TWI will keep the SDA lines released, making the master think
- * a 0xFF was transmitted.
+ * もう1つの注意点として、バッファアンダーフローが起きるとTWIはSDAを解放したままに
+ * するため、マスタからは0xFFが送られてきたように見えます。
  */
 void requestHandler() {
-  // We will start reading from the pointer.
-  // But if there was a previous read, and the master then started a
-  // second read, we want the pointer to pick up where they left off.
+  // ポインタの位置から読み出しを始める。
+  // ただし直前に読み出しがあり、マスタが続けて2回目の読み出しを
+  // 始めた場合は、前回の続きから読めるようにポインタを進める。
   uint8_t bytes_read = Wire.getBytesRead();
   WirePointer       += bytes_read;
   WirePointer       &= 0x1F;
-  // You could also do :
+  // 次のように書いても同じです(効率も同じ):
   // WirePointer = (WirePointer + Wire.getBytesRead()) & 0x1F;
-  // It is no more or less efficient.
 
-  // Making something to react would be done above between getting bytes read
-  // and adjusting the pointer. If you were implementing a sensor of some sort
-  // you might have the result register or the status register do that.
-  // The slave might even check during it's loop function to see if
-  // Wire.slaveTransactionOpen() ceased to be true, then check getBytesRead() to
-  // see if the key register was read __HOWEVER__
-  // While this is executing, you must bear in mind that the slave is "clock stretching"
-  // Hence avoiding an unduly long execution time should be one of your priorities.
-  // Not only is the slave device wasting time, it's wasting the masters time, and that
-  // of anything else waiting to use the bus. So like, if you're a sensor manager, you
-  // should be storing the values in the "register" array as you take them; you shouldn't go
-  // and take a dozen readings during this handler. Dont forget that this is also an ISR
-  // with all that that entails
+  // 「読まれたことに反応する」処理を入れるなら、bytes_readの取得と
+  // ポインタ調整の間に入れます。センサを実装するなら、結果レジスタや
+  // ステータスレジスタの読み出しに反応させることになるでしょう。
+  // スレーブのloop()側でWire.slaveTransactionOpen()がfalseになったのを
+  // 確認してからgetBytesRead()を調べる方法もあります。__ただし__
+  // このハンドラの実行中、スレーブは「クロックストレッチ」をしている
+  // 点に注意してください。実行時間を短く保つことは最優先事項です。
+  // スレーブ自身の時間だけでなく、マスタや、バスを待っている他の全ての
+  // デバイスの時間も浪費するからです。センサ管理装置を作るなら、値は
+  // 測定のたびに「レジスタ」配列へ格納しておくべきで、このハンドラの
+  // 中で何十回も測定しに行ってはいけません。これがISRであること、
+  // それに伴う全ての制約も忘れずに。
 
   for (byte i = 0; i < 32; i++) {
     Wire.write(DeviceRegisters[(WirePointer + i) & 0x1F]);
-    // "write" the whole array - but the master might only want one byte.
-    // The slave doesn't know how much data the master will want yet.
-    // and won't know until it's gotten all that it wants and has generated a stop condition.
+    // 配列全体を「書いて」おく。マスタは1バイトしか読まないかも
+    // しれないが、何バイト読むつもりかは、読み終えてストップ
+    // コンディションを出すまでスレーブには分からない。
   }
 
 }

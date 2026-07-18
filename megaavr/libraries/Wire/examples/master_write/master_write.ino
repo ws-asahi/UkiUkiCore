@@ -1,19 +1,20 @@
-/* Wire Master Write
- * by MX682X
+/* Wire Master Write(マスタ: 書き込み)
+ * 原作: MX682X
  *
- * Demonstrates use of the New Wire library
- * Writes data to an I2C/TWI slave device
- * Refer to the "Wire Slave Read" example for use with this
+ * Wireライブラリの使用例です。
+ * I2C/TWIスレーブデバイスへデータを書き込みます。
+ * 対向側は「Wire Slave Read」サンプルを使用してください。
  *
- * Enter any data using serial monitor or other console followed by either or
- * both of the line ending characters, and it will be sent to the slave, which
- * should print it out on it's serial port.
+ * シリアルモニタから任意の文字列を(改行付きで)送ると、その内容が
+ * スレーブへ送信され、スレーブ側のシリアルモニタに表示されます。
  *
- * To use this, you need to connect the SCL and SDA pins of this device to the
- * SCL and SDA pins of a second device running the Wire Slave Read example.
+ * 使い方: このボードのSCL(A5)/SDA(A4)を、Wire Slave Readサンプルを
+ * 実行しているもう1台のボードのSCL/SDAへ接続します。
  *
- * Pullup resistors must be connected between both data lines and Vcc.
- * See the Wire library README.md for more information.
+ * SDA/SCLの両方に、Vccへのプルアップ抵抗が必要です。
+ * 詳しくはWireライブラリのREADME.mdを参照してください。
+ *
+ * UkiUkiduino向けに日本語化
  */
 
 #include <Wire.h>
@@ -21,43 +22,43 @@
 char input[32];
 int8_t len = 0;
 
-#define MySerial Serial               // The serial port connected to the to the computer.
+#define MySerial Serial               // PCと接続しているシリアルポート
 
 void setup() {
-  Wire.begin();                       // initialize master
-  MySerial.begin(115200);             // Use 115200 baud - this is the 2020's, and these are modern AVRs.
+  Wire.begin();                       // マスタとして初期化する
+  MySerial.begin(115200);             // 115200ボーを使用(現代のAVRなら余裕です)
 }
 
 void loop() {
-  if (MySerial.available() > 0) {      // as soon as the first byte is received on Serial
-    readFromSerial();                 // read the data from the Serial interface
-    if (len > 0) {                    // after the while-loop, if there was useful data,
-      sendDataWire();                 // send the data over I2C
+  if (MySerial.available() > 0) {     // シリアルに1バイト届いたら
+    readFromSerial();                 // シリアルからデータを読み出す
+    if (len > 0) {                    // 有効なデータがあれば
+      sendDataWire();                 // I2Cへ送信する
     }
-    len = 0;                          // since the data was sent, the position is 0 again
+    len = 0;                          // 送信済みなので位置を0に戻す
   }
 }
 
 void readFromSerial() {
-  while (true) {                      // in an endless while-loop
-    while (MySerial.available() == 0);// means we've taken all the bytes in, and are still waiting for a cr/lf.
-    char c = MySerial.read();         // read the next char, now that there's one available.
-    if (c == '\n' || c == '\r') {     // until a new line or carriage return is found
-      break;                          // if so, break the endless while-loop
-    }                                 // otherwise
-    input[len] = c;                   // save the char
-    len++;                            // increment the  position
-    if (len > 30) {                   // if there was too much data
-      break;                          // break the while-loop to avoid buffer overflow
+  while (true) {                      // 無限ループの中で
+    while (MySerial.available() == 0);// 次の1文字が届くまで待つ
+    char c = MySerial.read();         // 届いた文字を読む
+    if (c == '\n' || c == '\r') {     // 改行(LF)か復帰(CR)が来たら
+      break;                          // ループを抜ける
+    }                                 // それ以外なら
+    input[len] = c;                   // 文字を保存して
+    len++;                            // 位置を進める
+    if (len > 30) {                   // データが多すぎる場合は
+      break;                          // バッファあふれ防止のため抜ける
     }
   }
 }
 
 void sendDataWire() {
-  Wire.beginTransmission(0x54);     // prepare transmission to slave with address 0x54
+  Wire.beginTransmission(0x54);     // アドレス0x54のスレーブへの送信を準備する
   for (uint8_t i = 0; i < len; i++) {
-    Wire.write(input[i]);           // Write the received data to the bus buffer
+    Wire.write(input[i]);           // 受け取ったデータをバスのバッファへ書く
   }
-  Wire.write("\r\n");               // add new line and carriage return for the Serial monitor
-  Wire.endTransmission();           // finish transmission
+  Wire.write("\r\n");               // シリアルモニタ用に改行を付ける
+  Wire.endTransmission();           // 送信を完了する
 }

@@ -1,20 +1,21 @@
-/* Wire Master Read
- * by MX682X
+/* Wire Master Read(マスタ: 読み出し)
+ * 原作: MX682X
  *
- * Demonstrates use of the New Wire library
- * Reads data from an I2C/TWI slave device
- * Refer to the "Wire Slave Write" example for use with this
+ * Wireライブラリの使用例です。
+ * I2C/TWIスレーブデバイスからデータを読み出します。
+ * 対向側は「Wire Slave Write」サンプルを使用してください。
  *
- * This example takes the input from Serial. If the serial input is 'm' or 'M',
- * this code requests 4 bytes from the slave with the address 0x54.
- * When using together with the complementary example, the slave sends it's millis() value.
- * This value is then sent to the serial monitor
+ * シリアルモニタから'm'または'M'を入力すると、アドレス0x54の
+ * スレーブへ4バイトを要求します。対のサンプルと組み合わせると、
+ * スレーブのmillis()値が届き、シリアルモニタに表示されます。
  *
- * To use this, you need to connect the SCL and SDA pins of this device to the
- * SCL and SDA pins of a second device running the Wire Slave Write example.
+ * 使い方: このボードのSCL(A5)/SDA(A4)を、Wire Slave Writeサンプルを
+ * 実行しているもう1台のボードのSCL/SDAへ接続します。
  *
- * Pullup resistors must be connected between both data lines and Vcc.
- * See the Wire library README.md for more information.
+ * SDA/SCLの両方に、Vccへのプルアップ抵抗が必要です。
+ * 詳しくはWireライブラリのREADME.mdを参照してください。
+ *
+ * UkiUkiduino向けに日本語化
  */
 
 #define MySerial Serial
@@ -25,29 +26,29 @@ int8_t rxLen = 0;
 int8_t len = 0;
 
 void setup() {
-  Wire.begin();                                 // initialize master
+  Wire.begin();                                 // マスタとして初期化する
   MySerial.begin(115200);
 }
 
 void loop() {
-  if (MySerial.available() > 0) {    // as soon as the first byte is received on Serial
-    char c = MySerial.read();       // read the data from serial.
+  if (MySerial.available() > 0) {   // シリアルに1バイト届いたら
+    char c = MySerial.read();       // 読み出して
     if (c == 'm' || c == 'M') {
-      sendDataWire();               // send the data over I2C
+      sendDataWire();               // I2Cへ要求を送る
     }
-    len = 0;                        // since the data was sent, the position is 0 again
+    len = 0;                        // 送信済みなので位置を0に戻す
   }
 }
 
 void sendDataWire() {
   uint32_t ms;
-  if (4 == Wire.requestFrom(0x54, 4, 0x01)) {    // request from slave
+  if (4 == Wire.requestFrom(0x54, 4, 0x01)) {    // スレーブへ要求する
     while (Wire.available()) {
-      ms  = (uint32_t)Wire.read();               // read out 32-bit wide data
+      ms  = (uint32_t)Wire.read();               // 32ビット値を組み立てながら読む
       ms |= (uint32_t)Wire.read() <<  8;
       ms |= (uint32_t)Wire.read() << 16;
       ms |= (uint32_t)Wire.read() << 24;
-      MySerial.println(ms);              // print the milliseconds from Slave
+      MySerial.println(ms);              // スレーブのミリ秒値を表示する
     }
   } else {
     MySerial.println("Wire.requestFrom() timed out!");

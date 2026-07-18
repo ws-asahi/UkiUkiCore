@@ -1,26 +1,25 @@
-/* Wire Register Model Master
- * by Spence Konde
+/* Wire Register Model Master(レジスタ方式スレーブを操作するマスタ)
+ * 原作: Spence Konde
  *
- * Demonstrates a master interacting with a wire slave implementing the register model
- * We knpw from the documented interface for the slave what write protection on
- * the bytes is as follows:
+ * 「レジスタマシン」方式のWireスレーブ(register_modelサンプル)を
+ * 操作するマスタのデモです。スレーブの公開仕様から、各バイトの
+ * 書き込み保護は次のとおりと分かっています:
  *
- * 0-4 are fully writable
- * the 5 low bits of 5 are writable
- * 6 and 7 are fully writable,
- * 8-11 only allow the 2 low bits in each nybble to be written
- * 12-15 are read-only
- * 16 and 17 allow only the low nybble to be written
- * 18 and 19 allow only the high nybble to be written.
+ * 0~4     全ビット書き込み可
+ * 5       下位5ビットのみ書き込み可
+ * 6~7     全ビット書き込み可
+ * 8~11    各ニブルの下位2ビットのみ書き込み可
+ * 12~15   読み出し専用
+ * 16~17   下位ニブルのみ書き込み可
+ * 18~19   上位ニブルのみ書き込み可
  *
- * And the default state is for them to hodl values equal to the address, until
- * told otherwise.
+ * 初期状態では各レジスタにアドレスと同じ値が入っています。
+ * アドレスポインタは自動的に進み、末尾で先頭へ折り返します。
  *
- * The address pointer autoincrements and wraps around.
+ * レジスタ4と5はLEDの点滅周期を制御します。I2C経由でスレーブを
+ * 設定する方法の一例です。
  *
- * Registers 4 and 5 control the blink period of the LED, as an example of
- * how a slave might be configured over I2C. In a real device, all the
- * registers would be either controlled by or
+ * UkiUkiduino向けに日本語化
  */
 #include <Wire.h>
 
@@ -33,8 +32,8 @@ void setup() {
 }
 
 void setAddressPointer(uint8_t address) {
-  Wire.beginTransmission(0x69);    // prepare transmission to slave with address 0x69
-  Wire.write(address);            // Write just the address
+  Wire.beginTransmission(0x69);   // アドレス0x69のスレーブへの送信を準備する
+  Wire.write(address);            // アドレスだけを書き込む
   Wire.endTransmission();
 }
 
@@ -62,26 +61,26 @@ void loop() {
   }
   MySerial.println("Now that was cool, no?");
   MySerial.println("Let's demo write protect in action");
-  Wire.beginTransmission(0x69);     // prepare transmission to slave with address 0x69
-  Wire.write(0x16);                 // Write just the address
-  Wire.write(0xEE);                 // Write a value
-  Wire.write(0xDD);                 // Write a value
-  Wire.write(0xCC);                 // Write a value
-  Wire.write(0xBB);                 // Write a value
-  Wire.write(0xFF);                 // Write a value
-  Wire.endTransmission();           // Send, slave ISR will fire.
-  MySerial.println("Read-em-back:");// now read them back by resetting the pointer
-  setAddressPointer(16);            // Set pointer to 16
-  Wire.requestFrom(0x69, 5);         // Read 5 bytes.
-  while (Wire.available()) {        // Hopefully we got 5 bytes. without this library versions new features, slave doesn't know how many were read!
-    MySerial.printHex((uint8_t)Wire.read());   // Print it out for user.
-    MySerial.print(' ');                       // spaces between each byte
+  Wire.beginTransmission(0x69);     // アドレス0x69のスレーブへの送信を準備する
+  Wire.write(0x16);                 // まずアドレスを書き込む
+  Wire.write(0xEE);                 // 値を書き込む
+  Wire.write(0xDD);                 // 値を書き込む
+  Wire.write(0xCC);                 // 値を書き込む
+  Wire.write(0xBB);                 // 値を書き込む
+  Wire.write(0xFF);                 // 値を書き込む
+  Wire.endTransmission();           // 送信するとスレーブ側のISRが動く
+  MySerial.println("Read-em-back:");// ポインタを戻して読み返してみる
+  setAddressPointer(16);            // ポインタを16に設定する
+  Wire.requestFrom(0x69, 5);        // 5バイト読む
+  while (Wire.available()) {        // このライブラリの拡張機能が無いと、スレーブは何バイト読まれたか分からない!
+    MySerial.printHex((uint8_t)Wire.read());   // 読めた値を表示する
+    MySerial.print(' ');                       // バイトの間に空白を入れる
   }
   MySerial.println("Change speed at which the LED blinks");
-  Wire.beginTransmission(0x69);   // prepare transmission to slave with address 0x69
-  Wire.write(0x4);                // Write just the address
-  Wire.write(0x80);               // Write a value
-  Wire.write(0x01);               // Write a value: ~3/8ths of a second!
+  Wire.beginTransmission(0x69);   // アドレス0x69のスレーブへの送信を準備する
+  Wire.write(0x4);                // まずアドレスを書き込む
+  Wire.write(0x80);               // 値を書き込む
+  Wire.write(0x01);               // 値を書き込む: 約3/8秒の点滅になる
   Wire.endTransmission();
   delay(10000);
 }

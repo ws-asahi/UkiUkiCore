@@ -11,8 +11,8 @@
         still if myFile.sync() or myFile.close() is not called.
 
   The circuit:
-  - Arduino MKR Zero board
-  - micro SD card attached
+  - Wazamono board with a micro SD card module on the SPI bus
+    (CS on PIN_SPI_SS: Tachi D4 / Tsurugi D10 / Kunai D0)
 
   This example code is in the public domain.
 */

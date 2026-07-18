@@ -12,13 +12,25 @@
   #error "This sketch takes over TCA0, don't use for millis here."
 #endif
 
-uint8_t OutputPin = PIN_PD1; //chosen to compile on all the places where this is a test sketch.
+/* PWM comes out on TCA0 WO1, so the physical pin follows each board's PWM port mux. */
+#if defined(WAZAMONO_BOARD_TACHI)
+  uint8_t OutputPin = 6;                          // D6 (PF1, TCA0 WO1)
+  #define DEMO_TCA_MUX PORTMUX_TCA0_PORTF_gc
+#elif defined(WAZAMONO_BOARD_TSURUGI)
+  uint8_t OutputPin = 6;                          // D6 (PD1, TCA0 WO1)
+  #define DEMO_TCA_MUX PORTMUX_TCA0_PORTD_gc
+#elif defined(WAZAMONO_BOARD_KUNAI)
+  uint8_t OutputPin = 5;                          // D5 (PA1, TCA0 WO1; shared with SCL)
+  #define DEMO_TCA_MUX PORTMUX_TCA0_PORTA_gc
+#else
+  #error "This example supports Wazamono boards only."
+#endif
 
 unsigned int Period = 0xFFFF;
 
 void setup() {
   pinMode(OutputPin, OUTPUT);
-  PORTMUX.TCAROUTEA = (PORTMUX.TCAROUTEA & ~(PORTMUX_TCA0_gm)) | PORTMUX_TCA0_PORTD_gc;
+  PORTMUX.TCAROUTEA = (PORTMUX.TCAROUTEA & ~(PORTMUX_TCA0_gm)) | DEMO_TCA_MUX;
   takeOverTCA0(); // this replaces disabling and resettng the timer, required previously.
   TCA0.SINGLE.CTRLB = (TCA_SINGLE_CMP1EN_bm | TCA_SINGLE_WGMODE_SINGLESLOPE_gc); // Single slope PWM mode, PWM on WO1
   TCA0.SINGLE.PER   = Period; // Count all the way up to 0xFFFF; At 20MHz, no prescale, this gives ~305Hz PWM

@@ -46,7 +46,6 @@ void setup() {
   Wire.onReceive(receiveDataWire);
 
   // Initialize serial port - if you need to swap pins, remember to do so.
-  // MySerial.swap(1);
   MySerial.begin(115200);       // Uses 115200 baud - this is the 2020's, and these are modern AVRs.
 }
 

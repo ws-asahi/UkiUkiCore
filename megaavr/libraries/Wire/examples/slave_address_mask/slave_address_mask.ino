@@ -73,7 +73,6 @@ void setup() {
   Wire.onReceive(receiveDataWire);
 
   // Initialize serial port - if you need to swap pins, remember to do so.
-  // MySerial.swap(1);
   MySerial.begin(115200);
 }
 
@@ -93,7 +92,7 @@ void printMessage() {
   // Saving to a temp variable like this saves 2-4 bytes of flash for every place
   // it is referenced, and 2-3 clocks every time it is accessed (those aren't quite
   // the same, because of loops). You probably don't care on a AVR128DB, but you
-  // probably do on a ATtiny with 2-4k of flash.
+  // probably do on a part with only 2-4k of flash.
   if (addr == 0) {
     MySerial.print("General Call");
     if (len > 1) {

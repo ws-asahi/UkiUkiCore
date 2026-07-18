@@ -6,10 +6,10 @@
 
   The circuit:
    SD card attached to SPI bus as follows:
- ** MOSI - pin 11
- ** MISO - pin 12
- ** CLK - pin 13
- ** CS - pin 4 (for MKRZero SD: SDCARD_SS_PIN)
+ ** MOSI - Tachi: D16 / Tsurugi: D11 / Kunai: D10
+ ** MISO - Tachi: D14 / Tsurugi: D12 / Kunai: D9
+ ** SCK  - Tachi: D15 / Tsurugi: D13 / Kunai: D8
+ ** CS   - PIN_SPI_SS (Tachi: D4 / Tsurugi: D10 / Kunai: D0)
 
   created   Nov 2010
   by David A. Mellis
@@ -35,7 +35,7 @@ void setup() {
 
   Serial.print("Initializing SD card...");
 
-  if (!SD.begin(4)) {
+  if (!SD.begin(PIN_SPI_SS)) {
     Serial.println("initialization failed!");
     while (1);
   }

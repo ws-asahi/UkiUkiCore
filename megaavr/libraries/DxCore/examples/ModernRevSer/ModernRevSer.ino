@@ -1,7 +1,4 @@
-/* Read the silicon revision of a "modern" (post-2016, AVRxt) part, including megaAVR 0-series,
- * tinyAVR 0/1/2-series, AVR Dx-series, and likely the upcoming AVR Ex-series.
- * classic AVRs do not have a uniform serial number scheme like the new ones do. Some have one
- * located in the sigrow, others do not.
+/* Read the silicon revision of the AVR DU-series part on your Wazamono board.
  * Also reads out the fuses and serial number. The fuses and serial number were part of an
  * attempt to determine whether the date code was embedded into the serial number somehow.
  * I suspect it is possible to determine the date code from it in some way.
@@ -14,7 +11,7 @@
  *        not a hash of a serial number. Don't count on it being impossible
  *        to guess the serial number.
  *    For these reasons, it is possible that additional information can be deduced from it
- *    In fact, on the Dx-series, the IO header identifies the meaning of each byte! Based on the similarity
+ *    In fact, the IO header identifies the meaning of each byte! Based on the similarity
  *    of the values observed in the wild, it is likely that the numbering scheme is similar for other parts.
  *  LOTNUM0:LOTNUM1:LOTNUM2:LOTNUM3:LOTNUM4:LOTNUM5  6 bytes of lot number
  *  RANDOM :SCRIBE : XPOS0 : XPOS1 : YPOS0 : YPOS1   1 random, unsure what "scribe" is, and 2 bytes each for X and Y position of die on wafer
@@ -30,13 +27,9 @@ void setup() {
   Serial.println();
   delay(1000);
   Serial.print("REVID: ");
-  #ifdef SIGROW_SERNUM15 // AVR Dx-series= - different format
-  char major = 0x40 + (SYSCFG.REVID >> 4);
+  char major = 0x40 + (SYSCFG.REVID >> 4);   // e.g. REVID 0x12 prints as "A2"
   Serial.print(major);
   Serial.println(SYSCFG.REVID & 0x0F);
-  #else
-  Serial.println('@' + SYSCFG.REVID);
-  #endif
   Serial.print("S/N: ");
   volatile uint8_t *mptr = &SIGROW_SERNUM0;
   showHex(*mptr++);

@@ -1,36 +1,42 @@
 /* Example 3: High speed 8-bit PWM
  * https://github.com/SpenceKonde/DxCore/blob/master/megaavr/extras/TakingOverTCA0.md
  *
- * A user of megaTinyCore requested (#152) high speed PWM. They wanted split mode disabled, and PWM frequency higher
- * than 62KHz. This is indeed possible - though do note that the maximum frequency of PWM possible with a full 8 bits
- * of resolution is 78.125 kHz when running at 20 MHz (20000000/256); at 24, it's 93.75 kHz, and overclocked to 32 MHz,
- * 125 kHz. The next highest  frequency for which perfect 8-bit resolution is possible is half of those frequencies.
- * Higher frequencies require lower resolution (see above example for one approach, which can also be used for
- * intermediate frequencies) - though if the frequency is constant, varying your input between 0 and the period instead
- * of using map() is desirable, as map may not be smooth. As a further aside, if 78.125kHz is suitable, there is no
- * need to disable split mode (ynless other features were required, like event inputs or buffering (which might well
- * be what the original requester wanted single mode for)
- * It strikes me now, as I adapt this example for the Dx-series parts, that 62 KHz is almost exactly the maximum
- * possible for 8-bit PWM at 16 MHz system clock. I'm pretty sure there's a connection!
- *
- * Do note that if pushing the PWM frequency is your aim, you can go considerably higher by using the Type D timer.
- * It is rated for a TCD clock of up to 48 MHz.... (and I was able to generate PWM from it without anomalies with
- * it clocked at 128 MHz (32 MHz system clock multiplied by 4, using the 4x multiplier setting that was in the initial
- * io headers, but was pulled from the datasheet before release, and the headers shortly after) - these parts have a
- * ton of headroom on frequency at room temp and under non-adverse conditions)
+ * This demonstrates high speed PWM with split mode disabled. The maximum frequency of PWM
+ * possible with a full 8 bits of resolution is CLK_PER/256: at the Wazamono boards' 24 MHz,
+ * that is 93.75 kHz. The next highest frequency for which perfect 8-bit resolution is
+ * possible is half of that. Higher frequencies require lower resolution (see the previous
+ * example for one approach, which can also be used for intermediate frequencies) - though
+ * if the frequency is constant, varying your input between 0 and the period instead of
+ * using map() is desirable, as map may not be smooth. As a further aside, if 93.75 kHz is
+ * suitable, there is no need to disable split mode (unless other features are required,
+ * like event inputs or buffering).
  */
 
 #if defined(MILLIS_USE_TIMERA0)
   #error "This sketch takes over TCA0, don't use for millis here."
 #endif
 
+/* PWM comes out on TCA0 WO2, so the physical pin follows each board's PWM port mux. */
+#if defined(WAZAMONO_BOARD_TACHI)
+  #define DEMO_OUT_PIN 7                          // D7 (PF2, TCA0 WO2)
+  #define DEMO_TCA_MUX PORTMUX_TCA0_PORTF_gc
+#elif defined(WAZAMONO_BOARD_TSURUGI)
+  #define DEMO_OUT_PIN 9                          // D9 (PD2, TCA0 WO2)
+  #define DEMO_TCA_MUX PORTMUX_TCA0_PORTD_gc
+#elif defined(WAZAMONO_BOARD_KUNAI)
+  #define DEMO_OUT_PIN 3                          // D3 (PA2, TCA0 WO2)
+  #define DEMO_TCA_MUX PORTMUX_TCA0_PORTA_gc
+#else
+  #error "This example supports Wazamono boards only."
+#endif
+
 
 void setup() {
   // We will be outputting PWM on PA2
-  pinMode(PIN_PA2, OUTPUT);
+  pinMode(DEMO_OUT_PIN, OUTPUT);
   takeOverTCA0();
 
-  PORTMUX.TCAROUTEA = (PORTMUX.TCAROUTEA & ~(PORTMUX_TCA0_gm)) | PORTMUX_TCA0_PORTA_gc;
+  PORTMUX.TCAROUTEA = (PORTMUX.TCAROUTEA & ~(PORTMUX_TCA0_gm)) | DEMO_TCA_MUX;
   TCA0.SINGLE.CTRLB = (TCA_SINGLE_CMP2EN_bm | TCA_SINGLE_WGMODE_SINGLESLOPE_gc); // Single slope PWM mode, PWM on WO2
   TCA0.SINGLE.PER = 0x00FF; // Count all the way up to 0x00FF (255) - 8-bit PWM
   // At 20MHz, this gives ~78.125kHz PWM

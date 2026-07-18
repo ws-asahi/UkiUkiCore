@@ -52,10 +52,18 @@ jobs:
         - megaavr/extras/ci/test-sketch/all/test_tone
         - megaavr/extras/ci/test-sketch/all/test_PWM
         - megaavr/extras/ci/test-sketch/all/test_timekeeping
-        - megaavr/libraries/Comparator/examples/Hysteresis
-        - megaavr/libraries/Comparator/examples/Internal_reference
-        - megaavr/libraries/Comparator/examples/Interrupt
-        - megaavr/libraries/Comparator/examples/Simple_comparator
+        - megaavr/libraries/AnalogComp/examples/EdgeInterrupt
+        - megaavr/libraries/AnalogComp/examples/OutputPin
+        - megaavr/libraries/AnalogComp/examples/ReadState
+        - megaavr/libraries/AnalogComp/examples/Threshold
+        - megaavr/libraries/CustomLogic/examples/AnalogCompInput
+        - megaavr/libraries/CustomLogic/examples/DualUnits
+        - megaavr/libraries/CustomLogic/examples/EdgeInterrupt
+        - megaavr/libraries/CustomLogic/examples/MultipleOutputs
+        - megaavr/libraries/CustomLogic/examples/SetResetLatch
+        - megaavr/libraries/CustomLogic/examples/ThreeInputOR
+        - megaavr/libraries/CustomLogic/examples/TruthTable
+        - megaavr/libraries/CustomLogic/examples/TwoInputAND
         - megaavr/libraries/DxCore/examples/EnhancedIODemo
         - megaavr/libraries/DxCore/examples/ModernRevSer
         - megaavr/libraries/DxCore/examples/SAMPLENdemo
@@ -72,18 +80,22 @@ jobs:
         - megaavr/libraries/EEPROM/examples/eeprom_read
         - megaavr/libraries/EEPROM/examples/eeprom_update
         - megaavr/libraries/EEPROM/examples/eeprom_write
-        - megaavr/libraries/Logic/examples/Five_input_NOR
-        - megaavr/libraries/Logic/examples/Interrupt
-        - megaavr/libraries/Logic/examples/LatchNoSeq
-        - megaavr/libraries/Logic/examples/LatchNoSeqDx
-        - megaavr/libraries/Logic/examples/Modulate
-        - megaavr/libraries/Logic/examples/Three_input_AND
-        - megaavr/libraries/Logic/examples/Three_input_NAND
-        - megaavr/libraries/Logic/examples/Three_input_OR
-        - megaavr/libraries/Logic/examples/Oscillate
-        - megaavr/libraries/Logic/examples/Two_input_AND
-        - megaavr/libraries/Logic/examples/Two_input_NAND
-        - megaavr/libraries/Logic/examples/Two_input_OR
+        - megaavr/libraries/EventSystem/examples/CompToPin
+        - megaavr/libraries/EventSystem/examples/PinToLogic
+        - megaavr/libraries/EventSystem/examples/PinToPin
+        - megaavr/libraries/EventSystem/examples/SoftwareTrigger
+        - megaavr/libraries/Flash/examples/FlashDemo
+        - megaavr/libraries/Flash/examples/FlashWriteTest
+        - megaavr/libraries/HID-Project/examples/Consumer
+        - megaavr/libraries/HID-Project/examples/Gamepad
+        - megaavr/libraries/HID-Project/examples/Keyboard
+        - megaavr/libraries/HID-Project/examples/Mouse
+        - megaavr/libraries/HID-Project/examples/RawHID
+        - megaavr/libraries/MIDIUSB/examples/MIDIUSB_buzzer
+        - megaavr/libraries/MIDIUSB/examples/MIDIUSB_clock
+        - megaavr/libraries/MIDIUSB/examples/MIDIUSB_loop
+        - megaavr/libraries/MIDIUSB/examples/MIDIUSB_read
+        - megaavr/libraries/MIDIUSB/examples/MIDIUSB_write
         - megaavr/libraries/Servo/examples/Knob
         - megaavr/libraries/Servo/examples/ServoMaxTest
         - megaavr/libraries/Servo/examples/Sweep
@@ -101,11 +113,10 @@ jobs:
         - megaavr/libraries/tinyNeoPixel_Static/examples/buttoncycler
         - megaavr/libraries/tinyNeoPixel_Static/examples/simple
         - megaavr/libraries/tinyNeoPixel_Static/examples/strandtest
+        - megaavr/libraries/USERSIG/examples/UsersigTest
         - megaavr/libraries/Wire/examples/digital_potentiometer
         - megaavr/libraries/Wire/examples/master_read
         - megaavr/libraries/Wire/examples/master_write
-        - megaavr/libraries/Wire/examples/pinswap_via_pins
-        - megaavr/libraries/Wire/examples/pinswap_via_swap
         - megaavr/libraries/Wire/examples/SFRRanger_reader
         - megaavr/libraries/Wire/examples/slave_read
         - megaavr/libraries/Wire/examples/slave_write

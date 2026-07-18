@@ -1,0 +1,38 @@
+#######################################
+# Syntax Coloring Map for EventSystem
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+EventSystemClass	KEYWORD1
+EventSource	KEYWORD1
+EventDestination	KEYWORD1
+EventSystem	KEYWORD1
+EventSystem1	KEYWORD1
+EventSystem2	KEYWORD1
+EventSystem3	KEYWORD1
+EventSystem4	KEYWORD1
+EventSystem5	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+connect	KEYWORD2
+addDestination	KEYWORD2
+disconnect	KEYWORD2
+trigger	KEYWORD2
+connected	KEYWORD2
+end	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+EVENT_ANALOG_COMP	LITERAL1
+EVENT_CUSTOM_LOGIC	LITERAL1
+EVENT_CUSTOM_LOGIC1	LITERAL1
+EVENT_SOFTWARE	LITERAL1
+EVENT_TO_LOGIC_A	LITERAL1
+EVENT_TO_LOGIC_B	LITERAL1
+EVENT_TO_LOGIC1_A	LITERAL1
+EVENT_TO_LOGIC1_B	LITERAL1

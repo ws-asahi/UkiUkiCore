@@ -5,7 +5,7 @@
 
 
 // Which pin on the Arduino is connected to the NeoPixels?
-#define PIN            PIN_PC3
+#define PIN            9  // D9: NeoPixel data pin
 
 // How many NeoPixels are attached to the Arduino?
 #define NUMPIXELS      16

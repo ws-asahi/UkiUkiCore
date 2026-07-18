@@ -10,14 +10,25 @@
 #endif
 
 unsigned int DutyCycle = 0;
-// picked more or less randomly, other than the fact that everything has it, so it makes a good example :-)
-uint8_t OutputPin = PIN_PC3;
+/* PWM comes out on TCA0 WO1, so the physical pin follows each board's PWM port mux. */
+#if defined(WAZAMONO_BOARD_TACHI)
+  uint8_t OutputPin = 6;                          // D6 (PF1, TCA0 WO1)
+  #define DEMO_TCA_MUX PORTMUX_TCA0_PORTF_gc
+#elif defined(WAZAMONO_BOARD_TSURUGI)
+  uint8_t OutputPin = 6;                          // D6 (PD1, TCA0 WO1)
+  #define DEMO_TCA_MUX PORTMUX_TCA0_PORTD_gc
+#elif defined(WAZAMONO_BOARD_KUNAI)
+  uint8_t OutputPin = 5;                          // D5 (PA1, TCA0 WO1; shared with SCL)
+  #define DEMO_TCA_MUX PORTMUX_TCA0_PORTA_gc
+#else
+  #error "This example supports Wazamono boards only."
+#endif
 
 
 void setup() {
   pinMode(OutputPin, OUTPUT);
   takeOverTCA0(); // this replaces disabling and resettng the timer, required previously.
-  PORTMUX.TCAROUTEA   = (PORTMUX.TCAROUTEA & ~(PORTMUX_TCA0_gm)) | PORTMUX_TCA0_PORTC_gc; // Set mux to PORTC
+  PORTMUX.TCAROUTEA   = (PORTMUX.TCAROUTEA & ~(PORTMUX_TCA0_gm)) | DEMO_TCA_MUX; // route WO to this board's PWM port
   TCA0.SINGLE.CTRLB   = (TCA_SINGLE_CMP1EN_bm | TCA_SINGLE_WGMODE_DSBOTTOM_gc); // Dual slope PWM mode OVF interrupt at BOTTOM, PWM on WO1.
   TCA0.SINGLE.PER     = 0xFFFF;               // Count all the way up to 0xFFFF.
   //                                             At 20MHz, this gives ~152Hz PWM with no prescaling.

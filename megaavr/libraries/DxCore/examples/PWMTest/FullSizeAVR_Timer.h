@@ -1,395 +1,77 @@
-/*  Welcome to IFDEF HELL!
- *   #if defined(ENTERED_HERE)
- *    abandon(allHope);
- *  #endif
+/* Timer/pin tables for the PWMTest diagnostic - WazamonoCore (AVR DU-series).
+ *
+ * The DU-series has three PWM-capable timers: TCA0, TCB0 and TCB1.
+ * The tables below list, for each PORTMUX option, which physical pin carries
+ * each waveform output - with per-board adjustments for pins that are not
+ * bonded out (Kunai) or otherwise unavailable (crystal, VBUS detect).
  */
 
 // *INDENT-OFF*
-/* This whole thing could *NEVER* be made in a way that was readable to humans and
- *  which would pass asytle. astyle is a great idea, except that it's idea of what
- *  the right formatting is objectively awful when there are nested #if's. It's like
- *  if it didn't
- */
 
 #define _tca0 0x00
-#define _tca1 0x01
 #define _tcb0 0x10
 #define _tcb1 0x11
-#define _tcb2 0x12
-#define _tcb3 0x13
-#define _tcb4 0x14
-#define _tcd0 0x30 //in case there's a TCC ever.
-#define _tce0 0x40
-#define _tcf0 0x50
-
-
 
 const PROGMEM_MAPPED uint8_t MyTimers[] = {
-  #ifdef TCA0
-    _tca0,
-  #endif
-  #ifdef TCA1
-    _tca1,
-  #endif
-  #ifdef TCB0
-    _tcb0,
-  #endif
-  #ifdef TCB1
-    _tcb1,
-  #endif
-  #ifdef TCB2
-    _tcb2,
-  #endif
-  #ifdef TCB3
-    _tcb3,
-  #endif
-  #ifdef TCB4
-    _tcb4,
-  #endif
-  #ifdef TCD0
-    _tcd0,
-  #endif
-  #ifdef TCE0
-    _tce0,
-  #endif
-  #ifdef TCF0
-    _tcf0,
-  #endif
+  _tca0,
+  _tcb0,
+  _tcb1,
   255
 };
 
-
-
-
+/* TCA0 waveform outputs WO0-WO5 for each TCAROUTEA value (one 6-entry row per
+ * port, PORTA..PORTG, so the index is 6*mux + channel). The DU routes TCA0
+ * only to PORTA, PORTC (WO3 = PC3 only), PORTD and PORTF; the other rows are
+ * padding so that indexing matches the PORTMUX register values.
+ * PC3 is deliberately excluded: it is the VBUS divider input on Tachi/Kunai
+ * on Tachi/Kunai, so PWM must not be driven there (on Tsurugi PC3 = D7, a
+ * plain GPIO, but TCA0 is muxed to PORTD so it is not a PWM pin anyway).
+ */
 const PROGMEM_MAPPED uint8_t TCA0pinsets[] = {
-  #if ((CLOCK_SOURCE & 0x03) == 0)
-    PIN_PA0, PIN_PA1,
+  /* PORTA (mux 0) */
+  #if defined(WAZAMONO_BOARD_KUNAI)
+    PIN_PA0,   PIN_PA1,    /* D4, D5 - internal oscillator, pins are free */
   #else
-    NOT_A_PIN, NOT_A_PIN,
+    NOT_A_PIN, NOT_A_PIN,  /* PA0/PA1 carry the 24 MHz crystal on Tachi/Tsurugi */
   #endif
-  #if defined(PIN_PA2) // 14-pin parts don't have these pins
-    PIN_PA2,    PIN_PA3,    PIN_PA4,    PIN_PA5,
+  PIN_PA2,   PIN_PA3,   PIN_PA4,   PIN_PA5,
+  /* PORTB (mux 1) - no PORTB on the DU-series */
+  NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN,
+  /* PORTC (mux 2) - only WO3 = PC3 exists, and it is reserved on all boards */
+  NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN,
+  /* PORTD (mux 3) */
+  #if defined(WAZAMONO_BOARD_KUNAI)
+    NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, /* PD0-PD3 not bonded out on Kunai */
   #else
-    NOT_A_PIN,  NOT_A_PIN,  NOT_A_PIN,  NOT_A_PIN,
+    PIN_PD0,   PIN_PD1,   PIN_PD2,   PIN_PD3,
   #endif
-  #if _AVR_PINCOUNT >= 48 //48-pin and 64 pin parts only have these
-    PIN_PB0,    PIN_PB1,    PIN_PB2,    PIN_PB3,    PIN_PB4,    PIN_PB5,
+  PIN_PD4,   PIN_PD5,
+  /* PORTE (mux 4) - no PORTE on the DU-series */
+  NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN,
+  /* PORTF (mux 5) */
+  #if defined(WAZAMONO_BOARD_KUNAI)
+    NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, /* PF0-PF5 not bonded out on Kunai */
   #else
-    NOT_A_PIN,  NOT_A_PIN,  NOT_A_PIN,  NOT_A_PIN,  NOT_A_PIN,  NOT_A_PIN,
+    PIN_PF0,   PIN_PF1,   PIN_PF2,   PIN_PF3,   PIN_PF4,   PIN_PF5,
   #endif
-  #if ((defined(MVIO) && _AVR_PINCOUNT < 28) || defined(__AVR_DU__) ) //14/20 pin parts with less than 28 pins don't have PC0
-    NOT_A_PIN,
-  #else
-    PIN_PC0,
-  #endif
-  #if  defined(__AVR_DU__)
-    NOT_A_PIN, NOT_A_PIN, PIN_PC3,
-  #else
-    PIN_PC1, PIN_PC2, PIN_PC3,
-  #endif
-  #if _AVR_PINCOUNT >= 48 // these don't exist until 48-pin parts
-    PIN_PC4,    PIN_PC5,
-  #else
-    NOT_A_PIN,  NOT_A_PIN,
-  #endif
-  #if (defined(MVIO) && _AVR_PINCOUNT < 48) //no PD0 on MVIO parts with under 48 pins.
-    NOT_A_PIN,
-  #else
-    PIN_PD0,
-  #endif
-  #if (_AVR_PINCOUNT >= 28) // and parts with 20 or 14 pins only have the second half of portd
-    PIN_PD1,    PIN_PD2,    PIN_PD3,
-  #else
-    NOT_A_PIN,  NOT_A_PIN,  NOT_A_PIN,
-  #endif
-  PIN_PD4, PIN_PD5,
-  #if defined(PIN_PE1)
-    PIN_PE0,    PIN_PE1,    PIN_PE2,    PIN_PE3,
-  #else
-    NOT_A_PIN,  NOT_A_PIN,  NOT_A_PIN,  NOT_A_PIN,
-  #endif
-  #if defined(PIN_PE4)
-    PIN_PE4,    PIN_PE5,
-  #else
-    NOT_A_PIN,  NOT_A_PIN,
-  #endif
-  #if defined(PIN_PF1) //PF0 and PF1 come as a mated pair
-    PIN_PF0,    PIN_PF1,
-  #else
-    NOT_A_PIN,  NOT_A_PIN,
-  #endif
-  #if defined(PIN_PF2) // if it has PF2, it has the rest of the normal pins on PF.
-    PIN_PF2,    PIN_PF3,    PIN_PF4,    PIN_PF5,
-  #else
-    NOT_A_PIN,  NOT_A_PIN,  NOT_A_PIN,  NOT_A_PIN,
-  #endif
-  #if defined(PORTG)
-    PIN_PG0,    PIN_PG1,    PIN_PG2,    PIN_PG3,    PIN_PG4,    PIN_PG5,
-  #else
-    NOT_A_PIN,  NOT_A_PIN,  NOT_A_PIN,  NOT_A_PIN,  NOT_A_PIN,  NOT_A_PIN
-  #endif
-};
-#if defined(TCA1)
-const PROGMEM_MAPPED uint8_t TCA1pinsets[] = {
-  #if _AVR_PINCOUNT >= 48
-    PIN_PB0, PIN_PB1, PIN_PB2, PIN_PB3, PIN_PB4, PIN_PB5,
-    PIN_PC4, PIN_PC5, PIN_PC6, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN,
-  #else
-    NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN,
-    NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN,
-  #endif
-
-  #if _AVR_PINCOUNT > 48
-    #if !defined(MAXREG)
-      PIN_PE4, PIN_PE5, PIN_PE6, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN,
-      PIN_PG0, PIN_PG1, PIN_PG2, PIN_PG3, PIN_PG4, PIN_PG5,
-    #else
-      PIN_PE4, PIN_PE5, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN,
-      PIN_PG0, PIN_PG1, PIN_PG2, PIN_PG3, PIN_PG4, PIN_PG5,
-     #endif
-  #else
-    NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN,
-    NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN,
-  #endif
-  #if defined(__AVR_EA__)
-    PIN_PA4, PIN_PA5, PIN_PA6, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN,
-    PIN_PD4, PIN_PD5, PIN_PD6, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN,
-  #else
-    NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN,
-    NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN,
-  #endif
+  /* PORTG (mux 6) - no PORTG on the DU-series */
+  NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN
 };
 
-#endif
+/* TCBn waveform output pins: one (default, alternate) pair per TCB, indexed
+ * as (timernum << 1) + mux. TCB0: PA2 / PF4, TCB1: PA3 / PF5.
+ */
 const PROGMEM_MAPPED uint8_t TCBpinsets[] = {
-  #if defined(PIN_PA2)
-    PIN_PA2,
+  PIN_PA2,                /* TCB0 default WO (Tachi: D2 / Tsurugi: D18 / Kunai: D3) */
+  #if defined(WAZAMONO_BOARD_KUNAI)
+    NOT_A_PIN,            /* TCB0 alt WO = PF4, not bonded out on Kunai */
   #else
-    NOT_A_PIN,
+    PIN_PF4,              /* TCB0 alt WO (Tachi: D9 / Tsurugi: D4) */
   #endif
-  #if defined(PIN_PF4)
-    PIN_PF4,
+  PIN_PA3,                /* TCB1 default WO (Tachi: D3 / Tsurugi: D19 / Kunai: D2) */
+  #if defined(WAZAMONO_BOARD_KUNAI)
+    NOT_A_PIN,            /* TCB1 alt WO = PF5, not bonded out on Kunai */
   #else
-    NOT_A_PIN,
-  #endif
-  #if defined(PIN_PA3)
-    PIN_PA3,
-  #else
-    NOT_A_PIN,
-  #endif
-  #if defined(PIN_PF5)
-    PIN_PF5,
-  #else
-    NOT_A_PIN,
-  #endif
-  #if defined(PIN_PC0) && !defined(FAKE_PIN_PC0)
-    PIN_PC0,
-  #else
-    NOT_A_PIN,
-  #endif
-  #if defined(PIN_PB4)
-    PIN_PB4,
-  #else
-    NOT_A_PIN,
-  #endif
-  #if defined(PIN_PB5)
-    PIN_PB5,
-  #else
-    NOT_A_PIN,
-  #endif
-  #if defined(PIN_PC1)
-    PIN_PC1,
-  #else
-    NOT_A_PIN,
-  #endif
-  #if defined(PIN_PG3)
-    PIN_PG3,
-  #else
-    NOT_A_PIN,
-  #endif
-  #if defined(PIN_PC6)
-    PIN_PC6,
-  #else
-    NOT_A_PIN,
+    PIN_PF5,              /* TCB1 alt WO (Tachi: D10 / Tsurugi: D3) */
   #endif
 };
-#if defined(TCD0)
-const PROGMEM_MAPPED uint8_t TCD0pinsets[] = {
-  #if defined(PIN_PA4)
-    PIN_PA4, PIN_PA5, PIN_PA6, PIN_PA7,
-  #else
-    NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN,
-  #endif
-  #if !(defined(__AVR_DA__) || defined(__AVR_DB__))
-    #if defined(PIN_PB4)
-      PIN_PB4, PIN_PB5,
-    #else
-      NOT_A_PIN, NOT_A_PIN,
-    #endif
-    #if defined(PIN_PB6)
-      PIN_PB6, PIN_PB7,
-    #else
-      NOT_A_PIN, NOT_A_PIN,
-    #endif
-    #if defined(PIN_PF1)
-      PIN_PF0, PIN_PF1,
-    #else
-      NOT_A_PIN, NOT_A_PIN,
-    #endif
-    #if defined(PIN_PF2)
-      PIN_PF2, PIN_PF3,
-    #else
-      NOT_A_PIN, NOT_A_PIN,
-    #endif
-    #if defined(PORTG)
-      PIN_PG4, PIN_PG5, PIN_PG6, PIN_PG7,
-    #else
-      NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN,
-    #endif
-    #if defined(__AVR_DD__)
-      #if _AVR_PINCOUNT > 14
-        PIN_PA4, PIN_PA5, PIN_PD4, PIN_PD5,
-      #else
-        NOT_A_PIN, NOT_A_PIN, PIN_PD4, PIN_PD5,
-      #endif
-    #else
-      NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN
-    #endif
-  #else
-    NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN,
-    NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN,
-    NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN,
-    NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN
-  #endif
-};
-#endif
-/* TODO:
-// This is a 128b table. The majority of it is "reserved" mappings. Obvious assumptions were made.
-const PROGMEM_MAPPED uint8_t TCE0pinsets[] = {
-  #if (((CLOCK_SOURCE & 0x03) == 0))
-    PIN_PA0, PIN_PA1,
-  #else
-    NOT_A_PIN, NOT_A_PIN,
-  #endif
-  #if defined(PIN_PA2)
-    PIN_PA2, PIN_PA3, PIN_PA4, PIN_PA5, PIN_PA6, PIN_PA7,
-  #else
-    NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN,
-  #endif
-  #if defined (PORTB)
-    PIN_PB0, PIN_PB1, PIN_PB2, PIN_PB3, PIN_PB4, PIN_PB5,
-    #if defined(PIN_PB6)
-      PIN_PB6, PIN_PB7,
-    #else
-      NOT_A_PIN, NOT_A_PIN,
-    #endif
-  #else
-    NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN,
-  #endif
-  #if defined(PORTC)
-    #if defined(MVIO) && _AVR_PINCOUNT < 28
-      NOT_A_PIN,
-    #else
-      PIN_PC0,
-    #endif
-    PIN_PC1, PIN_PC2, PIN_PC3,
-    #if defined(PIN_PC4)
-      PIN_PC4, PIN_PC5, PIN_PC6, PIN_PC7,
-    #else
-      NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN,
-    #endif
-  #endif
-  #if defined(PORTD)
-    #if defined(MVIO) && _AVR_PINCOUNT < 48
-      NOT_A_PIN,
-    #else
-      PIN_PD0,
-    #endif
-    #if _AVR_PINCOUNT > 20
-      PIN_PD1, PIN_PD2, PIN_PD3,
-    #else
-      NOT_A_PIN, NOT_A_PIN, NOT_A_PIN,
-    #endif
-    PIN_PD4, PIN_PD5, PIN_PD6, PIN_PD7,
-  #else
-    NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN,
-  #endif
-  #if defined(PORTE)
-    PIN_PE0, PIN_PE1, PIN_PE2, PIN_PE3,
-    #if defined(PIN_PE4)
-      PIN_PE4, PIN_PE5, PIN_PE6, PIN_PE7,
-    #else
-      NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN,
-  #else
-    NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN,
-  #endif
-  #if defined(PORTF)
-    #if !defined(PIN_PF1)
-      NOT_A_PIN, NOT_A_PIN,
-    #else
-      PIN_PF0, PIN_PF1,
-    #endif
-    #if !defined(PIN_PF2)
-      NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN,
-    #else
-      PIN_PF2, PIN_PF3, PIN_PF4, PIN_PF5,
-    #endif
-    NOT_A_PIN, NOT_A_PIN,
-  #else
-    NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN,
-  #endif
-  #if defined(PORTG)
-    PIN_PG0, PIN_PG1, PIN_PG2, PIN_PG3, PIN_PG4, PIN_PG5, PIN_PG6, PIN_PG7,
-  #else
-    NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN,
-  #endif
-  NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN,
-  // C2
-  #if (((CLOCK_SOURCE & 0x03) == 0))
-    PIN_PA0, PIN_PA1,
-  #else
-    NOT_A_PIN, NOT_A_PIN,
-  #endif
-      #if defined(MVIO) && _AVR_PINCOUNT < 28
-      NOT_A_PIN,
-    #else
-      PIN_PC0,
-    #endif
-  PIN_PC1, PIN_PC2, PIN_PC3, NOT_A_PIN, NOT_A_PIN,
-  // A2
-  #if defined(PIN_PA2)
-    PIN_PA2, PIN_PA3, PIN_PA4, PIN_PA5, PIN_PA6, PIN_PA7, NOT_A_PIN, NOT_A_PIN,
-  #else
-    NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN,
-  #endif
-  NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN,
-  NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN,
-  NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN,
-  NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN,
-  NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN,
-  NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN,
-};
-
-const PROGMEM_MAPPED uint8_t TCF0pinsets[] = {
-  #if (((CLOCK_SOURCE & 0x03) == 0))
-    PIN_PA0, PIN_PA1,
-  #else
-    NOT_A_PIN, NOT_A_PIN,
-  #endif
-  #if defined(PIN_PA6)
-    PIN_PA6, PIN_PA7,
-  #else
-    NOT_A_PIN, NOT_A_PIN,
-  #endif
-  #if defined(PIN_PF4)
-    PIN_PF4, PIN_PF5,
-  #else
-    NOT_A_PIN, NOT_A_PIN,
-  #endif
-  NOT_A_PIN, NOT_A_PIN,
-  NOT_A_PIN, NOT_A_PIN,
-  NOT_A_PIN, NOT_A_PIN,
-  NOT_A_PIN, NOT_A_PIN,
-  NOT_A_PIN, NOT_A_PIN
-};
-*/

@@ -2,33 +2,22 @@
                        \\   Enhanced I/O API Demo   //
                         ^^-------------------------^^
 
-The hardware in modern AVR devices (Dx, tinyAVR 0/1/2, mega 0-series) is more
-sophisticated than that which was featured in previous AVR products. This core
+The I/O hardware in the AVR DU-series is more sophisticated than that which
+was featured in classic AVR products. This core
 provides a few simple I/O functions to take advantage of the new pin I/O
 capabilities. This file demonstrates their function and calling conventions in
 brief.
 
-In these examples, we pick a pin that we know the part has -PIN_PA2 on tinyAVR
-and PIN_PD4 for everything else - all ATtiny have PA0~PA3, PA6,and PA7; PA0 is
-generally not available as it's used for UPDI.
-
-Now, we could have also used PIN_PA1 - that works on all parts, except that on
-the DD and DB-series, that pin may be used for a crystal, making it ill-suited
-for use in a demonstration.
+In these examples, we use pins D9 and D8, which are plain GPIO on every
+Wazamono board.
 
 This sketch isn't meant to be used as is - it's more of a starting point, or
 resource to cooy+paste starting points from.
 
 ******************************************************************************/
 
-#if defined (MEGATINYCORE)
-  #define DEMO_PIN PIN_PA2
-  #define DEMO_PIN2 PIN_PA3
-#else
-  #define DEMO_PIN PIN_PD4
-  #define DEMO_PIN2 PIN_PD5
-
-#endif
+#define DEMO_PIN 9   // D9
+#define DEMO_PIN2 8  // D8
 
 void setup() {
 

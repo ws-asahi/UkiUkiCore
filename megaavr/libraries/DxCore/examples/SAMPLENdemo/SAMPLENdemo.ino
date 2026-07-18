@@ -25,8 +25,8 @@ rather odd. Also that it goes all the way to 0 on a LOW, but not all the way to 
 
 
 */
-#define FIRST_PIN PIN_PD4
-#define SECOND_PIN PIN_PD5
+#define FIRST_PIN A0   // analog input under test
+#define SECOND_PIN A1  // driven LOW as an adjacent reference
 #if !defined(ADC_LOWLAT_bm) // One name on AVR DA/DB/DD
   #define SAMPLENREG (ADC0.SAMPCTRL)
 #else

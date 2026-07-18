@@ -1,7 +1,7 @@
 #include <tinyNeoPixel.h>
 
 
-#define PIN PIN_PC3 //chosen because all Dx and Ex parts have it
+#define PIN 9 // D9: NeoPixel data pin
 #define NUM_LEDS 60
 
 #define BRIGHTNESS 50

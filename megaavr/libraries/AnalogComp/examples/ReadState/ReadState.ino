@@ -1,24 +1,22 @@
-/* AnalogComp / ReadState
+/* AnalogComp / ReadState(状態の読み取り)
  *
- * Compares the plus input pin against the minus input pin and prints the
- * result. The output is true while the plus voltage is above the minus
- * voltage - a hardware voltage comparison with no ADC and no math.
+ * +入力ピンと-入力ピンの電圧を比較し、結果を表示します。
+ * +側の電圧が-側より高い間trueになります。ADCも計算も使わない、
+ * ハードウェアによる電圧比較です。
  *
- * Default input pins:
- *            plus (+)         minus (-)
- *   Tachi    A1  (PD2)        A0  (PD3)
- *   Tsurugi  D9  (PD2)        D10 (PD3)
- *   Kunai    D6  (PD6)        D7  (PD7)
+ * 既定の入力ピン:
+ *   +入力 = D9  (PD2)
+ *   -入力 = D10 (PD3)
  *
- * Try: connect the minus pin to a potentiometer wiper (or a resistor
- * divider) and the plus pin to the voltage you want to watch.
+ * 試してみよう: -入力を可変抵抗のワイパー(または分圧抵抗)に、
+ * +入力を監視したい電圧につないでみてください。
  */
 #include <AnalogComp.h>
 
 void setup() {
   Serial.begin(115200);
   AnalogComp.begin();
-  AnalogComp.setHysteresis(AC_HYST_SMALL); // suppress chatter near the crossing
+  AnalogComp.setHysteresis(AC_HYST_SMALL); // 境界付近のばたつきを抑える
 }
 
 void loop() {

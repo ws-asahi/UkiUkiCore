@@ -1,16 +1,15 @@
-/* EventSystem / CompToPin
+/* EventSystem / CompToPin(コンパレータからピンへ)
  *
- * The analog comparator's verdict, straight to a pin: the output pin is HIGH
- * while the voltage on the AnalogComp + input is above the internal 2.5 V
- * reference. No loop() code, no analogRead(), no CPU.
+ * アナログコンパレータの判定結果を、そのままピンへ届けます。
+ * AnalogCompの+入力の電圧が内蔵2.5V基準を上回っている間、出力ピンが
+ * HIGHになります。loop()のコードも、analogRead()も、CPUも使いません。
  *
- * Wiring:
- *   the voltage to watch -> AnalogComp + input
- *                           Tachi: A1 / Tsurugi: D9* / Kunai: D6
- *   an LED (+ resistor)  -> the event-output pin, to GND
- *                           Tachi: D2 / Tsurugi: D8 / Kunai: D0
+ * 接続:
+ *   監視したい電圧      -> AnalogComp +入力 = D9
+ *   LED(+抵抗、GNDへ)   -> イベント出力ピン = D8
  *
- * (*Tsurugi: D9 doubles as the EVOUTD pin; it is free while EVOUTD is unused.)
+ * (D9はEVOUTDピンとしても使われるピンですが、EVOUTDを使っていない
+ *  限り+入力として自由に使えます。)
  */
 #include <AnalogComp.h>
 #include <EventSystem.h>
@@ -18,18 +17,10 @@
 void setup() {
   Serial.begin(115200);
 
-  AnalogComp.begin(INTERNAL2V5);              // + input vs internal 2.5 V
+  AnalogComp.begin(INTERNAL2V5);              // +入力 vs 内蔵2.5V基準
   AnalogComp.setHysteresis(AC_HYST_MEDIUM);
 
-  #if defined(WAZAMONO_BOARD_TACHI)
-  EventSystem.connect(EVENT_ANALOG_COMP, 2);  // -> D2 (EVOUTA)
-  #elif defined(WAZAMONO_BOARD_TSURUGI)
-  EventSystem.connect(EVENT_ANALOG_COMP, 8);  // -> D8 (EVOUTA)
-  #elif defined(WAZAMONO_BOARD_KUNAI)
-  EventSystem.connect(EVENT_ANALOG_COMP, 0);  // -> D0 (EVOUTA)
-  #else
-  #error "This example supports Wazamono boards only."
-  #endif
+  EventSystem.connect(EVENT_ANALOG_COMP, 8);  // 判定結果 -> D8(EVOUTA)
 }
 
 void loop() {

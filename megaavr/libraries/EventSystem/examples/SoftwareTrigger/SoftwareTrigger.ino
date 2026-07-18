@@ -1,19 +1,20 @@
-/* EventSystem / SoftwareTrigger
+/* EventSystem / SoftwareTrigger(ソフトウェアからのパルス)
  *
- * trigger() sends a single one-clock pulse (about 42 ns at 24 MHz) down the
- * connection - far too short to see on an LED, but exactly what edge-driven
- * hardware wants. Here it SETs a CustomLogic latch; a button RESETs it.
- * The sketch decides WHEN (in code); everything after that is hardware.
+ * trigger()は、接続に1クロック分(24MHzで約42ナノ秒)のパルスを1発だけ
+ * 送ります。LEDで見るにはあまりに短いですが、エッジで動くハードウェア
+ * にはこれで十分です。ここではCustomLogicで作ったラッチをこのパルスで
+ * セットし、ボタンでリセットします。「いつ実行するか」だけをコードが
+ * 決め、それ以降はすべてハードウェアが処理します。
  *
- *   IN0 = the software pulse   (via EVENT_TO_LOGIC_A)
- *   IN1 = RESET button          Tachi: A2 / Tsurugi: D6 / Kunai: D5
- *   IN2 = the latch's own output
- *   OUT = LED (+ resistor)      Tachi: A0 / Tsurugi: D10 / Kunai: D2
+ *   IN0 = ソフトウェアパルス (EVENT_TO_LOGIC_A経由)
+ *   IN1 = リセットボタン      D6 (GNDへ。プルアップされ未押下=HIGH)
+ *   IN2 = ラッチ自身の出力
+ *   OUT = LED(+抵抗)          D10
  *
- * Truth table (bit i = output for inputs spelling i, IN2 = bit 2):
- *   RESET pressed (IN1 = 0)          -> 0          (indices 0,1,4,5)
- *   pulse arrives (IN0 = 1, IN1 = 1) -> 1          (indices 3,7)
- *   otherwise                        -> keep IN2   (index 2 -> 0, 6 -> 1)
+ * 真理値表(ビットiが「入力の並びがiのときの出力」。IN2=ビット2):
+ *   リセット押下(IN1=0)            -> 0        (インデックス0,1,4,5)
+ *   パルス到着(IN0=1かつIN1=1)     -> 1        (インデックス3,7)
+ *   それ以外                       -> IN2を保持 (2->0, 6->1)
  *   = 0b11001000
  */
 #include <CustomLogic.h>
@@ -24,14 +25,14 @@ void setup() {
 
   EventSystem.connect(EVENT_SOFTWARE, EVENT_TO_LOGIC_A);
 
-  CustomLogic.setInputIN0(LOGIC_EVENT_A);      // IN0 = the software pulse
-  CustomLogic.setInputIN2(LOGIC_OWN_OUTPUT);   // IN2 = our own output (latch)
+  CustomLogic.setInputIN0(LOGIC_EVENT_A);      // IN0 = ソフトウェアパルス
+  CustomLogic.setInputIN2(LOGIC_OWN_OUTPUT);   // IN2 = 自分の出力(=ラッチ化)
   CustomLogic.beginTruthTable(0b11001000, 3);
 }
 
 void loop() {
   Serial.println(F("trigger() - the latch goes HIGH (press the button to reset it)"));
-  EventSystem.trigger();                        // one 42 ns pulse: SET
+  EventSystem.trigger();                        // 42nsのパルス1発: セット
   for (uint8_t i = 0; i < 6; i++) {
     Serial.print(F("  latch: "));
     Serial.println(CustomLogic.read() ? F("SET") : F("RESET"));

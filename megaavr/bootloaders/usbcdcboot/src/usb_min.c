@@ -431,11 +431,18 @@ void usb_min_init(void) {
     oschf |=  (CLKCTRL_AUTOTUNE_SOF_gc | CLKCTRL_ALGSEL_INCR_gc);
     _PROTECTED_WRITE(CLKCTRL.OSCHFCTRLA, oschf);
 
-    /* VUSB regulator: derives the 3.3 V USB transceiver supply from VDD.
-     * The UkiUkiduino generates VUSB with the ON-CHIP regulator (VDD = 5 V,
-     * datasheet self-powered config "5s"; only a 470 nF decoupling cap sits
-     * on the VUSB pin), so the regulator must be enabled here. */
+    /* VUSB supply. VREG=1 builds (UkiUkiduino): the internal regulator
+     * derives the 3.3 V VUSB rail (and D+ pull-up reference) from the 5 V VDD
+     * (power configuration 5s; only a 470 nF decoupling cap sits on the VUSB
+     * pin). Selected by build_ukiukiduino.sh/.bat via VREG=0/1 (VREG=1 ->
+     * -DUSB_VREG_INTERNAL, see Makefile). A VREG=0 build would expect an
+     * external 3.3 V feed on VUSB (configuration 3s) - not the UkiUkiduino.
+     * NOTE: VREG operation additionally relies on the USBSINK fuse staying
+     * enabled (FUSE.SYSCFG1 bit 3, factory default 1, recommended enabled
+     * per DS40002548A section 6.4). */
+#if defined(USB_VREG_INTERNAL)
     SYSCFG.VUSBCTRL = SYSCFG_USBVREG_bm;
+#endif
 
     _delay_ms(1);
 

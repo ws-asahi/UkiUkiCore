@@ -7,9 +7,9 @@
 #  The clean-room bootloader source is NOT modified. Board parameters
 #  are passed in at build time:
 #
-#    board        MCU         LED   pol       USB ident (VID:PID)
-#    -----------  ----------  ----  --------  -----------------------------
-#    UkiUkiduino  avr64du32   PA0   act-HIGH  0x1209:0x000B (test placeholder)
+#    board        MCU         LED   pol       VREG  USB ident (VID:PID)
+#    -----------  ----------  ----  --------  ----  -----------------------------
+#    UkiUkiduino  avr64du32   PA0   act-HIGH  1     0x1209:0x000B (test placeholder)
 #
 #    - LED pin     : LED_PORT / LED_PIN
 #    - LED polarity: LED_AH=1 (active-HIGH) | LED_AL=1 (active-LOW)
@@ -56,19 +56,20 @@ fi
 MAKE="${MAKE:-make}"
 TOOLROOT="${TOOLROOT:-}"
 
-build() {            # $1=class  $2=mcu  $3=LEDport  $4=LEDpin  $5=LED polarity (AH | AL)
+build() {            # $1=class  $2=mcu  $3=LEDport  $4=LEDpin  $5=LED polarity (AH | AL)  $6=VREG (0 | 1)
   local polflag=""
+  local vreg="${6:-1}"   # omitted -> 1 (UkiUkiduino: internal VUSB regulator)
   if [ "${5:-}" = "AH" ]; then polflag="LED_AH=1"; fi
   if [ "${5:-}" = "AL" ]; then polflag="LED_AL=1"; fi
   echo ""
-  echo "------ building $2  ->  usbcdcboot_$1.hex  (LED $3 $4, pol ${5:-}) ------"
+  echo "------ building $2  ->  usbcdcboot_$1.hex  (LED $3 $4, pol ${5:-}, VREG $vreg) ------"
   rm -f src/*.o "usbcdcboot_$1".{elf,hex,lst,map} 2>/dev/null || true
-  $MAKE ${TOOLROOT:+TOOLROOT="$TOOLROOT"} MCU="$2" TARGET="usbcdcboot_$1" LED_PORT="$3" LED_PIN="$4" $polflag all
-  $MAKE ${TOOLROOT:+TOOLROOT="$TOOLROOT"} MCU="$2" TARGET="usbcdcboot_$1" $polflag size
+  $MAKE ${TOOLROOT:+TOOLROOT="$TOOLROOT"} MCU="$2" TARGET="usbcdcboot_$1" LED_PORT="$3" LED_PIN="$4" VREG="$vreg" $polflag all
+  $MAKE ${TOOLROOT:+TOOLROOT="$TOOLROOT"} MCU="$2" TARGET="usbcdcboot_$1" VREG="$vreg" $polflag size
 }
 
-#     class        mcu        LEDport LEDpin LEDpol(AH|AL)
-build ukiukiduino avr64du32   PORTA   0      AH
+#     class        mcu        LEDport LEDpin LEDpol(AH|AL) VREG
+build ukiukiduino avr64du32   PORTA   0      AH            1
 
 echo ""
 echo "=== collecting hex files into ../hex/ ==="

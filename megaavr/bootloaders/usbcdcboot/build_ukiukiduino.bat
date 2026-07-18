@@ -8,9 +8,9 @@ REM
 REM  This does NOT modify the clean-room bootloader source. Board
 REM  parameters are passed in at build time:
 REM
-REM    board        MCU         LED   pol       USB ident (VID:PID)
-REM    -----------  ----------  ----  --------  -----------------------------
-REM    UkiUkiduino  avr64du32   PA0   act-HIGH  0x1209:0x000B (test placeholder)
+REM    board        MCU         LED   pol       VREG  USB ident (VID:PID)
+REM    -----------  ----------  ----  --------  ----  -----------------------------
+REM    UkiUkiduino  avr64du32   PA0   act-HIGH  1     0x1209:0x000B (test placeholder)
 REM
 REM    - LED pin     : LED_PORT / LED_PIN
 REM    - LED polarity: LED_AH=1 (active-HIGH) | LED_AL=1 (active-LOW)
@@ -44,8 +44,7 @@ if not exist "%GCCBIN%\avr-gcc.exe" (
 set "PATH=%GCCBIN%;%PATH%"
 if not defined MAKE set MAKE=make
 
-REM            class             mcu        LEDport LEDpin LEDpol(AH|AL)
-call :build ukiukiduino       avr64du32  PORTA   0      AH
+call :build ukiukiduino       avr64du32  PORTA   0      AH      1
 
 echo.
 echo === collecting hex files into ..\hex\ ===
@@ -60,14 +59,16 @@ endlocal
 goto :eof
 
 :build
-REM  %1=class tag  %2=mcu  %3=LED port  %4=LED pin  %5=LED pol (AH | AL)
+REM  %1=class tag  %2=mcu  %3=LED port  %4=LED pin  %5=LED pol (AH | AL)  %6=VREG (0 | 1)
 set "POLFLAG="
 if /i "%~5"=="AH" set "POLFLAG=LED_AH=1"
 if /i "%~5"=="AL" set "POLFLAG=LED_AL=1"
+set "VREGVAL=%~6"
+if "%VREGVAL%"=="" set "VREGVAL=1"
 echo.
-echo ------ building %2  -^> usbcdcboot_%1.hex  (LED %3 %4, pol %5) ------
+echo ------ building %2  -^> usbcdcboot_%1.hex  (LED %3 %4, pol %5, VREG %VREGVAL%) ------
 del /q src\*.o 2>nul
 del /q usbcdcboot_%1.elf usbcdcboot_%1.hex usbcdcboot_%1.lst usbcdcboot_%1.map 2>nul
-"%MAKE%" MCU=%2 TARGET=usbcdcboot_%1 LED_PORT=%3 LED_PIN=%4 %POLFLAG% all
-"%MAKE%" MCU=%2 TARGET=usbcdcboot_%1 %POLFLAG% size
+"%MAKE%" MCU=%2 TARGET=usbcdcboot_%1 LED_PORT=%3 LED_PIN=%4 VREG=%VREGVAL% %POLFLAG% all
+"%MAKE%" MCU=%2 TARGET=usbcdcboot_%1 VREG=%VREGVAL% %POLFLAG% size
 goto :eof

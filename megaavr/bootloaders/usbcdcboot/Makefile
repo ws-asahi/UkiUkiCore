@@ -89,6 +89,16 @@ ifeq ($(VREG),1)
 CFLAGS += -DUSB_VREG_INTERNAL
 endif
 
+# LED_WS2812=1: the DFU status LED is an addressable WS2812-type RGB LED
+# (data-in on the BL_LED_PORT/BL_LED_PIN pin; UkiUkiduino: WS2812D-F5 on
+# PA0). DFU mode breathes yellow instead of blinking; LED_AH/LED_AL do not
+# apply. The UkiUkiduino builds with LED_WS2812=1 (default here); pass
+# LED_WS2812=0 for a plain GPIO LED.
+LED_WS2812 ?= 1
+ifeq ($(LED_WS2812),1)
+CFLAGS += -DBL_LED_WS2812
+endif
+
 # --- LED polarity (per-build) ---------------------------------------
 # Two explicit options select the DFU LED drive polarity:
 #   make ... LED_AH=1   -> active-HIGH (DxCore / Arduino "D13" convention)

@@ -114,7 +114,98 @@ static volatile uint16_t s_dbltap_flag __attribute__((section(".noinit")));
 #define BL_LED_DRIVE_OFF     OUTSET
 #endif
 
-static uint16_t s_led_period_counts;   /* main-loop iters per toggle */
+static uint16_t s_led_period_counts;   /* main-loop iters per toggle/step */
+
+#if defined(BL_LED_WS2812)
+/* --------------------------------------------------------------------
+ *  WS2812 (addressable RGB) DFU LED - UkiUkiduino: WS2812D-F5 on PA0.
+ *
+ *  Instead of a plain blink, DFU mode "breathes" yellow like the Uno R4 /
+ *  Leonardo bootloaders: brightness ramps 0..BL_WS_BREATH_MAX..0 in a
+ *  triangle. The entry-path encoding is preserved as the BREATHING SPEED
+ *  (magic = fast, double-tap = medium, blank app = slow), reusing
+ *  s_led_period_counts (one brightness step per period_counts/32 iters).
+ *
+ *  Timing (WS2812D-F5 datasheet, 24 MHz = the DFU clock): 31 cycles/bit ->
+ *  T0H 7cy=292ns (220-380), T1H 17cy=708ns (580-1000), T1L 14cy=583ns.
+ *  Frames are sent from the DFU loop only (>= 1 ms apart >> RES 280 us).
+ *  GRB order, MSB first. SBI/CBI keep the rest of PORTA untouched.
+ *
+ *  NOTE: WS2812 mode drives the pin on PORTA (VPORTA.OUT, I/O addr 0x01);
+ *  the LED_AH/LED_AL polarity options do not apply. The 4 MHz double-tap
+ *  window shows no LED in this mode (the bit timing is counted for 24 MHz).
+ * -------------------------------------------------------------------- */
+#define BL_WS_BREATH_MAX  96u          /* peak brightness of the breath */
+
+static uint8_t s_ws_level;             /* current brightness 0..MAX     */
+static int8_t  s_ws_dir;               /* +1 rising / -1 falling        */
+
+/* One byte, MSB first, 31 cycles/bit ("rjmp .+0" = 2-cycle, 1-word nop). */
+static void bl_ws_byte(uint8_t b) {
+    uint8_t cnt = 8;
+    __asm__ __volatile__(
+        "1:                        \n\t"
+        "sbi  0x01, %[bit]         \n\t" /* c1    high (VPORTA.OUT)     */
+        "rjmp .+0                  \n\t"
+        "rjmp .+0                  \n\t"
+        "nop                       \n\t" /* c2-c6                       */
+        "sbrs %[b], 7              \n\t" /* c7 (c7-c8 when bit=1)       */
+        "cbi  0x01, %[bit]         \n\t" /* c8    bit=0: low, T0H=7cy   */
+        "rjmp .+0                  \n\t"
+        "rjmp .+0                  \n\t"
+        "rjmp .+0                  \n\t"
+        "rjmp .+0                  \n\t"
+        "nop                       \n\t" /* c9-c17                      */
+        "cbi  0x01, %[bit]         \n\t" /* c18   bit=1: low, T1H=17cy  */
+        "lsl  %[b]                 \n\t" /* c19                         */
+        "rjmp .+0                  \n\t"
+        "rjmp .+0                  \n\t"
+        "rjmp .+0                  \n\t"
+        "rjmp .+0                  \n\t"
+        "nop                       \n\t" /* c20-c28                     */
+        "dec  %[c]                 \n\t" /* c29                         */
+        "brne 1b                   \n\t" /* c30-c31 -> 31 cycles/bit    */
+        : [b] "+r" (b), [c] "+r" (cnt)
+        : [bit] "I" (BL_LED_PIN)
+    );
+}
+
+/* One GRB frame with interrupts off (~31 us; USB runs polled, and even
+ * under interrupts a full-speed frame is 1 ms, so this is harmless). */
+static void bl_ws_frame(uint8_t r, uint8_t g, uint8_t b) {
+    uint8_t s = SREG;
+    __asm__ __volatile__("cli" ::: "memory");
+    bl_ws_byte(g);
+    bl_ws_byte(r);
+    bl_ws_byte(b);
+    SREG = s;
+}
+
+static inline void bl_led_init(uint16_t period_counts) {
+    s_led_period_counts = period_counts;
+    s_ws_level = 0;
+    s_ws_dir = 1;
+    BL_LED_PORT.DIRSET = BL_LED_PIN_BM;
+    BL_LED_PORT.OUTCLR = BL_LED_PIN_BM;   /* data line idle low */
+}
+
+static inline void bl_led_deinit(void) {
+    bl_ws_frame(0, 0, 0);                 /* LED dark for the app */
+    BL_LED_PORT.OUTCLR = BL_LED_PIN_BM;   /* keep driven low (no float) */
+}
+
+/* One breathing step: advance the triangle and send a yellow frame. */
+static void bl_led_breathe_step(void) {
+    if (s_ws_level == 0) {
+        s_ws_dir = 1;
+    } else if (s_ws_level >= BL_WS_BREATH_MAX) {
+        s_ws_dir = -1;
+    }
+    s_ws_level = (uint8_t)(s_ws_level + s_ws_dir);
+    bl_ws_frame(s_ws_level, s_ws_level, 0);   /* R=G -> yellow */
+}
+
+#else  /* !BL_LED_WS2812: plain GPIO LED (original behavior) */
 
 static inline void bl_led_init(uint16_t period_counts) {
     s_led_period_counts = period_counts;
@@ -138,6 +229,7 @@ static inline void bl_led_on(void) {
 static inline void bl_led_off_state(void) {
     BL_LED_PORT.BL_LED_DRIVE_OFF = BL_LED_PIN_BM;
 }
+#endif /* BL_LED_WS2812 */
 
 /* ------------------------------------------------------------------
  *  Coarse busy-wait calibrated for the 4 MHz reset-default clock.
@@ -169,6 +261,15 @@ static void bl_wait_ms_4mhz(uint16_t ms) {
  * application restart. */
 #define DBLTAP_WINDOW_MS  500U
 static void bl_dbltap_window(void) {
+#if defined(BL_LED_WS2812)
+    /* The window runs on the 4 MHz reset-default clock, where the WS2812
+     * bit timing (counted for 24 MHz) cannot be met, so the window shows
+     * no LED - same as the Uno R4 / Leonardo double-tap behavior. Keep the
+     * data line driven low so the pixel cannot latch noise. */
+    BL_LED_PORT.DIRSET = BL_LED_PIN_BM;
+    BL_LED_PORT.OUTCLR = BL_LED_PIN_BM;
+    bl_wait_ms_4mhz(DBLTAP_WINDOW_MS);
+#else
     BL_LED_PORT.DIRSET = BL_LED_PIN_BM;
     for (uint8_t i = 0; i < (DBLTAP_WINDOW_MS / 50U); i++) {
         bl_led_on();
@@ -178,6 +279,7 @@ static void bl_dbltap_window(void) {
     }
     BL_LED_PORT.BL_LED_DRIVE_OFF = BL_LED_PIN_BM;   /* off */
     BL_LED_PORT.DIRCLR = BL_LED_PIN_BM;   /* release the LED pin for the application */
+#endif
 }
 
 /* ----- WDT timeout we ask the silicon to apply when leaving prog mode ----- */
@@ -403,9 +505,20 @@ int main(void) {
         usb_min_poll();
         cdc_min_poll();
         stk500_poll();
+#if defined(BL_LED_WS2812)
+        /* One brightness step per period/32 iterations: a full breath
+         * (0..MAX..0) takes ~6x the old blink period, giving a slow
+         * Uno R4-style yellow breathing whose speed still encodes the
+         * entry path (magic = fast, double tap = medium, blank = slow). */
+        if (++led_count >= (uint16_t)(s_led_period_counts >> 5)) {
+            led_count = 0;
+            bl_led_breathe_step();
+        }
+#else
         if (++led_count >= s_led_period_counts) {
             led_count = 0;
             bl_led_toggle();
         }
+#endif
     }
 }

@@ -184,15 +184,11 @@ void digitalWrite(uint8_t pin, uint8_t val) {
 
   #if defined(LED_BUILTIN_MIRROR)
   /* Board LED mirror (e.g. UkiUkiduino): a digitalWrite() to the mirror source
-   * pin (D13/PD6) also copies the pin's resulting OUT bit onto the LED driver
-   * pin. Copying the RESULT makes HIGH/LOW/CHANGE all mirror correctly. Costs
-   * one compare for every other pin, and two VPORT ops when it matches. */
+   * pin (D13/PD6) also updates the on-board LED. The variant provides the hook,
+   * which reads the pin's RESULTING OUT bit, so HIGH/LOW/CHANGE all mirror
+   * correctly. Costs one compare for every other pin. */
   if (pin == LED_MIRROR_SRC_PIN) {
-    if (LED_MIRROR_SRC_VPORT.OUT & LED_MIRROR_SRC_bm) {
-      LED_MIRROR_DST_VPORT.OUT |= LED_MIRROR_DST_bm;
-    } else {
-      LED_MIRROR_DST_VPORT.OUT &= ~LED_MIRROR_DST_bm;
-    }
+    __led_builtin_mirror_hook();
   }
   #endif
 }
@@ -227,13 +223,10 @@ inline __attribute__((always_inline)) void digitalWriteFast(uint8_t pin, uint8_t
   #if defined(LED_BUILTIN_MIRROR)
   /* Board LED mirror (see digitalWrite above). pin is a compile-time constant
    * here, so this whole block folds away except when writing the mirror source
-   * pin, where it adds a single bit-test + set/clear - still "fast". */
+   * pin. NOTE: on boards where the hook drives an addressable (WS2812-type)
+   * LED, the call is NOT single-cycle - see the variant for actual cost. */
   if (pin == LED_MIRROR_SRC_PIN) {
-    if (LED_MIRROR_SRC_VPORT.OUT & LED_MIRROR_SRC_bm) {
-      LED_MIRROR_DST_VPORT.OUT |= LED_MIRROR_DST_bm;
-    } else {
-      LED_MIRROR_DST_VPORT.OUT &= ~LED_MIRROR_DST_bm;
-    }
+    __led_builtin_mirror_hook();
   }
   #endif
 }

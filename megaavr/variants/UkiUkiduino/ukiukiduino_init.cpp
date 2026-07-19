@@ -5,22 +5,28 @@
  * (see LICENSE.md).
  *
  * Purpose
- *   Prepare PA0 as the on-board LED driver pin.  The LED itself follows
- *   digitalWrite()/digitalWriteFast() calls made to D13 (PD6): the core copies
- *   the resulting PD6 OUT bit onto PA0 (software mirror; see LED_BUILTIN_MIRROR
- *   in pins_arduino.h and the hooks in wiring_digital.c).  This replaces the
- *   op-amp buffer that a classic Arduino Uno R3 puts between pin 13 (SCK) and
- *   its LED, without loading the D13/SCK line with the LED at all.
+ *   Prepare PA0 as the data pin for the on-board WS2812D-F5 addressable RGB
+ *   LED, and make sure the LED starts dark (a WS2812's power-on pixel state
+ *   is undefined, and the bootloader may have left its breathing color lit).
+ *   The LED itself follows digitalWrite()/digitalWriteFast() calls made to
+ *   D13 (PD6): the core's mirror hook reads the resulting PD6 OUT bit and
+ *   sends the matching WS2812 frame on PA0 (see LED_BUILTIN_MIRROR in
+ *   pins_arduino.h and ukiukiduino_led.cpp).  This preserves the classic
+ *   Arduino Uno "D13 = LED" experience - the stock Blink sketch blinks the
+ *   LED (yellow by default) unmodified - without loading the D13/SCK line
+ *   with the LED at all.  setLEDColor()/setLEDBrightness() change the lit
+ *   color/brightness.
  *
  *   Design note: only software writes are mirrored.  SPI (SCK) traffic does
- *   NOT blink the LED - a deliberate difference from the Uno R3.  A hardware
- *   mirror onto PA0 is not possible on the AVR64DU32: PA0 carries only CCL
- *   LUT0-IN0 (an input), and has no CCL output or EVOUT function (datasheet
- *   DS40002548A, I/O multiplexing table).  PC3 - the only spare pin with a CCL
- *   output (LUT1-OUT) - is exposed on the header as D7 instead, where its ADC
+ *   NOT blink the LED - a deliberate difference from the Uno R3 (and a
+ *   necessity: a WS2812 needs framed data, not a logic level).  PA0 carries
+ *   only CCL LUT0-IN0 (an input) and has no CCL output or EVOUT function
+ *   (datasheet DS40002548A, I/O multiplexing table), so no hardware mirror
+ *   is possible either.  PC3 - the only spare pin with a CCL output
+ *   (LUT1-OUT) - is exposed on the header as D7 instead, where its ADC
  *   channel (AIN31 = A13), AC0 AINP4 and LUT1-OUT are available to the user.
- *   PA0 is a plain VDD-domain 5V GPIO, as is PC3 (per datasheet section 6.1,
- *   VDD powers all I/O lines; VUSB powers only the DM/DP transceiver).
+ *   PA0 is a plain VDD-domain 5V GPIO (per datasheet section 6.1, VDD powers
+ *   all I/O lines; VUSB powers only the DM/DP transceiver).
  *
  * Resource use
  *   None. Unlike the earlier CCL-based design, no EVSYS channel and no CCL LUT
@@ -46,11 +52,15 @@ extern "C" { __attribute__((used)) char ukiukiduino_variant_keep = 0; }
 /* initVariant() is a weak no-op in the core (cores/dxcore/main.cpp); this strong
  * definition overrides it and runs once, immediately after init(), before setup(). */
 void initVariant(void) {
-  /* LED driver pin PA0: output, LED off (LED is active-HIGH via R7).
-   * The pin stays an output permanently; pinMode(13, ...) only affects PD6,
-   * so the LED simply holds its last mirrored state if D13 is made an input. */
+  /* WS2812 data pin PA0: output, idle LOW.  The pin stays an output
+   * permanently; pinMode(13, ...) only affects PD6, so the LED simply holds
+   * its last mirrored frame if D13 is made an input. */
   VPORTA.OUT &= ~(1 << 0);
   VPORTA.DIR |= (1 << 0);
+  /* Blank the LED: PD6 OUT is 0 after reset, so the mirror hook sends the
+   * (0,0,0) frame.  This clears both the WS2812's undefined power-on state
+   * and anything the bootloader's breathing animation left behind. */
+  __led_builtin_mirror_hook();
 }
 
 #endif /* UKIUKIDUINO_PINOUT */

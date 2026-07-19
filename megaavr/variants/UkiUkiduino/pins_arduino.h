@@ -68,12 +68,16 @@
  *           (WAZAMONO_SERIAL1_IS_USART0, set in boards.txt; see below).
  *   AREF  -> PD7 = VREFA is wired to the Uno R3 AREF header pin, so
  *           analogReference(EXTERNAL) IS supported on this board.
- *   LED   -> on-board LED is driven by PA0, which SOFTWARE-mirrors writes made
- *           with digitalWrite()/digitalWriteFast() to D13 (PD6): the core copies
- *           the resulting PD6 OUT bit onto PA0 (see LED_BUILTIN_MIRROR below and
- *           wiring_digital.c). Only software writes are mirrored - SPI (SCK)
- *           traffic does NOT blink the LED (a deliberate difference from the
- *           Uno R3), and direct register writes to PORTD are not mirrored.
+ *   LED   -> on-board LED is a WS2812D-F5 addressable RGB LED, data-in on PA0.
+ *           digitalWrite()/digitalWriteFast() to D13 (PD6) are SOFTWARE-mirrored:
+ *           the core reads the resulting PD6 OUT bit and sends the matching
+ *           WS2812 frame on PA0 (HIGH = lit in the current color - yellow by
+ *           default, LOW = off), so the stock Blink sketch works unmodified.
+ *           setLEDColor()/setLEDBrightness() (below) change the lit color.
+ *           Only software writes are mirrored - SPI (SCK) traffic does NOT
+ *           blink the LED (a deliberate difference from the Uno R3), and
+ *           direct register writes to PORTD are not mirrored. Each mirrored
+ *           write costs ~340 us (280 us WS2812 latch guard + 31 us frame).
  *   BUTTON-> BTN_BUILTIN = D20 (PA1). External 1 kOhm pull-down on the board;
  *           pressed = HIGH. Use pinMode(BTN_BUILTIN, INPUT) - no pullup needed.
  *   Serial-> native USB CDC (USBSerial), Leonardo/Micro convention.
@@ -125,7 +129,7 @@
 #define PIN_PA2 (18)  // D18 A4 / SDA
 #define PIN_PA3 (19)  // D19 A5 / SCL
 #define PIN_PA1 (20)  // D20 BTN_BUILTIN (on-board button; no ADC channel)
-#define PIN_PA0 (21)  // BUILTIN_LED driver (software mirror of D13 writes); no ADC; no Dn alias
+#define PIN_PA0 (21)  // WS2812D-F5 LED data-in (driven by the D13 software mirror); no ADC; no Dn alias
 #define PIN_PD7 (22)  // AREF header pin = VREFA (external reference; AIN7); no Dn alias
 #define PIN_PF6 (23)  // RESET
 #define PIN_PF7 (24)  // UPDI (Power header pin 1; highest index -> NUM_DIGITAL_PINS = 25)
@@ -144,16 +148,46 @@
 #endif
 
 /* ---- LED_BUILTIN software mirror (see wiring_digital.c) ----
- * digitalWrite()/digitalWriteFast() on D13 (PD6) also copy the resulting PD6
- * OUT bit onto PA0, which drives the on-board LED. Copying the RESULT (rather
- * than the requested value) makes HIGH/LOW/CHANGE all mirror correctly.
- * SPI SCK traffic and direct register writes are intentionally NOT mirrored. */
+ * digitalWrite()/digitalWriteFast() on D13 (PD6) also call the hook below,
+ * which reads the RESULTING PD6 OUT bit (so HIGH/LOW/CHANGE all mirror
+ * correctly) and sends the matching WS2812 frame on PA0: HIGH = lit in the
+ * current color (default: yellow), LOW = off. Implemented in
+ * ukiukiduino_led.cpp. SPI SCK traffic and direct register writes are
+ * intentionally NOT mirrored.
+ * TIMING: each mirrored write busy-waits the WS2812 frame-latch time
+ * (RES > 280 us, WS2812D-F5 datasheet) and then streams the 24-bit frame
+ * with interrupts briefly disabled (~31 us). digitalWrite(13) therefore
+ * takes ~340 us - fine for Blink-style use, but do not bit-bang fast
+ * protocols on D13 (it is the SPI SCK pin anyway; hardware SPI is not
+ * affected because SCK traffic is not mirrored). */
 #define LED_BUILTIN_MIRROR
 #define LED_MIRROR_SRC_PIN             (PIN_PD6)   /* D13 */
-#define LED_MIRROR_SRC_VPORT           VPORTD
-#define LED_MIRROR_SRC_bm              (1 << 6)
-#define LED_MIRROR_DST_VPORT           VPORTA
-#define LED_MIRROR_DST_bm              (1 << 0)
+
+#ifdef __cplusplus
+extern "C" void __led_builtin_mirror_hook(void);
+#else
+void __led_builtin_mirror_hook(void);
+#endif
+
+#ifdef __cplusplus
+/* ---- On-board LED color API (WS2812D-F5 on PA0) ----
+ * The LED still follows D13 like a classic Uno: digitalWrite(LED_BUILTIN,
+ * HIGH/LOW) = lit/off. These functions change WHAT "lit" looks like:
+ *
+ *   setLEDColor(r, g, b);        8-bit RGB components
+ *   setLEDColor(Yellow);         named color (see LEDColorName)
+ *   setLEDBrightness(level);     0-255 overall brightness (default 40)
+ *
+ * If the LED is currently lit (D13 OUT is HIGH) the change is applied
+ * immediately; otherwise it takes effect at the next digitalWrite(13, HIGH).
+ * Power-on defaults: Yellow, brightness 40 (the Uno "L"-LED look). */
+enum LEDColorName : uint8_t {
+  Red, Green, Blue, Yellow, Orange, Cyan, Magenta, Purple, Pink, White
+};
+void setLEDColor(uint8_t r, uint8_t g, uint8_t b);
+void setLEDColor(LEDColorName color);
+void setLEDBrightness(uint8_t brightness);
+#endif
 
 #ifdef CORE_ATTACH_OLD
   #define EXTERNAL_NUM_INTERRUPTS      (48)

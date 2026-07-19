@@ -19,8 +19,8 @@
           },
           "url": "https://github.com/ws-asahi/UkiUkiCore/releases/download/v0.0.3/UkiUkiCore-0.0.3.tar.bz2",
           "archiveFileName": "UkiUkiCore-0.0.3.tar.bz2",
-          "checksum": "SHA-256:0000000000000000000000000000000000000000000000000000000000000000",
-          "size": "0",
+          "checksum": "SHA-256:d4f8c6176e6c9de67b4c4ab0564483e6e3e624e434d25a3bfe3fc56a6bfaa55c",
+          "size": "3704610",
           "boards": [
             {
               "name": "UkiUkiduino"

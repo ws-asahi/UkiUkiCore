@@ -1,7 +1,15 @@
+/* RGBWstrandtest - RGBW(白チップ入り)NeoPixelストリップの動作テスト
+ * 原作: Adafruit NeoPixelライブラリ付属サンプル
+ * UkiUkiduino向けに日本語化
+ *
+ * SK6812などRGBWタイプのストリップ用です。第4の値が専用の
+ * 白色LEDの明るさになります(WS2812系のRGBストリップには
+ * strandtestを使ってください)。
+ */
 #include <tinyNeoPixel.h>
 
 
-#define PIN 9 // D9: NeoPixel data pin
+#define PIN 9 // D9: NeoPixelのデータピン
 #define NUM_LEDS 60
 
 #define BRIGHTNESS 50
@@ -13,15 +21,15 @@ void setup() {
   Serial.begin(115200);
   strip.setBrightness(BRIGHTNESS);
   strip.begin();
-  strip.show(); // Initialize all pixels to 'off'
+  strip.show(); // 全ピクセルを「消灯」で初期化する
 }
 
 void loop() {
-  // Some example procedures showing how to display to the pixels:
-  colorWipe(strip.Color(255, 0, 0), 50); // Red
-  colorWipe(strip.Color(0, 255, 0), 50); // Green
-  colorWipe(strip.Color(0, 0, 255), 50); // Blue
-  colorWipe(strip.Color(0, 0, 0, 255), 50); // White
+  // ピクセルへの表示方法をいくつかのパターンで実演する:
+  colorWipe(strip.Color(255, 0, 0), 50); // 赤
+  colorWipe(strip.Color(0, 255, 0), 50); // 緑
+  colorWipe(strip.Color(0, 0, 255), 50); // 青
+  colorWipe(strip.Color(0, 0, 0, 255), 50); // 白(専用白チップ)
 
   whiteOverRainbow(20, 75, 5);
 
@@ -35,7 +43,7 @@ void loop() {
 
 }
 
-// Fill the dots one after the other with a color
+// 1つずつ順番に同じ色で塗りつぶす
 void colorWipe(uint32_t c, uint8_t wait) {
   for (uint16_t i = 0; i < strip.numPixels(); i++) {
     strip.setPixelColor(i, c);
@@ -44,6 +52,7 @@ void colorWipe(uint32_t c, uint8_t wait) {
   }
 }
 
+// 白チップだけをゆっくり明滅させる(ガンマ補正付き)
 void pulseWhite(uint8_t wait) {
   for (int j = 0; j < 256; j++) {
     for (uint16_t i = 0; i < strip.numPixels(); i++) {
@@ -62,7 +71,7 @@ void pulseWhite(uint8_t wait) {
   }
 }
 
-
+// 虹をフェードインさせて回し、最後は白の点滅へつなぐ
 void rainbowFade2White(uint8_t wait, int rainbowLoops, int whiteLoops) {
   float fadeMax = 100.0;
   int fadeVal = 0;
@@ -70,7 +79,7 @@ void rainbowFade2White(uint8_t wait, int rainbowLoops, int whiteLoops) {
   int redVal, greenVal, blueVal;
 
   for (int k = 0; k < rainbowLoops; k ++) {
-    for (int j = 0; j < 256; j++) { // 5 cycles of all colors on wheel
+    for (int j = 0; j < 256; j++) { // 色相環を一巡する
 
       for (uint16_t i = 0; i < strip.numPixels(); i++) {
 
@@ -84,12 +93,12 @@ void rainbowFade2White(uint8_t wait, int rainbowLoops, int whiteLoops) {
 
       }
 
-      // First loop, fade in!
+      // 最初の周ではフェードイン!
       if (k == 0 && fadeVal < fadeMax - 1) {
         fadeVal++;
       }
 
-      // Last loop, fade out!
+      // 最後の周ではフェードアウト!
       else if (k == rainbowLoops - 1 && j > 255 - fadeMax) {
         fadeVal--;
       }
@@ -129,6 +138,7 @@ void rainbowFade2White(uint8_t wait, int rainbowLoops, int whiteLoops) {
 
 }
 
+// 虹色の上を白い光の帯が走り抜ける
 void whiteOverRainbow(uint8_t wait, uint8_t whiteSpeed, uint8_t whiteLength) {
   if (whiteLength >= strip.numPixels()) {
     whiteLength = strip.numPixels() - 1;
@@ -152,7 +162,7 @@ void whiteOverRainbow(uint8_t wait, uint8_t whiteSpeed, uint8_t whiteLength) {
           strip.setPixelColor(i, Wheel(((i * 256 / strip.numPixels()) + j) & 255));
         }
       }
-      // *INDENT-OFF*  f'n a-style
+      // *INDENT-OFF*
       #if !defined(MILLIS_USE_TIMERNONE)
       if (millis() - lastTime > whiteSpeed) {
         head++;
@@ -163,7 +173,7 @@ void whiteOverRainbow(uint8_t wait, uint8_t whiteSpeed, uint8_t whiteLength) {
         lastTime = millis();
       }
       #else
-        #pragma message("WhiteOverRainbow() function of this sketch require millis, which is not currently enabled. This function will not operate correctly)."
+        #pragma message("whiteOverRainbow()はmillisを必要としますが、現在無効化されています。この関数は正しく動作しません。")
       #endif
       // *INDENT-ON*
 
@@ -178,6 +188,7 @@ void whiteOverRainbow(uint8_t wait, uint8_t whiteSpeed, uint8_t whiteLength) {
   }
 }
 
+// 全ピクセルを白チップで全点灯する
 void fullWhite() {
   for (uint16_t i = 0; i < strip.numPixels(); i++) {
     strip.setPixelColor(i, strip.Color(0, 0, 0, 255));
@@ -186,11 +197,11 @@ void fullWhite() {
 }
 
 
-// Slightly different, this makes the rainbow equally distributed throughout
+// 少し違うバージョン。虹をストリップ全体に均等に分布させる
 void rainbowCycle(uint8_t wait) {
   uint16_t i, j;
 
-  for (j = 0; j < 256 * 5; j++) { // 5 cycles of all colors on wheel
+  for (j = 0; j < 256 * 5; j++) { // 色相環を5周する
     for (i = 0; i < strip.numPixels(); i++) {
       strip.setPixelColor(i, Wheel(((i * 256 / strip.numPixels()) + j) & 255));
     }
@@ -211,8 +222,8 @@ void rainbow(uint8_t wait) {
   }
 }
 
-// Input a value 0 to 255 to get a color value.
-// The colours are a transition r - g - b - back to r.
+// 0~255の値から色を作る。
+// 色は 赤 - 緑 - 青 - 赤 と遷移する(白チップは使わない)。
 uint32_t Wheel(byte WheelPos) {
   WheelPos = 255 - WheelPos;
   if (WheelPos < 85) {

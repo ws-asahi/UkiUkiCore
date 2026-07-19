@@ -1,34 +1,34 @@
 /***********************************************************************
- * UsersigTest - verify the USERSIG library against the real USERROW.
+ * UsersigTest - USERSIGライブラリを実機のUSERROWで検証する
  *
- * The USERROW ("user signature space") is a small non-volatile area that
- * is NOT touched by a chip erase and survives ordinary sketch uploads.
- * It is meant for the things that belong to the *board* rather than to
- * the sketch: serial numbers, calibration constants, board revisions.
+ * USERROW(ユーザー署名領域)はチップ消去の影響を受けず、通常の
+ * スケッチ書き込みでも消えない小さな不揮発領域です。スケッチでは
+ * なく「基板そのもの」に属する情報 - シリアル番号、校正値、基板
+ * リビジョンなど - の保存場所として意図されています。
  *
- * On the AVR DU-series it is 512 bytes at 0x1200 - 16x larger than the
- * 32 bytes of the DA/DB/DD parts, which is why anything in the library
- * that assumed an 8-bit index has to be checked.
+ * AVR DUシリーズでは0x1200に512バイトあり、DA/DB/DD系の32バイトの
+ * 16倍です。ライブラリ内に8ビット前提のインデックスが残っていると
+ * 壊れるため、このテストで検証します。
  *
- * The USERROW is flash-like: a write can only clear bits (1 -> 0). To set
- * a bit back to 1 the whole row must be erased, so the library keeps a RAM
- * copy for those writes:
+ * USERROWはフラッシュ的な性質を持ち、書き込みはビットを落とす
+ * (1→0)ことしかできません。ビットを1へ戻すには行全体の消去が
+ * 必要なため、ライブラリはそのような書き込みをRAMコピーに保留します:
  *
- *   USERSIG.write(idx, val) returns 1  -> written straight to the USERROW
- *                           returns 0  -> buffered; call USERSIG.flush()
- *   USERSIG.flush()                    -> erase + rewrite, returns the
- *                                         number of bytes that changed
- *   USERSIG.erase()                    -> erase the whole USERROW
+ *   USERSIG.write(idx, val) が1を返す → USERROWへ直接書き込まれた
+ *                           が0を返す → 保留。USERSIG.flush()を呼ぶこと
+ *   USERSIG.flush()                   → 消去+再書き込み。変化した
+ *                                        バイト数を返す
+ *   USERSIG.erase()                   → USERROW全体を消去
  *
- * WARNING: this sketch erases and rewrites the USERROW (2 erase/write
- * cycles per run). The USERROW has a limited endurance - run it to test,
- * not in a loop.
+ * 警告: このスケッチはUSERROWの消去と再書き込みを行います(1回の
+ * 実行で2回の消去/書き込みサイクル)。USERROWの書き換え寿命は有限
+ * です - テストとして実行し、ループで回さないでください。
  ***********************************************************************/
 #include <USERSIG.h>
 
-/* Where the test data goes. Kept apart so the checks can't mask each other. */
-#define MARKER_INDEX  500          /* persistence marker (6 bytes)        */
-#define STRUCT_INDEX  480          /* put()/get() test object (12 bytes)  */
+/* テストデータの配置。検査同士が互いを隠さないよう離してある。 */
+#define MARKER_INDEX  500          /* 永続性マーカー(6バイト)             */
+#define STRUCT_INDEX  480          /* put()/get()テスト用の構造体(12バイト) */
 #define MARKER_MAGIC  0x47495355UL /* "USIG" */
 
 struct Marker {
@@ -36,7 +36,7 @@ struct Marker {
   uint16_t runs;
 };
 
-struct Cal {                       /* a plausible real payload            */
+struct Cal {                       /* 実用でありそうなペイロードの例      */
   uint32_t serial;
   int16_t  offset;
   char     tag[6];
@@ -44,8 +44,8 @@ struct Cal {                       /* a plausible real payload            */
 
 uint8_t tests = 0, failures = 0;
 
-/* Read the USERROW directly, bypassing the library, so that a test cannot
- * be fooled by a library that truncates the index (e.g. index 300 -> 44). */
+/* ライブラリを経由せずUSERROWを直接読む。インデックスを切り詰める
+ * バグ(例: 300→44)を持つライブラリにテストが騙されないようにするため。 */
 static inline uint8_t raw(uint16_t idx) {
   return *((volatile uint8_t *)(USER_SIGNATURES_START + idx));
 }
@@ -80,7 +80,7 @@ void dump(uint16_t start, uint16_t len) {
 void setup() {
   Serial.begin(115200);
   for (uint8_t i = 0; i < 40 && !Serial; i++) {
-    delay(50);                     /* give a USB CDC host time to attach */
+    delay(50);                     /* USB CDCホストの接続完了を待つ      */
   }
   delay(200);
 
@@ -92,10 +92,10 @@ void setup() {
   Serial.print(F("USERSIG.length()      : "));
   Serial.println((uint16_t)USERSIG.length());
 
-  /* Safety gate. If length() disagrees with the device, the library is
-   * carrying 8-bit indices/counters somewhere: write() would land on the
-   * wrong byte and flush() would spin forever on a 512-byte USERROW. Stop
-   * before touching anything. */
+  /* 安全ゲート。length()がデバイスの実サイズと食い違う場合、ライブラリの
+   * どこかに8ビットのインデックス/カウンタが残っている: write()は誤った
+   * バイトに着地し、flush()は512バイトのUSERROWで永久ループする。
+   * 何かに触れる前にここで停止する。 */
   if ((uint16_t)USERSIG.length() != (uint16_t)USER_SIGNATURES_SIZE) {
     Serial.println(F("\n!! The library reports a size that is not the device's USERROW size."));
     Serial.println(F("!! It is not safe for a 512-byte USERROW - a flush() would hang here."));
@@ -103,7 +103,7 @@ void setup() {
     return;
   }
 
-  /* Has this board run the test before? Read the marker BEFORE erasing. */
+  /* この基板でテストを実行したことがあるか? 消去の前にマーカーを読む。 */
   Marker prev;
   USERSIG.get(MARKER_INDEX, prev);
   Serial.println();
@@ -120,7 +120,7 @@ void setup() {
   dump(0, 32);
   dump(USER_SIGNATURES_SIZE - 32, 32);
 
-  /* ---- 1. erase ---------------------------------------------------- */
+  /* ---- 1. 消去 ------------------------------------------------------ */
   Serial.println(F("\n[1] erase()"));
   USERSIG.erase();
   bool blank = true;
@@ -132,7 +132,7 @@ void setup() {
   }
   check(F("all 512 bytes read 0xFF"), blank);
 
-  /* ---- 2. direct writes, including indices above 255 ---------------- */
+  /* ---- 2. 直接書き込み(255超のインデックスを含む) ------------------- */
   Serial.println(F("\n[2] write() on an erased USERROW - goes straight to flash"));
   const uint16_t idx[6] = {0, 1, 255, 256, 300, 511};
   const uint8_t  val[6] = {0xA5, 0x5A, 0x11, 0x22, 0x33, 0x44};
@@ -145,7 +145,7 @@ void setup() {
   check(F("every write() returned 1 (written immediately)"), direct);
 
   for (uint8_t i = 0; i < 6; i++) {
-    if (raw(idx[i]) != val[i]) {           /* raw: the TRUE address */
+    if (raw(idx[i]) != val[i]) {           /* raw: 真のアドレスを見る */
       stored = false;
     }
   }
@@ -153,14 +153,14 @@ void setup() {
   check(F("read() agrees with the USERROW"),
         USERSIG.read(300) == 0x33 && USERSIG.read(511) == 0x44);
 
-  /* ---- 3. a write that needs an erase is buffered ------------------- */
+  /* ---- 3. 消去が必要な書き込みは保留される --------------------------- */
   Serial.println(F("\n[3] write() that needs a bit set back to 1 - buffered"));
-  int8_t r = USERSIG.write(0, 0xFF);       /* 0xA5 -> 0xFF needs an erase */
+  int8_t r = USERSIG.write(0, 0xFF);       /* 0xA5→0xFFには消去が必要 */
   check(F("write() returned 0 (deferred until flush)"), r == 0);
   check(F("read() already reports the pending value"), USERSIG.read(0) == 0xFF);
   check(F("the USERROW itself is still unchanged"), raw(0) == 0xA5);
 
-  /* ---- 4. flush ----------------------------------------------------- */
+  /* ---- 4. flush ------------------------------------------------------ */
   Serial.println(F("\n[4] flush() - erase and rewrite the row from the buffer"));
   int16_t changed = USERSIG.flush();
   Serial.print(F("  flush() reported changed bytes: "));
@@ -171,11 +171,11 @@ void setup() {
         raw(1) == 0x5A && raw(255) == 0x11 && raw(256) == 0x22 &&
         raw(300) == 0x33 && raw(511) == 0x44);
 
-  /* ---- 5. put()/get() an object, above index 255 --------------------- */
+  /* ---- 5. 255超のインデックスへの構造体put()/get() -------------------- */
   Serial.println(F("\n[5] put()/get() a 12-byte object at index 480"));
   Cal out = {0xDEADBEEF, -1234, "DUtst"};
   USERSIG.put(STRUCT_INDEX, out);
-  USERSIG.flush();                          /* commit if anything was buffered */
+  USERSIG.flush();                          /* 保留分があれば確定する */
   Cal in;
   USERSIG.get(STRUCT_INDEX, in);
   check(F("the object survived the round trip"),
@@ -184,7 +184,7 @@ void setup() {
   check(F("it really is stored at index 480"),
         raw(STRUCT_INDEX) == (uint8_t)(out.serial & 0xFF));
 
-  /* ---- 6. persistence marker ---------------------------------------- */
+  /* ---- 6. 永続性マーカー --------------------------------------------- */
   Serial.println(F("\n[6] persistence marker"));
   Marker next;
   next.magic = MARKER_MAGIC;
@@ -200,7 +200,7 @@ void setup() {
   dump(0, 32);
   dump(USER_SIGNATURES_SIZE - 32, 32);
 
-  /* ---- summary ------------------------------------------------------ */
+  /* ---- 結果まとめ ----------------------------------------------------- */
   Serial.print(F("\nResult: "));
   Serial.print(tests - failures);
   Serial.print('/');
@@ -214,5 +214,5 @@ void setup() {
 }
 
 void loop() {
-  /* Nothing - the USERROW has a limited endurance, so the test runs once. */
+  /* 何もしない - USERROWの書き換え寿命は有限なので、テストは一度だけ実行する。 */
 }

@@ -1,55 +1,58 @@
+/* strandtest - NeoPixelストリップの動作テスト(Static版)
+ * 原作: Adafruit NeoPixelライブラリ付属サンプル
+ * UkiUkiduino向けに日本語化
+ */
 #include <tinyNeoPixel_Static.h>
-  #define PIN    9  // D9: NeoPixel data pin
 
-// Parameter 1 = number of pixels in strip
-// Parameter 2 = Arduino pin number (most are valid)
-// Parameter 3 = pixel type flags, add together as needed:
-//   NEO_GRB     Pixels are wired for GRB bitstream (most NeoPixel products)
-//   NEO_RGB     Pixels are wired for RGB bitstream (v1 FLORA pixels, not v2)
-// Parameter 4 = array to store pixel data in
+#define PIN 9 // D9: NeoPixelのデータピン
+
+// 引数1 = ストリップのピクセル数
+// 引数2 = Arduinoピン番号(ほとんどのピンが使える)
+// 引数3 = ピクセルの種別。必要に応じて足し合わせる:
+//   NEO_GRB     GRB順のビットストリーム(大半のNeoPixel製品)
+//   NEO_RGB     RGB順のビットストリーム(v1 FLORAピクセル等)
+// 引数4 = ピクセルデータを格納する配列
 
 #define NUMPIXELS 60
 
-// Since this is for the static version of the library, we need to supply the pixel array
-// This saves space by eliminating use of malloc() and free(), and makes the RAM used for
-// the frame buffer show up when the sketch is compiled.
+// ライブラリのStatic版なので、ピクセル配列を自分で用意します。
+// malloc()/free()を使わないぶん省フラッシュで、フレームバッファの
+// RAM使用量がコンパイル時に見えるようになる利点があります。
 
 byte pixels[NUMPIXELS * 3];
 
-// When we setup the NeoPixel library, we tell it how many pixels, and which pin to use to send signals.
-// Note that for older NeoPixel strips you might need to change the third parameter--see the strandtest
-// example for more information on possible values. Finally, for the 4th argument we pass the array we
-// defined above.
+// ピクセル数・ピン・種別に加え、第4引数として上で定義した配列を渡します。
 
 tinyNeoPixel strip = tinyNeoPixel(NUMPIXELS, PIN, NEO_GRB, pixels);
 
-// IMPORTANT: To reduce NeoPixel burnout risk, add 1000 uF capacitor across
-// pixel power leads, add 300 - 500 Ohm resistor on first pixel's data input
-// and minimize distance between Arduino and first pixel.  Avoid connecting
-// on a live circuit...if you must, connect GND first.
+// 重要: NeoPixelの焼損リスクを減らすため、ピクセルの電源両端に
+// 1000uFのコンデンサを追加し、最初のピクセルのデータ入力には
+// 300~500Ωの抵抗を直列に入れ、ボードと最初のピクセルの距離を
+// できるだけ短くしてください。通電中の回路への接続は避けること。
+// やむを得ない場合はGNDを最初に接続してください。
 
 void setup() {
-  pinMode(PIN, OUTPUT); // set pin output - this is not done internally by the library for Static version of library
-  // strip.begin(); // Static version does not use this.
-  strip.show(); // Initialize all pixels to 'off'
+  pinMode(PIN, OUTPUT); // Static版はライブラリがピン設定をしないため自分で行う
+  // strip.begin(); // Static版では使わない
+  strip.show(); // 全ピクセルを「消灯」で初期化する
 }
 
 void loop() {
-  // Some example procedures showing how to display to the pixels:
-  colorWipe(strip.Color(255, 0, 0), 50); // Red
-  colorWipe(strip.Color(0, 255, 0), 50); // Green
-  colorWipe(strip.Color(0, 0, 255), 50); // Blue
-  // Send a theater pixel chase in...
-  theaterChase(strip.Color(127, 127, 127), 50); // White
-  theaterChase(strip.Color(127, 0, 0), 50); // Red
-  theaterChase(strip.Color(0, 0, 127), 50); // Blue
+  // ピクセルへの表示方法をいくつかのパターンで実演する:
+  colorWipe(strip.Color(255, 0, 0), 50); // 赤
+  colorWipe(strip.Color(0, 255, 0), 50); // 緑
+  colorWipe(strip.Color(0, 0, 255), 50); // 青
+  // 劇場マーキー風の流れる点灯を送る...
+  theaterChase(strip.Color(127, 127, 127), 50); // 白
+  theaterChase(strip.Color(127, 0, 0), 50); // 赤
+  theaterChase(strip.Color(0, 0, 127), 50); // 青
 
   rainbow(20);
   rainbowCycle(20);
   theaterChaseRainbow(50);
 }
 
-// Fill the dots one after the other with a color
+// 1つずつ順番に同じ色で塗りつぶす
 void colorWipe(uint32_t c, uint8_t wait) {
   for (uint16_t i = 0; i < strip.numPixels(); i++) {
     strip.setPixelColor(i, c);
@@ -70,11 +73,11 @@ void rainbow(uint8_t wait) {
   }
 }
 
-// Slightly different, this makes the rainbow equally distributed throughout
+// 少し違うバージョン。虹をストリップ全体に均等に分布させる
 void rainbowCycle(uint8_t wait) {
   uint16_t i, j;
 
-  for (j = 0; j < 256 * 5; j++) { // 5 cycles of all colors on wheel
+  for (j = 0; j < 256 * 5; j++) { // 色相環を5周する
     for (i = 0; i < strip.numPixels(); i++) {
       strip.setPixelColor(i, Wheel(((i * 256 / strip.numPixels()) + j) & 255));
     }
@@ -83,44 +86,44 @@ void rainbowCycle(uint8_t wait) {
   }
 }
 
-// Theatre-style crawling lights.
+// 劇場マーキー風の流れる点灯
 void theaterChase(uint32_t c, uint8_t wait) {
-  for (int j = 0; j < 10; j++) { // do 10 cycles of chasing
+  for (int j = 0; j < 10; j++) { // 10周ぶん流す
     for (int q = 0; q < 3; q++) {
       for (uint16_t i = 0; i < strip.numPixels(); i = i + 3) {
-        strip.setPixelColor(i + q, c);  // turn every third pixel on
+        strip.setPixelColor(i + q, c);  // 3個おきに点灯する
       }
       strip.show();
 
       delay(wait);
 
       for (uint16_t i = 0; i < strip.numPixels(); i = i + 3) {
-        strip.setPixelColor(i + q, 0);      // turn every third pixel off
+        strip.setPixelColor(i + q, 0);      // 3個おきに消灯する
       }
     }
   }
 }
 
-// Theatre-style crawling lights with rainbow effect
+// 劇場マーキー風の流れる点灯(虹バージョン)
 void theaterChaseRainbow(uint8_t wait) {
-  for (int j = 0; j < 256; j++) {   // cycle all 256 colors in the wheel
+  for (int j = 0; j < 256; j++) {   // 色相環の全256色を一巡する
     for (int q = 0; q < 3; q++) {
       for (uint16_t i = 0; i < strip.numPixels(); i = i + 3) {
-        strip.setPixelColor(i + q, Wheel((i + j) % 255)); // turn every third pixel on
+        strip.setPixelColor(i + q, Wheel((i + j) % 255)); // 3個おきに点灯する
       }
       strip.show();
 
       delay(wait);
 
       for (uint16_t i = 0; i < strip.numPixels(); i = i + 3) {
-        strip.setPixelColor(i + q, 0);      // turn every third pixel off
+        strip.setPixelColor(i + q, 0);      // 3個おきに消灯する
       }
     }
   }
 }
 
-// Input a value 0 to 255 to get a color value.
-// The colours are a transition r - g - b - back to r.
+// 0~255の値から色を作る。
+// 色は 赤 - 緑 - 青 - 赤 と遷移する。
 uint32_t Wheel(byte WheelPos) {
   WheelPos = 255 - WheelPos;
   if (WheelPos < 85) {

@@ -1,39 +1,41 @@
-// NeoPixel Ring simple sketch (c) 2013 Shae Erisson
-// released under the GPLv3 license to match the rest of the AdaFruit NeoPixel library
+/* simple - NeoPixelを1個ずつ順番に点灯する最小サンプル(Static版)
+ * 原作: Shae Erisson (c) 2013, GPLv3
+ * UkiUkiduino向けに日本語化。あわせてStatic版のAPI
+ * (ピクセル配列を渡す4引数コンストラクタ+手動pinMode)に修正
+ * (原本は非Static版の書き方のままでコンパイルできなかった)
+ */
+#include <tinyNeoPixel_Static.h>
 
-#include <tinyNeoPixel.h>
+// NeoPixelをつないだピン
+#define PIN            9   // D9
 
-
-// Which pin on the Arduino is connected to the NeoPixels?
-#define PIN            3
-
-// How many NeoPixels are attached to the Arduino?
+// つながっているNeoPixelの個数
 #define NUMPIXELS      16
 
-// When we setup the NeoPixel library, we tell it how many pixels, and which pin to use to send signals.
-// Note that for older NeoPixel strips you might need to change the third parameter--see the strandtest
-// example for more information on possible values.
-tinyNeoPixel pixels = tinyNeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
+// Static版はピクセルデータの配列を自分で用意して第4引数で渡す
+byte pixelData[NUMPIXELS * 3];
 
-int delayval = 500; // delay for half a second
+tinyNeoPixel pixels = tinyNeoPixel(NUMPIXELS, PIN, NEO_GRB, pixelData);
+
+int delayval = 500; // 0.5秒待つ
 
 void setup() {
-
-  pixels.begin(); // This initializes the NeoPixel library.
+  pinMode(PIN, OUTPUT); // Static版はライブラリがピン設定をしないため自分で行う
+  // pixels.begin()はStatic版では使わない
 }
 
 void loop() {
 
-  // For a set of NeoPixels the first NeoPixel is 0, second is 1, all the way up to the count of pixels minus one.
+  // NeoPixelの番号は先頭が0、2個目が1、…、末尾が(個数-1)。
 
   for (int i = 0; i < NUMPIXELS; i++) {
 
-    // pixels.Color takes RGB values, from 0,0,0 up to 255,255,255
-    pixels.setPixelColor(i, pixels.Color(0, 150, 0)); // Moderately bright green color.
+    // pixels.ColorはRGB値(0,0,0 ~ 255,255,255)から色を作る
+    pixels.setPixelColor(i, pixels.Color(0, 150, 0)); // ほどほどの明るさの緑
 
-    pixels.show(); // This sends the updated pixel color to the hardware.
+    pixels.show(); // 更新した色を実際のハードウェアへ送る
 
-    delay(delayval); // Delay for a period of time (in milliseconds).
+    delay(delayval); // 少し待つ(ミリ秒)
 
   }
 }

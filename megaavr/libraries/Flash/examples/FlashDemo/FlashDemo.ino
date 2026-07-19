@@ -1,7 +1,15 @@
+/* FlashDemo - アプリからのフラッシュ自己書き換えデモ
+ *
+ * Flashライブラリの消去/ワード書き込み/バイト書き込み/配列書き込み/
+ * 読み出し/マップドポインタの各APIを一通り実演します。
+ * UkiUkiduinoではCDCブートローダのSPMエントリ経由で書き込みます。
+ *
+ * UkiUkiduino向けに日本語化
+ */
 #include <Flash.h>
 
 #define BASE_ADDRESS (PROGMEM_SIZE - (0x800))
-// This is 2048 bytes before the end of the flash
+// フラッシュ末尾の2048バイト手前
 
 uint16_t testArray[] = {0xBADD, 0xBEEF, 0xD00D};
 char testArray2[15] = "Hello Flash";
@@ -9,27 +17,27 @@ uint8_t testArray3[10] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
 
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
-  // Blink the LED for good measure too (note: LED_BUILTIN is active-LOW on Tachi)
-  Serial.begin(115200); 
+  // ついでにLEDも点滅させる
+  Serial.begin(115200);
   for (uint8_t i = 0; i < 40 && !Serial; i++) {
-    delay(50);                     /* give a USB CDC host time to attach */
+    delay(50);                     /* USB CDCホストの接続完了を待つ */
   }
   delay(200);
-  // Give the user a chance to connect to the serial port
+  // ユーザーがシリアルポートへ接続する猶予を与える
   for (byte i = 3; i; i--) {
     digitalWrite(LED_BUILTIN, CHANGE);
-    Serial.print('.'); // Show something so it doesn't look hung
+    Serial.print('.'); // 固まって見えないよう何か表示する
     delay(1000);
   }
   digitalWrite(LED_BUILTIN, LOW);
   Demo();
-  // Once we're done with the demo, we just sit here.
+  // デモが終わったら、あとは何もしない。
 }
 
 
 void Demo() {
   readHalfPage(BASE_ADDRESS);
-  Serial.println(F("First, make sure we can write the flash"));
+  Serial.println(F("First, make sure we can write the flash")); // まずフラッシュへ書けることを確認する
   byte check = Flash.checkWritable();
   if (check != FLASHWRITE_OK) {
     Serial.print(F("Error: "));
@@ -43,7 +51,7 @@ void Demo() {
   Serial.println(Flash.writeWord(BASE_ADDRESS, 0xCFF3));
   Serial.print(F("the number 1056 at base + 4: "));
   Serial.println(Flash.writeWord(BASE_ADDRESS + 4, 1056));
-  // 1056 is easy to see in hex, binary too: 0x0420, or 00000100 00100000
+  // 1056は16進でも2進でも見つけやすい: 0x0420 = 00000100 00100000
   Serial.print(F("Word 0x8001 at base +7: "));
   Serial.println(Flash.writeWord(BASE_ADDRESS + 7, 0x8001));
   Serial.println(F(" Failed - words writes must be aligned"));
@@ -51,7 +59,7 @@ void Demo() {
   Serial.println(Flash.writeByte(BASE_ADDRESS + 8, 0));
   Serial.print(F("Byte 12 at base + 9: "));
   Serial.println(Flash.writeByte(BASE_ADDRESS + 9, 0x12));
-  // Bytes do not need to be aligned.
+  // バイト書き込みはアラインメント不要。
   Serial.print(F("3 words starting at base + 12: "));
   Serial.println(Flash.writeWords(BASE_ADDRESS + 12, testArray, 3));
   Serial.print(F("10-byte long array starting at base + 0x20: "));
@@ -77,22 +85,22 @@ void Demo() {
 }
 
 
-void loop() { /* do nothing */
+void loop() { /* 何もしない */
 }
 
-// pretty-print 256b of flash
+// フラッシュ256バイトを整形表示する
 void readHalfPage(uint32_t StartAddress) {
   StartAddress &= 0x0001FF00;
   Serial.print(F("0x"));
   Serial.print(StartAddress, HEX);
   Serial.println(F(":"));
   for (unsigned long i = StartAddress; i < (StartAddress + 0x100); i++) {
-    Serial.printHex(Flash.readByte(i)); // DxCore helper function - does the leading 0.
+    Serial.printHex(Flash.readByte(i)); // DxCoreのヘルパー関数 - 先頭の0も表示する。
     if ((i & 31) != 31) {
-      // Print 32 bytes per line, space between them, (31 spaces, fence post)
+      // 1行32バイト、間にスペース(スペースは31個)
       Serial.print(' ');
     } else {
-      // Last one of a line gets a newline printed after it instead.
+      // 行末の1個だけは代わりに改行を打つ。
       Serial.println();
     }
   }

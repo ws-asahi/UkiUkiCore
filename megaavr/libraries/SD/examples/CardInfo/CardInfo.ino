@@ -1,48 +1,46 @@
 /*
-  SD card test
+  SDカードのテスト
 
-  This example shows how use the utility libraries on which the'
-  SD library is based in order to get info about your SD card.
-  Very useful for testing a card when you're not sure whether its working or not.
+  SDライブラリの土台になっているユーティリティライブラリを使って、
+  SDカードの情報を取得する方法を示します。カードが正常に動くか
+  自信がないときのテストにとても便利です。
 
-  The circuit:
-    SD card attached to SPI bus as follows:
- ** MOSI - Tachi: D16 / Tsurugi: D11 / Kunai: D10
- ** MISO - Tachi: D14 / Tsurugi: D12 / Kunai: D9
- ** SCK  - Tachi: D15 / Tsurugi: D13 / Kunai: D8
- ** CS   - PIN_SPI_SS (Tachi: D4 / Tsurugi: D10 / Kunai: D0)
+  回路(UkiUkiduino):
+    SDカードをSPIバスに次のように接続:
+ ** MOSI - D11
+ ** MISO - D12
+ ** SCK  - D13
+ ** CS   - PIN_SPI_SS (D10)
 
 
-  created  28 Mar 2011
-  by Limor Fried
-  modified 9 Apr 2012
-  by Tom Igoe
+  原作: Limor Fried (2011) / Tom Igoe改変 (2012)
+  UkiUkiduino向けに日本語化
 */
-// include the SD library:
+// SDライブラリを読み込む:
 #include <SPI.h>
 #include <SD.h>
 
-// set up variables using the SD utility library functions:
+// SDユーティリティライブラリの各オブジェクトを用意する:
 Sd2Card card;
 SdVolume volume;
 SdFile root;
 
-// change this to match your SD module wiring; PIN_SPI_SS is the
-// board's hardware SS pin (Tachi: D4 / Tsurugi: D10 / Kunai: D0)
+// SDモジュールの配線に合わせて変更する。PIN_SPI_SSは
+// 基板のハードウェアSSピン(UkiUkiduinoではD10)
 const int chipSelect = PIN_SPI_SS;
 
 void setup() {
-  // Open serial communications and wait for port to open:
+  // シリアル通信を開き、ポートが開くのを待つ:
   Serial.begin(115200);
   while (!Serial) {
-    ; // wait for serial port to connect. Needed for native USB port only
+    ; // シリアルポートの接続を待つ(ネイティブUSBポートでのみ必要)
   }
 
 
   Serial.print("\nInitializing SD card...");
 
-  // we'll use the initialization code from the utility libraries
-  // since we're just testing if the card is working!
+  // カードが動くかを調べるだけなので、
+  // ユーティリティライブラリの初期化コードを使う!
   if (!card.init(SPI_HALF_SPEED, chipSelect)) {
     Serial.println("initialization failed. Things to check:");
     Serial.println("* is a card inserted?");
@@ -53,7 +51,7 @@ void setup() {
     Serial.println("Wiring is correct and a card is present.");
   }
 
-  // print the type of card
+  // カードの種別を表示する
   Serial.println();
   Serial.print("Card type:         ");
   switch (card.type()) {
@@ -70,7 +68,7 @@ void setup() {
       Serial.println("Unknown");
   }
 
-  // Now we will try to open the 'volume'/'partition' - it should be FAT16 or FAT32
+  // 次に「ボリューム」(パーティション)を開いてみる - FAT16かFAT32のはず
   if (!volume.init(card)) {
     Serial.println("Could not find FAT16/FAT32 partition.\nMake sure you've formatted the card");
     while (1);
@@ -85,14 +83,14 @@ void setup() {
   Serial.println(volume.blocksPerCluster() * volume.clusterCount());
   Serial.println();
 
-  // print the type and size of the first FAT-type volume
+  // 最初のFAT系ボリュームの種別とサイズを表示する
   uint32_t volumesize;
   Serial.print("Volume type is:    FAT");
   Serial.println(volume.fatType(), DEC);
 
-  volumesize = volume.blocksPerCluster();    // clusters are collections of blocks
-  volumesize *= volume.clusterCount();       // we'll have a lot of clusters
-  volumesize /= 2;                           // SD card blocks are always 512 bytes (2 blocks are 1KB)
+  volumesize = volume.blocksPerCluster();    // クラスタはブロックの集まり
+  volumesize *= volume.clusterCount();       // クラスタはたくさんある
+  volumesize /= 2;                           // SDカードのブロックは常に512バイト(2ブロックで1KB)
   Serial.print("Volume size (Kb):  ");
   Serial.println(volumesize);
   Serial.print("Volume size (Mb):  ");
@@ -104,7 +102,7 @@ void setup() {
   Serial.println("\nFiles found on the card (name, date and size in bytes): ");
   root.openRoot(volume);
 
-  // list all files in the card with date and size
+  // カード内の全ファイルを日付・サイズ付きで一覧する
   root.ls(LS_R | LS_DATE | LS_SIZE);
 }
 

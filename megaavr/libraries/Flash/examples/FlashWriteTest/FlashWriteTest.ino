@@ -1,14 +1,16 @@
-/* FlashWriteTest - hardware verification for Flash writes through the
- * AVR-DU USB CDC bootloader's SPM entry stub.
+/* FlashWriteTest - AVR DU用USB CDCブートローダのSPMエントリスタブを
+ * 経由したフラッシュ書き込みの実機検証
  *
- * Expected output on a board running the updated bootloader (v0x1A01+):
- *   checkWritable() = 0 (FLASHWRITE_OK), then ERASE / WRITE / VERIFY PASS.
- * On an older bootloader without the stub, checkWritable() reports a
- * nonzero code and the test stops WITHOUT calling the write entry.
+ * 更新済みブートローダ(v0x1A01以降)を載せた基板での期待出力:
+ *   checkWritable() = 0 (FLASHWRITE_OK)、続いてERASE/WRITE/GUARDがPASS。
+ * スタブのない旧ブートローダではcheckWritable()が非ゼロを返し、
+ * 書き込みエントリを呼ぶ前にテストを中止します。
+ *
+ * UkiUkiduino向けに日本語化
  */
 #include <Flash.h>
 
-#define TEST_ADDRESS (PROGMEM_SIZE - 512UL)  /* last flash page */
+#define TEST_ADDRESS (PROGMEM_SIZE - 512UL)  /* フラッシュ最終ページ */
 
 uint16_t failures = 0;
 

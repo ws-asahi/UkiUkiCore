@@ -1,21 +1,18 @@
 /*
-  SD card read/write
+  SDカードの読み書き
 
-  This example shows how to read and write data to and from an SD card file
-  The circuit:
-   SD card attached to SPI bus as follows:
- ** MOSI - Tachi: D16 / Tsurugi: D11 / Kunai: D10
- ** MISO - Tachi: D14 / Tsurugi: D12 / Kunai: D9
- ** SCK  - Tachi: D15 / Tsurugi: D13 / Kunai: D8
- ** CS   - PIN_SPI_SS (Tachi: D4 / Tsurugi: D10 / Kunai: D0)
+  SDカード上のファイルへのデータの書き込みと読み出しの方法を示します。
 
-  created   Nov 2010
-  by David A. Mellis
-  modified 9 Apr 2012
-  by Tom Igoe
+  回路(UkiUkiduino):
+   SDカードをSPIバスに次のように接続:
+ ** MOSI - D11
+ ** MISO - D12
+ ** SCK  - D13
+ ** CS   - PIN_SPI_SS (D10)
 
-  This example code is in the public domain.
-
+  原作: David A. Mellis (2010) / Tom Igoe改変 (2012)
+  この例はパブリックドメインです。
+  UkiUkiduino向けに日本語化
 */
 
 #include <SPI.h>
@@ -24,7 +21,7 @@
 File myFile;
 
 void setup() {
-  // Open serial communications and wait for port to open:
+  // シリアル通信を開く
   Serial.begin(115200);
 
 
@@ -36,39 +33,39 @@ void setup() {
   }
   Serial.println("initialization done.");
 
-  // open the file. note that only one file can be open at a time,
-  // so you have to close this one before opening another.
+  // ファイルを開く。同時に開けるファイルは1つだけなので、
+  // 別のファイルを開く前にこれを閉じる必要がある。
   myFile = SD.open("test.txt", FILE_WRITE);
 
-  // if the file opened okay, write to it:
+  // 開けたら書き込む:
   if (myFile) {
     Serial.print("Writing to test.txt...");
     myFile.println("testing 1, 2, 3.");
-    // close the file:
+    // ファイルを閉じる:
     myFile.close();
     Serial.println("done.");
   } else {
-    // if the file didn't open, print an error:
+    // 開けなかったらエラーを表示する:
     Serial.println("error opening test.txt");
   }
 
-  // re-open the file for reading:
+  // 今度は読み出し用に開き直す:
   myFile = SD.open("test.txt");
   if (myFile) {
     Serial.println("test.txt:");
 
-    // read from the file until there's nothing else in it:
+    // 中身がなくなるまでファイルから読む:
     while (myFile.available()) {
       Serial.write(myFile.read());
     }
-    // close the file:
+    // ファイルを閉じる:
     myFile.close();
   } else {
-    // if the file didn't open, print an error:
+    // 開けなかったらエラーを表示する:
     Serial.println("error opening test.txt");
   }
 }
 
 void loop() {
-  // nothing happens after setup
+  // setupの後は何もしない
 }

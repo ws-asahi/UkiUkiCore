@@ -1,25 +1,19 @@
 /*
-  Listfiles
+  ファイル一覧の表示
 
-  This example shows how print out the files in a
-  directory on a SD card
+  SDカードのディレクトリ内のファイルを一覧表示する方法を示します。
 
-  The circuit:
-   SD card attached to SPI bus as follows:
- ** MOSI - Tachi: D16 / Tsurugi: D11 / Kunai: D10
- ** MISO - Tachi: D14 / Tsurugi: D12 / Kunai: D9
- ** SCK  - Tachi: D15 / Tsurugi: D13 / Kunai: D8
- ** CS   - PIN_SPI_SS (Tachi: D4 / Tsurugi: D10 / Kunai: D0)
+  回路(UkiUkiduino):
+   SDカードをSPIバスに次のように接続:
+ ** MOSI - D11
+ ** MISO - D12
+ ** SCK  - D13
+ ** CS   - PIN_SPI_SS (D10)
 
-  created   Nov 2010
-  by David A. Mellis
-  modified 9 Apr 2012
-  by Tom Igoe
-  modified 2 Feb 2014
-  by Scott Fitzgerald
-
-  This example code is in the public domain.
-
+  原作: David A. Mellis (2010) / Tom Igoe改変 (2012) /
+        Scott Fitzgerald改変 (2014)
+  この例はパブリックドメインです。
+  UkiUkiduino向けに日本語化
 */
 #include <SPI.h>
 #include <SD.h>
@@ -27,10 +21,10 @@
 File root;
 
 void setup() {
-  // Open serial communications and wait for port to open:
+  // シリアル通信を開き、ポートが開くのを待つ:
   Serial.begin(115200);
   while (!Serial) {
-    ; // wait for serial port to connect. Needed for native USB port only
+    ; // シリアルポートの接続を待つ(ネイティブUSBポートでのみ必要)
   }
 
   Serial.print("Initializing SD card...");
@@ -49,7 +43,7 @@ void setup() {
 }
 
 void loop() {
-  // nothing happens after setup finishes.
+  // setupの後は何もしない
 }
 
 void printDirectory(File dir, int numTabs) {
@@ -57,7 +51,7 @@ void printDirectory(File dir, int numTabs) {
 
     File entry =  dir.openNextFile();
     if (! entry) {
-      // no more files
+      // ファイルはもうない
       break;
     }
     for (uint8_t i = 0; i < numTabs; i++) {
@@ -68,7 +62,7 @@ void printDirectory(File dir, int numTabs) {
       Serial.println("/");
       printDirectory(entry, numTabs + 1);
     } else {
-      // files have sizes, directories do not
+      // ファイルにはサイズがあり、ディレクトリにはない
       Serial.print("\t\t");
       Serial.println(entry.size(), DEC);
     }

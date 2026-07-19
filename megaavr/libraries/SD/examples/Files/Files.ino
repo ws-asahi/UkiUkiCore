@@ -1,21 +1,18 @@
 /*
-  SD card basic file example
+  SDカードの基本ファイル操作
 
-  This example shows how to create and destroy an SD card file
-  The circuit:
-   SD card attached to SPI bus as follows:
- ** MOSI - Tachi: D16 / Tsurugi: D11 / Kunai: D10
- ** MISO - Tachi: D14 / Tsurugi: D12 / Kunai: D9
- ** SCK  - Tachi: D15 / Tsurugi: D13 / Kunai: D8
- ** CS   - PIN_SPI_SS (Tachi: D4 / Tsurugi: D10 / Kunai: D0)
+  SDカード上のファイルの作成と削除の方法を示します。
 
-  created   Nov 2010
-  by David A. Mellis
-  modified 9 Apr 2012
-  by Tom Igoe
+  回路(UkiUkiduino):
+   SDカードをSPIバスに次のように接続:
+ ** MOSI - D11
+ ** MISO - D12
+ ** SCK  - D13
+ ** CS   - PIN_SPI_SS (D10)
 
-  This example code is in the public domain.
-
+  原作: David A. Mellis (2010) / Tom Igoe改変 (2012)
+  この例はパブリックドメインです。
+  UkiUkiduino向けに日本語化
 */
 #include <SPI.h>
 #include <SD.h>
@@ -23,10 +20,10 @@
 File myFile;
 
 void setup() {
-  // Open serial communications and wait for port to open:
+  // シリアル通信を開き、ポートが開くのを待つ:
   Serial.begin(115200);
   while (!Serial) {
-    ; // wait for serial port to connect. Needed for native USB port only
+    ; // シリアルポートの接続を待つ(ネイティブUSBポートでのみ必要)
   }
 
 
@@ -44,19 +41,19 @@ void setup() {
     Serial.println("example.txt doesn't exist.");
   }
 
-  // open a new file and immediately close it:
+  // 新しいファイルを開いてすぐ閉じる:
   Serial.println("Creating example.txt...");
   myFile = SD.open("example.txt", FILE_WRITE);
   myFile.close();
 
-  // Check to see if the file exists:
+  // ファイルができたか確認する:
   if (SD.exists("example.txt")) {
     Serial.println("example.txt exists.");
   } else {
     Serial.println("example.txt doesn't exist.");
   }
 
-  // delete the file:
+  // ファイルを削除する:
   Serial.println("Removing example.txt...");
   SD.remove("example.txt");
 
@@ -68,5 +65,5 @@ void setup() {
 }
 
 void loop() {
-  // nothing happens after setup finishes.
+  // setupの後は何もしない
 }

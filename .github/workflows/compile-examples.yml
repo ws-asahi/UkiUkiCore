@@ -52,6 +52,7 @@ jobs:
           sketch-paths: |
             - megaavr/libraries/EEPROM/examples
             - megaavr/libraries/USERSIG/examples
+            - megaavr/libraries/UkiUkiduino/examples
             - megaavr/libraries/EventSystem/examples
             - megaavr/libraries/CustomLogic/examples
             - megaavr/libraries/AnalogComp/examples

@@ -73,7 +73,7 @@
  *           the core reads the resulting PD6 OUT bit and sends the matching
  *           WS2812 frame on PA0 (HIGH = lit in the current color - yellow by
  *           default, LOW = off), so the stock Blink sketch works unmodified.
- *           setLEDColor()/setLEDBrightness() (below) change the lit color.
+ *           setBLEDColor() (below) changes the lit color/brightness.
  *           Only software writes are mirrored - SPI (SCK) traffic does NOT
  *           blink the LED (a deliberate difference from the Uno R3), and
  *           direct register writes to PORTD are not mirrored. Each mirrored
@@ -172,21 +172,25 @@ void __led_builtin_mirror_hook(void);
 #ifdef __cplusplus
 /* ---- On-board LED color API (WS2812D-F5 on PA0) ----
  * The LED still follows D13 like a classic Uno: digitalWrite(LED_BUILTIN,
- * HIGH/LOW) = lit/off. These functions change WHAT "lit" looks like:
+ * HIGH/LOW) = lit/off. These functions change WHAT "lit" looks like.
+ * The "B" in setBLEDColor marks them as Built-in-LED-only functions:
  *
- *   setLEDColor(r, g, b);        8-bit RGB components
- *   setLEDColor(Yellow);         named color (see LEDColorName)
- *   setLEDBrightness(level);     0-255 overall brightness (default 40)
+ *   setBLEDColor(Yellow);            named color (see LEDColorName) at the
+ *                                    default brightness (40)
+ *   setBLEDColor(Yellow, 255);       named color + brightness 0-255
+ *   setBLEDColor(r, g, b);           raw 8-bit RGB components, shown as-is
+ *                                    (no brightness scaling - scale the
+ *                                    values yourself if needed)
  *
  * If the LED is currently lit (D13 OUT is HIGH) the change is applied
  * immediately; otherwise it takes effect at the next digitalWrite(13, HIGH).
- * Power-on defaults: Yellow, brightness 40 (the Uno "L"-LED look). */
+ * Power-on default: Yellow at brightness 40 (the Uno "L"-LED look). */
 enum LEDColorName : uint8_t {
   Red, Green, Blue, Yellow, Orange, Cyan, Magenta, Purple, Pink, White
 };
-void setLEDColor(uint8_t r, uint8_t g, uint8_t b);
-void setLEDColor(LEDColorName color);
-void setLEDBrightness(uint8_t brightness);
+#define BLED_DEFAULT_BRIGHTNESS 40
+void setBLEDColor(uint8_t r, uint8_t g, uint8_t b);
+void setBLEDColor(LEDColorName color, uint8_t brightness = BLED_DEFAULT_BRIGHTNESS);
 #endif
 
 #ifdef CORE_ATTACH_OLD

@@ -14,9 +14,12 @@
  *      PD6 OUT = 0  ->  LED off (0,0,0 frame)
  *
  * so the stock Blink sketch works completely unmodified, and blinks yellow.
- * setLEDColor()/setLEDBrightness() (declared in pins_arduino.h) change what
- * "lit" looks like; when the LED is currently lit they re-send the frame
- * immediately.
+ * setBLEDColor() (declared in pins_arduino.h) changes what "lit" looks
+ * like; when the LED is currently lit it re-sends the frame immediately.
+ *
+ * This driver is fully self-contained (the bit-banged protocol below is
+ * written from the WS2812D-F5 datasheet) - it does NOT use or depend on the
+ * tinyNeoPixel libraries in any way.
  *
  * --- WS2812D-F5 protocol timing (datasheet "Data Transfer Time") -----------
  *      T0H  220 ns - 380 ns     T1H  580 ns - 1 us
@@ -48,14 +51,15 @@
   #error "ukiukiduino_led.cpp: the WS2812 bit timing below is cycle-counted for 24 MHz."
 #endif
 
-/* Current "lit" appearance. Defaults: yellow at a tasteful brightness -
- * roughly the classic Uno "L" LED look, not a retina-searing full white. */
-static uint8_t s_r = 255, s_g = 255, s_b = 0;
-static uint8_t s_brightness = 40;
+/* Current "lit" appearance, stored as the FINAL RGB values to display
+ * (brightness is applied when a named color is set, not at send time).
+ * Defaults: yellow at brightness 40 - roughly the classic Uno "L" LED
+ * look, not a retina-searing full white. (255,255,0) scaled by 40 -> (40,40,0). */
+static uint8_t s_r = 40, s_g = 40, s_b = 0;
 
 /* (component * (brightness+1)) >> 8 : cheap 0..255 scaling; 255 -> identity. */
-static inline uint8_t scale8(uint8_t c) {
-  return (uint8_t)(((uint16_t)c * (uint16_t)(s_brightness + 1)) >> 8);
+static inline uint8_t scale8(uint8_t c, uint8_t brightness) {
+  return (uint8_t)(((uint16_t)c * (uint16_t)(brightness + 1)) >> 8);
 }
 
 /* One byte, MSB first, 31 cycles/bit. Cycle numbers in comments count from
@@ -99,7 +103,7 @@ static void ws2812_frame(uint8_t r, uint8_t g, uint8_t b) {
  * HIGH/LOW/CHANGE all behave. Also used at startup to blank the LED. */
 extern "C" void __led_builtin_mirror_hook(void) {
   if (VPORTD.OUT & (1 << 6)) {
-    ws2812_frame(scale8(s_r), scale8(s_g), scale8(s_b));
+    ws2812_frame(s_r, s_g, s_b);
   } else {
     ws2812_frame(0, 0, 0);
   }
@@ -107,7 +111,8 @@ extern "C" void __led_builtin_mirror_hook(void) {
 
 /* ---- sketch-facing API (declared in pins_arduino.h) ---------------------- */
 
-void setLEDColor(uint8_t r, uint8_t g, uint8_t b) {
+/* Raw RGB: shown as-is, no brightness scaling. */
+void setBLEDColor(uint8_t r, uint8_t g, uint8_t b) {
   s_r = r;
   s_g = g;
   s_b = b;
@@ -116,27 +121,24 @@ void setLEDColor(uint8_t r, uint8_t g, uint8_t b) {
   }
 }
 
-void setLEDColor(LEDColorName color) {
+/* Named color at a given brightness (0-255; the default argument is
+ * BLED_DEFAULT_BRIGHTNESS = 40, see pins_arduino.h). */
+void setBLEDColor(LEDColorName color, uint8_t brightness) {
+  uint8_t r, g, b;
   switch (color) {
-    case Red:     setLEDColor(255,   0,   0); break;
-    case Green:   setLEDColor(  0, 255,   0); break;
-    case Blue:    setLEDColor(  0,   0, 255); break;
+    case Red:     r = 255; g =   0; b =   0; break;
+    case Green:   r =   0; g = 255; b =   0; break;
+    case Blue:    r =   0; g =   0; b = 255; break;
     default:
-    case Yellow:  setLEDColor(255, 255,   0); break;
-    case Orange:  setLEDColor(255,  80,   0); break;
-    case Cyan:    setLEDColor(  0, 255, 255); break;
-    case Magenta: setLEDColor(255,   0, 255); break;
-    case Purple:  setLEDColor(128,   0, 255); break;
-    case Pink:    setLEDColor(255,  40,  70); break;
-    case White:   setLEDColor(255, 255, 255); break;
+    case Yellow:  r = 255; g = 255; b =   0; break;
+    case Orange:  r = 255; g =  80; b =   0; break;
+    case Cyan:    r =   0; g = 255; b = 255; break;
+    case Magenta: r = 255; g =   0; b = 255; break;
+    case Purple:  r = 128; g =   0; b = 255; break;
+    case Pink:    r = 255; g =  40; b =  70; break;
+    case White:   r = 255; g = 255; b = 255; break;
   }
-}
-
-void setLEDBrightness(uint8_t brightness) {
-  s_brightness = brightness;
-  if (VPORTD.OUT & (1 << 6)) {   /* lit right now -> apply immediately */
-    __led_builtin_mirror_hook();
-  }
+  setBLEDColor(scale8(r, brightness), scale8(g, brightness), scale8(b, brightness));
 }
 
 #endif /* UKIUKIDUINO_PINOUT */

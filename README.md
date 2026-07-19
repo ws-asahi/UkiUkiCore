@@ -72,7 +72,7 @@ USB-シリアル変換チップなしで PC と直接通信できることが最
 1. Arduino IDE の **ファイル > 基本設定 > 追加のボードマネージャの URL** に以下を追加します。
 
    ```
-   https://wazamono.ws-asahi.net/package_wazamono_index.json
+   https://ws-asahi.github.io/UkiUkiCore/package_ukiuki_index.json
    ```
 
 2. **ツール > ボード > ボードマネージャ** で「**UkiUkiCore**」を検索してインストールします。

@@ -2,7 +2,7 @@
   "packages": [
     {
       "name": "UkiUkiCore",
-      "maintainer": "Yusuke Shimizu - Workshop Asahi",
+      "maintainer": "Unicollabo",
       "websiteURL": "https://github.com/ws-asahi/UkiUkiCore",
       "email": "asahi.00@ws-asahi.net",
       "help": {
@@ -10,7 +10,7 @@
       },
       "platforms": [
         {
-          "name": "UkiUkiduino (AVR64DU32)",
+          "name": "UkiUkiCore",
           "architecture": "megaavr",
           "version": "0.0.3",
           "category": "Contributed",

@@ -1,43 +1,37 @@
-/*
-ADC0.SAMPCTRL demo
-
-Connect a 1 MEG resistor between the two analog inputs. This sketch, because it is used as a "compile test" to approve new
-versions, has to choose pins that always exist on parts being tested. These pins turn out to be PD4-7, and we use the first two.
-| Part family   | FIRST_PIN | SECOND_PIN |
-|---------------|-----------|------------|
-| AVR DA+DB>48p | PIN_PD4   | PIN_PD5    |
-| AVR DB/DD     | PIN_PD4   | PIN_PD5    |
-| AVR DD <28pin | PIN_PD4   | PIN_PD5    |
-| AVR EA        | PIN_PD4   | PIN_PD5    |
-
-
-This makes PD4 a very high impedance input, controlled by PD5.
-This sketch flips PD5 and then immediately takes some readings on PD4, printing the first one.
-Format output is conducive to graphing in excel/etc (save as .csv)
-One thing that is important to remember is that what matters is what the last voltage READ BY the ADC was.
-For example, if you switch back and forth between reading a high impedance source, and a voltage very close to ground,
-your numbers will err low with a low SAMPLEN, while if you were last measuring a high voltage, if would err high.
-This of course means that if you are continually measuring the same high impedance, but slow changing voltage, you can
-afford to use a shorter sample length than if you were switching between multiple analog voltages.
-
-And finally, notice how it is slower when the change is from low to high vs high to low - which strikes me as
-rather odd. Also that it goes all the way to 0 on a LOW, but not all the way to 4095 on a HIGH.
-
-
-*/
-#define FIRST_PIN A0   // analog input under test
-#define SECOND_PIN A1  // driven LOW as an adjacent reference
-#if !defined(ADC_LOWLAT_bm) // One name on AVR DA/DB/DD
+/* ADCサンプル時間(SAMPLEN)のデモ
+ *
+ * A0とA1の間に1MΩの抵抗を接続してください。A0が「非常に高インピー
+ * ダンスな入力」になり、A1がそれを駆動する構成になります。
+ *
+ * このスケッチはA1を反転させた直後にA0を数回読み、最初の測定値を
+ * 表示します。出力はExcel等でのグラフ化に向く形式です(.csv保存)。
+ *
+ * 重要なのは「ADCが最後に読んだ電圧が何だったか」です。例えば高
+ * インピーダンス源とGND付近の電圧を交互に読むと、SAMPLENが小さい
+ * 場合は測定値が低い側へ、直前に高い電圧を測っていた場合は高い側へ
+ * ずれます。裏を返せば、同じ高インピーダンス・緩変化の電圧を測り
+ * 続けるなら、複数のアナログ電圧を切り替える場合より短いサンプル
+ * 時間で済むということです。
+ *
+ * 最後に、変化がLOW→HIGHのときの方がHIGH→LOWより遅いこと
+ * (原作者いわく「かなり奇妙」)、LOWでは0まで落ち切るのにHIGHでは
+ * 上限まで届き切らないことにも注目してください。
+ *
+ * UkiUkiduino向けに日本語化
+ */
+#define FIRST_PIN A0   // テスト対象のアナログ入力
+#define SECOND_PIN A1  // 隣で駆動する側のピン
+#if !defined(ADC_LOWLAT_bm) // AVR DA/DB/DDでのレジスタ名
   #define SAMPLENREG (ADC0.SAMPCTRL)
 #else
-  #define SAMPLENREG (ADC0.CTRLE) //different name on AVR DU/EA/EB/SD
+  #define SAMPLENREG (ADC0.CTRLE) // AVR DU/EA/EB/SDでは名前が違う
 #endif
 
 void setup() {
   pinMode(SECOND_PIN, OUTPUT);
   digitalWrite(SECOND_PIN, LOW);
   SAMPLENREG = 0xFF;
-  analogReadResolution(ADC_NATIVE_RESOLUTION); //usually 12 bits on Dx-core, but DU and SD have only 10.
+  analogReadResolution(ADC_NATIVE_RESOLUTION); // Dx系は通常12ビットだが、DUとSDは10ビット。
   Serial.begin(115200);
   delay(1000);
   analogRead(FIRST_PIN);

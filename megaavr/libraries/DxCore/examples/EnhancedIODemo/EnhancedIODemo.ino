@@ -1,19 +1,18 @@
 /*********************\\*****************************//************************
-                       \\   Enhanced I/O API Demo   //
+                       \\   拡張I/O APIデモ         //
                         ^^-------------------------^^
 
-The I/O hardware in the AVR DU-series is more sophisticated than that which
-was featured in classic AVR products. This core
-provides a few simple I/O functions to take advantage of the new pin I/O
-capabilities. This file demonstrates their function and calling conventions in
-brief.
+AVR DUシリーズのI/Oハードウェアは、従来のクラシックAVRのものより
+高機能です。このコアは、新しいピンI/O機能を活用するための簡単な
+I/O関数をいくつか提供しています。このファイルはその働きと呼び出し方を
+手短に実演します。
 
-In these examples, we use pins D9 and D8, which are plain GPIO on every
-Wazamono board.
+例ではD9とD8を使います(UkiUkiduinoでは通常のGPIOです)。
 
-This sketch isn't meant to be used as is - it's more of a starting point, or
-resource to cooy+paste starting points from.
+このスケッチはそのまま使うためのものではありません。出発点、あるいは
+コピー&ペースト元の資料として使ってください。
 
+UkiUkiduino向けに日本語化
 ******************************************************************************/
 
 #define DEMO_PIN 9   // D9
@@ -26,17 +25,17 @@ void setup() {
 
 
 void loop() {
-  openDrainBitbang(0x0DF0AD8B); // or, with human endianness, 0x8BADF00D
+  openDrainBitbang(0x0DF0AD8B); // 人間の読み順(エンディアン)なら0x8BADF00D
 }
 
 /*-----------------------------------------------------------------------------
-openDrain(pin,value) and openDrainFast(pin,value)
+openDrain(pin,value) と openDrainFast(pin,value)
 
-Nothing specific to the modernAVRs about openDrain() - it's the "missing"
-digital I/O function. To get pullup, set it INPUT_PULLUP with pinMode first, then
-call openDrain() - remember that, emulating the behavior of classic AVRs, the
-core configures pins as inputs unless told otherwise.
-  Usage:
+openDrain()自体はmodern AVR固有の機能ではなく、「欠けていた」デジタル
+I/O関数です。プルアップ付きで使うには、先にpinModeでINPUT_PULLUPにして
+からopenDrain()を呼びます - クラシックAVRの挙動を踏襲し、コアは指示
+されない限りピンを入力のままにすることを思い出してください。
+  使い方:
     openDrain(DEMO_PIN, LOW);
     openDrain(DEMO_PIN, FLOATING);
     openDrain(DEMO_PIN, CHANGE);
@@ -44,20 +43,18 @@ core configures pins as inputs unless told otherwise.
     openDrainFast(DEMO_PIN, FLOATING);
     openDrainFast(DEMO_PIN, CHANGE);
 
-  LOW sets pin mode to OUTPUT.
-  FLOATING sets pin mode to INPUT. If there is a pullup
-enabled or external pullup connected, the pin will be pulled up assuming
-nothing else connected to it is driving the pin LOW; otherwise the pin will
-float.
-  CHANGE toggles the direction.
+  LOWはピンをOUTPUTにします。
+  FLOATINGはピンをINPUTにします。プルアップが有効か外付けプルアップが
+あれば、他のデバイスがLOWへ引っ張っていない限りピンはHIGHへ吊られ、
+なければフロートします。
+  CHANGEは方向をトグルします。
 
-  Like all Fast I/O functions, you must pass a constant pin and you should try
-  to pass a constant value as well. The function when both are constant, and
-  the value is not CHANGE optimizes to a single cbi or sbi instruction, occupying
-  2 bytes of flash and executing within a single clock cycle. This function is
-  ((always_inline)) - but with a single 2 byte instruction, this is always
-  more efficient. When the value is CHANGE, it uses two instructions, one a
-  double-size STS instruction, for 6 bytes and 3 clock cycles.
+  Fast系のI/O関数はすべて、ピンに定数を渡す必要があり、値もできるだけ
+  定数にすべきです。両方が定数で値がCHANGE以外なら、cbi/sbi 1命令
+  (フラッシュ2バイト・1クロック)に最適化されます。この関数は
+  ((always_inline))ですが、2バイト1命令ならその方が常に効率的です。
+  値がCHANGEの場合は2命令(うち1つは倍サイズのSTS)で6バイト・
+  3クロックになります。
 
 -----------------------------------------------------------------------------*/
 
@@ -66,29 +63,29 @@ void openDrainBitbang(uint32_t data) {
   pinMode(DEMO_PIN2, INPUT_PULLUP);
   openDrain(DEMO_PIN, FLOATING);
   openDrain(DEMO_PIN2, FLOATING);
-  // Now both pins are open drains with their pullup enabled
-  // now they use one as a clock, and the other as data in some sort of digital
-  // communication scheme waiting to make sure the pins come back to HIGH like
-  // I2C does.
-  // When it's not waiting for the pins to rise back to HIGH, the code runs
+  // これで両ピンともプルアップ付きのオープンドレインになった。
+  // ここでは一方をクロック、他方をデータに使い、I2Cのように
+  // 「ピンがHIGHへ戻るのを確認しながら」通信する体の何かをやる。
+  // ピンの立ち上がり待ち以外の間、コードは進む
   for (uint8_t i = 0; i < 32; i++) {
     while (digitalReadFast(DEMO_PIN) != HIGH || digitalReadFast(DEMO_PIN2) != HIGH);
-    // Wait for them to be pulled high - probably won't loop, but maybe high capacitance on
-    // the lines or weak pullups, or other device holding low (like I2C clock stretching)
-    _NOPNOP(); // wait four clocks so the receiver has a chance to see the same thing as we did; We could even wait longer here
+    // 両ピンがHIGHへ吊られるのを待つ - ループはおそらく回らないが、
+    // 配線容量が大きい/プルアップが弱い/他デバイスがLOW保持
+    // (I2Cのクロックストレッチ等)の可能性はある
+    _NOPNOP(); // 受信側がこちらと同じ状態を見られるよう4クロック待つ。もっと待ってもよい
     _NOPNOP();
     if (((uint8_t)data) & 0x01) {
-      openDrainFast(DEMO_PIN2, LOW); ///set up data line - this likely compiles to cbi, sbrc, sbi
-      // (certainly that's what you;'d expect the compiler to to do, but sometimes it's not so smart)
+      openDrainFast(DEMO_PIN2, LOW); // データ線をセットする - おそらくcbi, sbrc, sbiにコンパイルされる
+      // (コンパイラに期待する動作は確かにそれだが、そこまで賢くないこともある)
     }
-    _NOPNOP(); // wait four clocks so the receiver has a chance to see the same thing as we did; We could even wait longer here
+    _NOPNOP(); // 受信側がこちらと同じ状態を見られるよう4クロック待つ。もっと待ってもよい
     _NOPNOP();
     openDrainFast(DEMO_PIN, LOW);
-    data >>= 1;  // if we'd immediately released it, it would only be low for a fraction of a microsecond.
-    // doing that math in there is liks a quarter microsecond delay.
+    data >>= 1;  // すぐ解放すると、LOWの時間が1マイクロ秒に満たなくなる。
+    // ここでこの計算を挟むこと自体が1/4マイクロ秒ほどの遅延になる。
     openDrainFast(DEMO_PIN, FLOATING);
     openDrainFast(DEMO_PIN2, FLOATING);
-    // release pins.
+    // ピンを解放する。
   }
 
 }

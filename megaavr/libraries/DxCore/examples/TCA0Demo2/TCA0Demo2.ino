@@ -1,41 +1,33 @@
-/* Example 2: Variable frequency and duty cycle PWM
- * https://github.com/SpenceKonde/DxCore/blob/master/megaavr/extras/TakingOverTCA0.md
+/* 例2: 周波数もデューティ比も変えられるPWM
+ * 参考: https://github.com/SpenceKonde/DxCore/blob/master/megaavr/extras/TakingOverTCA0.md
  *
- * This generates PWM similar to the first example (though without the silly interrupt to change the duty cycle),
- * but takes it a step further and into more practical territory with two functions to set the duty cycle and frequency.
- * Calling those instead of this PWMDemo() function is all you'd need to make use of this.
- * Somewhere I think I have the same functionality implemented for the classic AVR "Timer1" style 16-bit timers.
+ * 例1と似たPWMを生成しますが(デューティを割り込みでいじる遊びは抜き)、
+ * デューティ比と周波数を設定する2つの関数を備えた、より実用的な形に
+ * 一歩進めています。PWMDemo()の代わりにその2関数を呼ぶだけで
+ * 実用に使えます。
+ *
+ * UkiUkiduino向けに日本語化・単板化
  */
 
 
 #if defined(MILLIS_USE_TIMERA0)
-  #error "This sketch takes over TCA0, don't use for millis here."
+  #error "このスケッチはTCA0を占有します。millisにTCA0を使う設定では使えません。"
 #endif
 
-/* PWM comes out on TCA0 WO1, so the physical pin follows each board's PWM port mux. */
-#if defined(WAZAMONO_BOARD_TACHI)
-  uint8_t OutputPin = 6;                          // D6 (PF1, TCA0 WO1)
-  #define DEMO_TCA_MUX PORTMUX_TCA0_PORTF_gc
-#elif defined(WAZAMONO_BOARD_TSURUGI)
-  uint8_t OutputPin = 6;                          // D6 (PD1, TCA0 WO1)
-  #define DEMO_TCA_MUX PORTMUX_TCA0_PORTD_gc
-#elif defined(WAZAMONO_BOARD_KUNAI)
-  uint8_t OutputPin = 5;                          // D5 (PA1, TCA0 WO1; shared with SCL)
-  #define DEMO_TCA_MUX PORTMUX_TCA0_PORTA_gc
-#else
-  #error "This example supports Wazamono boards only."
-#endif
+/* PWMはTCA0のWO1に出る。UkiUkiduinoのTCA0はPORTD配置なのでD6(PD1)。 */
+uint8_t OutputPin = 6;                            // D6 (PD1, TCA0 WO1)
+#define DEMO_TCA_MUX PORTMUX_TCA0_PORTD_gc
 
 unsigned int Period = 0xFFFF;
 
 void setup() {
   pinMode(OutputPin, OUTPUT);
   PORTMUX.TCAROUTEA = (PORTMUX.TCAROUTEA & ~(PORTMUX_TCA0_gm)) | DEMO_TCA_MUX;
-  takeOverTCA0(); // this replaces disabling and resettng the timer, required previously.
-  TCA0.SINGLE.CTRLB = (TCA_SINGLE_CMP1EN_bm | TCA_SINGLE_WGMODE_SINGLESLOPE_gc); // Single slope PWM mode, PWM on WO1
-  TCA0.SINGLE.PER   = Period; // Count all the way up to 0xFFFF; At 20MHz, no prescale, this gives ~305Hz PWM
+  takeOverTCA0(); // 以前必要だった「タイマ停止+リセット」の代わりにこれを呼ぶ
+  TCA0.SINGLE.CTRLB = (TCA_SINGLE_CMP1EN_bm | TCA_SINGLE_WGMODE_SINGLESLOPE_gc); // シングルスロープPWM、WO1に出力
+  TCA0.SINGLE.PER   = Period; // 0xFFFFまでカウント。24MHz・分周なしで約366HzのPWM
   TCA0.SINGLE.CMP1  = 0;
-  TCA0.SINGLE.CTRLA = TCA_SINGLE_ENABLE_bm; // Eable the timer with no prescaler
+  TCA0.SINGLE.CTRLA = TCA_SINGLE_ENABLE_bm; // 分周なしでタイマを有効化する
 }
 
 void loop() {
@@ -60,8 +52,8 @@ void PWMDemo(unsigned long frequency) {
 
 void setDutyCycle(byte duty) {
   TCA0.SINGLE.CMP1 = map(duty, 0, 255, 0, Period);
-  // map() kinda sucks, there are better ways to do this, etc. For more information, consult
-  // a different guide written by somebody else. No, I don't have one in mind ;)
+  // map()はいまいちな関数で、もっと良い方法もあります。詳しくは
+  // 誰か別の人が書いた別の解説をどうぞ。心当たりはありませんが ;)
 }
 
 void setFrequency(unsigned long freqInHz) {

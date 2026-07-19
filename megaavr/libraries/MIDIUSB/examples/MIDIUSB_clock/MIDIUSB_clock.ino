@@ -1,23 +1,22 @@
 /*
- * MIDIUSB_clock.ino
- * 
- * Simple example of beat clock based on MIDI pulse messages
- * received from software. 
- * 
- * Tested on Leonardo with Ableton.
- * 
- * In preferences go to MIDI Sync. Select device Output
- * and toggle Sync button, change clock type to Pattern.
- * Usually changing Sync Delay is required.
- * 
- * Created: 19/12/2016
- * Author: Ernest Warzocha
+ * MIDIUSB_clock.ino - MIDIクロック同期
+ *
+ * ソフトウェアから送られるMIDIクロック(パルス)メッセージに
+ * 同期するビートクロックの簡単な例です。
+ *
+ * LeonardoとAbletonでの動作確認に基づくサンプルです:
+ * 環境設定のMIDI Syncで本デバイスのOutputを選び、Syncボタンを
+ * 有効化、クロックタイプをPatternへ変更します。多くの場合
+ * Sync Delayの調整も必要です。
+ *
+ * 原作: Ernest Warzocha (2016)
+ * UkiUkiduino向けに日本語化
  */
 
 #include "MIDIUSB.h"
 
-//Pulse per quarter note. Each beat has 24 pulses.
-//Tempo is based on software inner BPM.
+// 4分音符あたりのパルス数。1拍=24パルス。
+// テンポはソフト側のBPMに従う。
 int ppqn = 0;
 
 void noteOn(byte channel, byte pitch, byte velocity) {
@@ -35,35 +34,35 @@ void setup() {
 }
 
 void loop() {
-  
+
   midiEventPacket_t rx;
-  
+
   do {
     rx = MidiUSB.read();
 
-    //Count pulses and send note 
+    // パルスを数え、拍ごとにノートを送る
     if(rx.byte1 == 0xF8){
        ++ppqn;
-       
+
        if(ppqn == 24){
           noteOn(1,48,127);
-          MidiUSB.flush();      
+          MidiUSB.flush();
           ppqn = 0;
        };
     }
-    //Clock start byte
+    // クロック開始バイト
     else if(rx.byte1 == 0xFA){
       noteOn(1,48,127);
       MidiUSB.flush();
       ppqn = 0;
     }
-    //Clock stop byte
+    // クロック停止バイト
     else if(rx.byte1 == 0xFC){
       noteOff(1,48,0);
       MidiUSB.flush();
       ppqn = 0;
     };
-    
+
   } while (rx.header != 0);
-  
+
 }

@@ -1,18 +1,20 @@
 /*
- * MIDIUSB_test.ino
+ * MIDIUSB_read.ino - MIDIメッセージの受信
  *
- * Created: 4/6/2015 10:47:08 AM
- * Author: gurbrinder grewal
- * Modified by Arduino LLC (2015)
- */ 
+ * 原作: gurbrinder grewal (2015) / Arduino LLCによる改変
+ * UkiUkiduino向けに日本語化
+ *
+ * 届いたMIDIイベントパケットをそのままシリアルモニタへ16進表示
+ * します。DAWやキーボードアプリからノートを送って確認してください。
+ */
 
 #include "MIDIUSB.h"
 
-// First parameter is the event type (0x09 = note on, 0x08 = note off).
-// Second parameter is note-on/note-off, combined with the channel.
-// Channel can be anything between 0-15. Typically reported to the user as 1-16.
-// Third parameter is the note number (48 = middle C).
-// Fourth parameter is the velocity (64 = normal, 127 = fastest).
+// 第1引数はイベント種別(0x09=ノートオン、0x08=ノートオフ)。
+// 第2引数はノートオン/オフとチャネルの合成値。
+// チャネルは0~15(ユーザー向け表記では通常1~16)。
+// 第3引数はノート番号(48=中央のド)。
+// 第4引数はベロシティ(64=普通、127=最強)。
 
 void noteOn(byte channel, byte pitch, byte velocity) {
   midiEventPacket_t noteOn = {0x09, 0x90 | channel, pitch, velocity};
@@ -28,10 +30,10 @@ void setup() {
   Serial.begin(115200);
 }
 
-// First parameter is the event type (0x0B = control change).
-// Second parameter is the event type, combined with the channel.
-// Third parameter is the control number number (0-119).
-// Fourth parameter is the control value (0-127).
+// 第1引数はイベント種別(0x0B=コントロールチェンジ)。
+// 第2引数はイベント種別とチャネルの合成値。
+// 第3引数はコントロール番号(0~119)。
+// 第4引数はコントロール値(0~127)。
 
 void controlChange(byte channel, byte control, byte value) {
   midiEventPacket_t event = {0x0B, 0xB0 | channel, control, value};

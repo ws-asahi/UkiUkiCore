@@ -1,29 +1,33 @@
 /*
   Copyright (c) 2019-2020 Blahlicus
-  See the readme for credit to other people.
+  他の貢献者はライブラリのreadmeを参照。
 
-  Alternate input method example using german
+  キーボードレイアウト切り替えサンプル(日本語JIS配列)
 
-  Demonstrates how to set the _asciimap bindings to alternate input methods.
+  _asciimapの割り当てを別の配列に切り替える方法のデモです。
+  ここでは日本語(JIS)配列を選択します。OS側の入力配列も
+  ファームウェアと同じもの(日本語キーボード)に設定されている
+  必要があります。
 
-  Users also have to change the OS level input method to match the one used
-  in the firmware.
-
+  UkiUkiduino向けに日本語化・JIS配列化
 */
-#define HID_CUSTOM_LAYOUT // set this flag to indicate that a custom layout is selected
-// if the above flag is not defined, then the default US layout is used instead
+#define HID_CUSTOM_LAYOUT // カスタム配列を選ぶことを示すフラグ
+// このフラグが未定義の場合は既定のUS配列が使われます
 
-#define LAYOUT_GERMAN // set this flag after the above flag to indicate the custom input method is German
-// for more layouts, see /src/KeyboardLayouts/ImprovedKeylayouts.h
+#define LAYOUT_JAPANESE // 上のフラグに続けて日本語(JIS)配列を指定する
+// 他の配列は /src/KeyboardLayouts/ImprovedKeylayouts.h を参照
+// (LAYOUT_GERMAN、LAYOUT_FRENCHなど多数あります)
 
-// you must set the above flags before including HID-Project
+// 上の2つのフラグは必ずHID-Projectのincludeより前に置くこと
 #include "HID-Project.h"
 
 
 void setup() {
   BootKeyboard.begin();
   delay(2000);
-  BootKeyboard.write(KEY_7|MOD_LEFT_SHIFT); // this outputs the / symbol as per the german input method
+  // JIS配列とUS配列で位置が違う記号を打ってみる。
+  // OSが日本語キーボード設定なら、そのまま正しく表示されます。
+  BootKeyboard.print("JIS: @ [ ] : ^");
 }
 
 

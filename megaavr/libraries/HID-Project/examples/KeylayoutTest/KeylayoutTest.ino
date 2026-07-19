@@ -1,27 +1,26 @@
 /*
   Copyright (c) 2014-2021 NicoHood
-  See the readme for credit to other people.
+  他の貢献者はライブラリのreadmeを参照。
 
-  KeymapTest Example
-  Test a keylayout to make sure that all keys type the character they are
-  supposed to.
+  KeymapTest(キー配列の検証)サンプル
+  選んだキー配列で、すべてのキーが意図した文字を打つかテストします。
 
-  See HID Project documentation for more information about the keyboard API:
   https://github.com/NicoHood/HID/wiki/Keyboard-API
+
+  UkiUkiduino向けに日本語化
 */
 
-/* By default the US English layout is selected. To test a different keylayout,
- * uncomment the following two lines and change the second to reflect your
- * chosen layout. You can see the available layouts at the bottom of
- * ImprovedKeylayouts.h in the library sources.
+/* 既定ではUS英語配列が選ばれています。別の配列をテストするには
+ * 下の2行のコメントを外し、2行目を試したい配列に変更してください。
+ * 使える配列はライブラリ内 ImprovedKeylayouts.h の末尾で確認できます。
+ * (日本語JIS配列はLAYOUT_JAPANESEです)
  */
 //#define HID_CUSTOM_LAYOUT
-//#define LAYOUT_ITALIAN
+//#define LAYOUT_JAPANESE
 
 #include <HID-Project.h>
 
-/* Time to wait after each key press/release so that it gets picked up by the
- * host system [ms].
+/* キーの押下/解放のたびに待つ時間[ms]。ホスト側の取りこぼし防止。
  */
 #define KEYDELAY 5
 
@@ -33,18 +32,18 @@ void setup() {
   BootKeyboard.begin();
   BootKeyboard.releaseAll();
 
-  Serial.println ("--- HID Project Keyboard Layout Test ---");
-  Serial.println ("You will see two columns of characters. If the chosen keymap is correct, the two characters");
-  Serial.println ("will be the same on every line. If they are not, try again with a different keymap.");
-  Serial.println ("DO NOT CHANGE WINDOW UNTIL THE SKETCH IS DONE!!!");
-  Serial.println ("Please click in the input box above, make sure it is empty and press ENTER");
+  Serial.println("--- HID Project キー配列テスト ---");
+  Serial.println("2列の文字が表示されます。選んだ配列が正しければ、全行で左右の文字が");
+  Serial.println("一致します。一致しない場合は別の配列で試してください。");
+  Serial.println("テストが終わるまでウィンドウを切り替えないでください!!!");
+  Serial.println("上の入力欄をクリックし、空であることを確認してからEnterを押してください");
   while (!Serial.available()) {
   }
   while (Serial.available()) {
     Serial.read ();
   }
   delay (100);
-  
+
   for (char c = ' '; c <= '~'; ++c) {
     Serial.print(c);
     Serial.print(' ');
@@ -71,9 +70,9 @@ void setup() {
     Serial.println();
   }
 
-  Serial.println("--- Done ---");
+  Serial.println("--- 完了 ---");
 }
 
 void loop() {
-  // Nothing to do, yay!
+  // 何もすることなし!
 }

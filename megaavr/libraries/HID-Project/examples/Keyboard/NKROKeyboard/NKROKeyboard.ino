@@ -1,40 +1,43 @@
 /*
   Copyright (c) 2014-2015 NicoHood
-  See the readme for credit to other people.
+  他の貢献者はライブラリのreadmeを参照。
 
-  NKROKeyboard example
+  NKROKeyboardサンプル
 
-  Press a button to hold a lot of keys at the same time.
-  NKRO can push 113 keys at the same time,
-  the other Keyboards only 6 keys + 8 modifiers!
+  ボタンを押すと大量のキーを同時押しします。
+  NKROは最大113キーの同時押しが可能です
+  (通常のキーボードは6キー+修飾8キーまで)。
 
-  You may also use SingleNKROKeyboard to enable a single report NKROKeyboard.
+  UkiUkiduinoでは基板上のボタン(BTN_BUILTIN、押下=HIGH)を使うので
+  配線なしで試せます。
 
-  See HID Project documentation for more information.
+  単一レポート版のSingleNKROKeyboardもあります。
   https://github.com/NicoHood/HID/wiki/Keyboard-API#nkro-keyboard
+
+  UkiUkiduino向けに日本語化
 */
 
 #include "HID-Project.h"
 
 const int pinLed = LED_BUILTIN;
-const int pinButton = 2;
+const int pinButton = BTN_BUILTIN;  // 基板上のボタン(押下=HIGH)
 
 void setup() {
   pinMode(pinLed, OUTPUT);
-  pinMode(pinButton, INPUT_PULLUP);
+  pinMode(pinButton, INPUT);  // 基板にプルダウン実装済み
 
-  // Sends a clean report to the host. This is important on any Arduino type.
+  // ホストへクリーンなレポートを送る。どのArduinoでも重要な儀式です。
   NKROKeyboard.begin();
 }
 
 void loop() {
-  // Hold a lot of keys at the same time
-  if (!digitalRead(pinButton)) {
+  // 大量のキーを同時押しする
+  if (digitalRead(pinButton)) {   // 押下=HIGH
     digitalWrite(pinLed, HIGH);
 
-    // Do not press to many at once or some OS will have problems.
-    // Note that the resulting pressed order might differ,
-    // because all keys are pressed at the same time.
+    // あまり多くを一度に押すとOSによっては問題が出ます。
+    // 全キーが同時に押されるため、入力される順序は
+    // 表示上入れ替わることがあります。
     NKROKeyboard.add('0');
     NKROKeyboard.add('1');
     NKROKeyboard.add('2');
@@ -47,12 +50,11 @@ void loop() {
     NKROKeyboard.add('9');
     NKROKeyboard.send();
 
-    // Release all keys and hit enter
+    // 全キーを離してEnterを打つ
     NKROKeyboard.releaseAll();
     NKROKeyboard.println();
 
-    // Simple debounce
+    // 簡易チャタリング対策
     delay(300);
   }
 }
-

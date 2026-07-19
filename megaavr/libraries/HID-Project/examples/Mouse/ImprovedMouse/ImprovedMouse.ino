@@ -1,69 +1,73 @@
 /*
   Copyright (c) 2014-2015 NicoHood
-  See the readme for credit to other people.
+  他の貢献者はライブラリのreadmeを参照。
 
-  Mouse example
-  Press a button to click or move the mouse.
+  Mouseサンプル
+  ボタンでマウスのクリック・移動・スクロールを行います。
 
-  You may also use BootMouse to enable a bios compatible (single report) mouse.
-  However this is very unusual and not recommended.
-  Bios mice dont support wheels which can cause problems after a reboot.
+  UkiUkiduino:
+    クリック   = 基板上のボタン(BTN_BUILTIN、押下=HIGH)
+    移動       = D2に外付けボタン(GNDへ。内部プルアップ、押下=LOW)
+    スクロール = D3に外付けボタン(同上)
 
-  See HID Project documentation for more Information.
+  BIOS互換(単一レポート)のBootMouseもありますが、非常に特殊で
+  非推奨です。BIOSマウスはホイール非対応のため、再起動後に問題が
+  出ることがあります。
   https://github.com/NicoHood/HID/wiki/Mouse-API
+
+  UkiUkiduino向けに日本語化
 */
 
 #include "HID-Project.h"
 
 const int pinLed = LED_BUILTIN;
-const int pinButtonClick = 2;
-const int pinButtonMove = 3;
-const int pinButtonScroll = 4;
+const int pinButtonClick = BTN_BUILTIN;  // 押下=HIGH
+const int pinButtonMove = 2;             // 押下=LOW
+const int pinButtonScroll = 3;           // 押下=LOW
 
 void setup() {
-  // Prepare led + buttons
+  // LEDとボタンを準備する
   pinMode(pinLed, OUTPUT);
-  pinMode(pinButtonClick, INPUT_PULLUP);
+  pinMode(pinButtonClick, INPUT);        // 基板にプルダウン実装済み
   pinMode(pinButtonMove, INPUT_PULLUP);
   pinMode(pinButtonScroll, INPUT_PULLUP);
 
-  // Sends a clean report to the host. This is important on any Arduino type.
+  // ホストへクリーンなレポートを送る。どのArduinoでも重要な儀式です。
   Mouse.begin();
 }
 
 void loop() {
-  if (!digitalRead(pinButtonClick)) {
+  if (digitalRead(pinButtonClick)) {     // 押下=HIGH
     digitalWrite(pinLed, HIGH);
 
-    // Same use as the official library, pretty much self explaining
+    // 公式ライブラリと同じ使い方。ほぼ自明です
     Mouse.click();
     //Mouse.click(MOUSE_RIGHT);
 
-    // Simple debounce
+    // 簡易チャタリング対策
     delay(300);
     digitalWrite(pinLed, LOW);
   }
 
-  if (!digitalRead(pinButtonMove)) {
+  if (!digitalRead(pinButtonMove)) {     // 押下=LOW
     digitalWrite(pinLed, HIGH);
 
-    // Same use as the official library, pretty much self explaining
+    // 公式ライブラリと同じ使い方。ほぼ自明です
     Mouse.move(100, 0);
 
-    // Simple debounce
+    // 簡易チャタリング対策
     delay(300);
     digitalWrite(pinLed, LOW);
   }
 
-  if (!digitalRead(pinButtonScroll)) {
+  if (!digitalRead(pinButtonScroll)) {   // 押下=LOW
     digitalWrite(pinLed, HIGH);
 
-    // Scroll down a bit, make sure the value is high enough
+    // 少し下へスクロールする。値は十分大きくすること
     Mouse.move(0, 0, 160);
 
-    // simple debounce
+    // 簡易チャタリング対策
     delay(300);
     digitalWrite(pinLed, LOW);
   }
 }
-

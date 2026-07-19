@@ -1,35 +1,39 @@
 /*
   Copyright (c) 2014-2015 NicoHood
-  See the readme for credit to other people.
+  他の貢献者はライブラリのreadmeを参照。
 
-  Gamepad example
-  Press a button and demonstrate Gamepad actions
+  Gamepadサンプル
+  ボタンを押すたびにゲームパッドの各操作をデモします。
 
-  You can also use Gamepad1,2,3 and 4 as single report.
-  This will use 1 endpoint for each gamepad.
+  UkiUkiduinoでは基板上のボタン(BTN_BUILTIN、押下=HIGH)を使うので
+  配線なしで試せます。動作確認はOSのゲームコントローラ設定画面や
+  ブラウザのGamepad APIテストページが便利です。
 
-  See HID Project documentation for more infos
+  Gamepad1~4を使うと個別レポート(ゲームパッドごとに1エンドポイント)
+  にもできます。
   https://github.com/NicoHood/HID/wiki/Gamepad-API
+
+  UkiUkiduino向けに日本語化
 */
 
 #include "HID-Project.h"
 
 const int pinLed = LED_BUILTIN;
-const int pinButton = 2;
+const int pinButton = BTN_BUILTIN;  // 基板上のボタン(押下=HIGH)
 
 void setup() {
   pinMode(pinLed, OUTPUT);
-  pinMode(pinButton, INPUT_PULLUP);
+  pinMode(pinButton, INPUT);  // 基板にプルダウン実装済み
 
-  // Sends a clean report to the host. This is important on any Arduino type.
+  // ホストへクリーンなレポートを送る。どのArduinoでも重要な儀式です。
   Gamepad.begin();
 }
 
 void loop() {
-  if (!digitalRead(pinButton)) {
+  if (digitalRead(pinButton)) {   // 押下=HIGH
     digitalWrite(pinLed, HIGH);
 
-    // Press button 1-32
+    // ボタン1~32を順に押す
     static uint8_t count = 0;
     count++;
     if (count == 33) {
@@ -39,12 +43,12 @@ void loop() {
     else
       Gamepad.press(count);
 
-    // Move x/y Axis to a new position (16bit)
+    // X/Y軸を新しい位置へ動かす(16ビット)
     Gamepad.xAxis(random(0xFFFF));
     Gamepad.yAxis(random(0xFFFF));
 
-    // Go through all dPad positions
-    // values: 0-8 (0==centered)
+    // 十字キー(D-Pad)の全方向を順に巡る
+    // 値: 0~8(0=中立)
     static uint8_t dpad1 = GAMEPAD_DPAD_CENTERED;
     Gamepad.dPad1(dpad1++);
     if (dpad1 > GAMEPAD_DPAD_UP_LEFT)
@@ -55,11 +59,11 @@ void loop() {
     if (dpad2 < GAMEPAD_DPAD_CENTERED)
       dpad2 = GAMEPAD_DPAD_UP_LEFT;
 
-    // Functions above only set the values.
-    // This writes the report to the host.
+    // ここまでの関数は値を設定するだけ。
+    // この呼び出しでレポートがホストへ送られる。
     Gamepad.write();
 
-    // Simple debounce
+    // 簡易チャタリング対策
     delay(300);
     digitalWrite(pinLed, LOW);
   }

@@ -1,64 +1,69 @@
 /*
   Copyright (c) 2014-2015 NicoHood
-  See the readme for credit to other people.
+  他の貢献者はライブラリのreadmeを参照。
 
-  Improved Keyboard example
+  Improved Keyboardサンプル
 
-  Shows how to use the new Keyboard API.
+  新しいKeyboard APIの使い方を示します。
+  UkiUkiduinoでは基板上のボタン(BTN_BUILTIN、押下=HIGH)を使うので
+  配線なしで試せます。
 
-  See HID Project documentation for more information.
+  ※押すたびにPCへ"Hello World!"が打ち込まれます。テキストエディタ等に
+    フォーカスを合わせてから試してください。
+
   https://github.com/NicoHood/HID/wiki/Keyboard-API#improved-keyboard
+
+  UkiUkiduino向けに日本語化
 */
 
 #include "HID-Project.h"
 
 const int pinLed = LED_BUILTIN;
-const int pinButton = 2;
+const int pinButton = BTN_BUILTIN;  // 基板上のボタン(押下=HIGH)
 
 void setup() {
   pinMode(pinLed, OUTPUT);
-  pinMode(pinButton, INPUT_PULLUP);
+  pinMode(pinButton, INPUT);  // 基板にプルダウン実装済み
 
-  // Sends a clean report to the host. This is important on any Arduino type.
+  // ホストへクリーンなレポートを送る。どのArduinoでも重要な儀式です。
   Keyboard.begin();
 }
 
 
 void loop() {
-  // Trigger caps lock manually via button
-  if (!digitalRead(pinButton)) {
+  if (digitalRead(pinButton)) {   // 押下=HIGH
     digitalWrite(pinLed, HIGH);
 
-    // Use the default print functions
+    // ふつうのprint系関数が使える
     Keyboard.println("Hello World!");
 
-    // Press a single character, special non ascii characters wont work.
+    // 1文字だけ打つ(ASCII外の特殊文字は不可)
     //Keyboard.write('a');
 
-    // Write single keys, do not use a number here!
+    // キーを直接打つ(数値を渡さないこと!)
     //Keyboard.write(KEY_ENTER);
 
 
-    // If you really wish to press a RAW keycode without the name use this:
+    // どうしても生のキーコードを打ちたい場合はこう書く:
     //Keyboard.write(KeyboardKeycode(40));
 
-    // Use (a limited number of) consumer keys.
-    // Only works with the lower 255 keys and on linux only.
+    // (一部の)Consumerキーも使える。
+    // 下位255キーのみ、かつLinux限定です。
     //Keyboard.write(MEDIA_PLAY_PAUSE);
 
-    // Linux also supports several system function via consumer report.
+    // LinuxではConsumerレポート経由のシステム機能もいくつか使える。
     //Keyboard.write(CONSUMER_POWER);
     //Keyboard.write(CONSUMER_SLEEP);
 
-    // You can also use some special keyboard keys on linux.
+    // Linuxでは特殊なキーボードキーも使える。
     //Keyboard.write(KEY_POWER);
     //Keyboard.write(KEY_F13);
 
-    // You can wakeup you PC from sleep.
-    // This might be not supported on all hardware, but on all OS types.
+    // PCをスリープから起こすこともできる。
+    // ハードウェアによっては非対応だが、OSの種類は問わない。
     //Keyboard.wakeupHost();
 
-    // Simple debounce
+    // 簡易チャタリング対策
     delay(300);
     digitalWrite(pinLed, LOW);
   }

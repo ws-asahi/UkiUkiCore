@@ -1,43 +1,47 @@
 /*
   Copyright (c) 2014-2015 NicoHood
-  See the readme for credit to other people.
+  他の貢献者はライブラリのreadmeを参照。
 
-  BootKeyboard example
+  BootKeyboardサンプル
 
-  Shows that keyboard works even in bios.
-  Led indicats if we are in bios.
+  キーボードがBIOS画面でも動くことを示します。
+  LEDは「今BIOS(ブートプロトコル)かどうか」を表示します。
 
-  See HID Project documentation for more information.
+  UkiUkiduinoでは基板上のボタン(BTN_BUILTIN、押下=HIGH)を使うので
+  配線なしで試せます。
+
   https://github.com/NicoHood/HID/wiki/Keyboard-API#boot-keyboard
+
+  UkiUkiduino向けに日本語化
 */
 
 #include "HID-Project.h"
 
 const int pinLed = LED_BUILTIN;
-const int pinButton = 2;
+const int pinButton = BTN_BUILTIN;  // 基板上のボタン(押下=HIGH)
 
 void setup() {
   pinMode(pinLed, OUTPUT);
-  pinMode(pinButton, INPUT_PULLUP);
+  pinMode(pinButton, INPUT);  // 基板にプルダウン実装済み
 
-  // Sends a clean report to the host. This is important on any Arduino type.
+  // ホストへクリーンなレポートを送る。どのArduinoでも重要な儀式です。
   BootKeyboard.begin();
 }
 
 
 void loop() {
-  // Light led if keyboard uses the boot protocol (normally while in bios)
-  // Keep in mind that on a 16u2 and Arduino Micro HIGH and LOW for TX/RX Leds are inverted.
+  // キーボードがブートプロトコルで動いている間(通常はBIOS画面)
+  // LEDを点灯する
   if (BootKeyboard.getProtocol() == HID_BOOT_PROTOCOL)
     digitalWrite(pinLed, HIGH);
   else
     digitalWrite(pinLed, LOW);
 
-  // Trigger caps lock manually via button
-  if (!digitalRead(pinButton)) {
+  // ボタンでEnterキーを送る
+  if (digitalRead(pinButton)) {   // 押下=HIGH
     BootKeyboard.write(KEY_ENTER);
 
-    // Simple debounce
+    // 簡易チャタリング対策
     delay(300);
   }
 }

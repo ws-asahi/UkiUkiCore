@@ -2,7 +2,7 @@
 
 **UkiUkiduino専用 Arduino コア**
 USB ネイティブな新世代 AVR（`AVR64DU32`）を搭載した Arduino Uno R3 互換ボード「UkiUkiduino」のためのボードサポートパッケージ（Arduino core）です。
-UkiUkiduino は VTuber「浮々ゆにこ」の公式ファングッズとして開発されたボードです。
+UkiUkiduino は VTuber「浮々ゆにこ」のファングッズとして開発されたボードです。
 
 ![platform](https://img.shields.io/badge/platform-AVR%20DU-blue)
 ![license](https://img.shields.io/badge/license-LGPL--2.1-green)
@@ -13,7 +13,7 @@ UkiUkiduino は、定番の Arduino Uno R3 を **USB を内蔵した新世代 AV
 USB-シリアル変換チップを別途搭載せず、マイコン単体で PC と直接つながります。
 UkiUkiCore は、このボードを Arduino IDE で開発するための専用コアで、[WazamonoCore](https://github.com/ws-asahi/WazamonoCore)から **UkiUkiduino に必要な部分だけを残して再構成** しています。
 
-> ⚠️ **開発版（v0.0.1）です。** API・ボード定義・ブートローダは予告なく変更されることがあります。
+> ⚠️ **開発版（v0.0.3）です。** API・ボード定義・ブートローダは予告なく変更されることがあります。
 
 ---
 
@@ -35,6 +35,7 @@ USB-シリアル変換チップなしで PC と直接通信できることが最
 | Flash | 64 KB |
 | SRAM | 8 KB |
 | EEPROM | 256 B |
+| USERROW | 512 B |
 | 最大動作周波数 | 24 MHz |
 | **USB** | USB 2.0 Full-Speed **デバイス** |
 | ADC | 10-bit 170 ksps × 1（21 チャネル） |
@@ -58,7 +59,7 @@ USB-シリアル変換チップなしで PC と直接通信できることが最
 - **全ピンアナログ入力対応** - 全てのデジタル入出力ピン（D0–D19）でアナログ値の読取りが可能。
 - **7 系統の PWM 出力** - Uno R3 では 6 本だった PWM を 7 本に拡張
 - **オンボードボタン搭載** - BTN_BUILTIN（D20）で追加部品なしに入力を試せます
-- **フルカラーLED搭載** - LED_BUILTIN(D13)と連動してRGB色指定が可能なLEDを動作させることができます。
+- **フルカラーLED搭載** - LED_BUILTIN(D13)と連動してRGB色指定が可能なLEDが動作します。
 - **UPDI 対応** - Power ヘッダの 1 番ピンから UPDI デバッガーで動作中の MCU にアクセス可能
 - **ネイティブ avr-gcc 対応** - DxCore と異なる点として最新の avr-gcc コンパイラを使用（今後も順次更新されます）。
 
@@ -136,7 +137,7 @@ UkiUkiCore は [WazamonoCore](https://github.com/ws-asahi/WazamonoCore)（© Wor
 
 - ベースコア: **DxCore** - © Spence Konde 2021–2022、および各 Arduino コア
 - USB スタック・Wazamono 向けカスタマイズ: © Workshop Asahi 2026
-- UkiUkiduino 向けボード定義・カスタマイズ: © Workshop Asahi 2026
-- 「UkiUkiduino」は Workshop Asahi の製品名です。「浮々ゆにこ」に関する名称・キャラクターの権利は権利者に帰属します。
+- UkiUkiduino 向けボード定義・カスタマイズ: © Unicollabo
+- 「UkiUkiduino」は [VEE](https://vee-official.jp) の製品名です。「浮々ゆにこ」に関する名称・キャラクターの権利は VEE に帰属します。
 
 ライセンス全文は [LICENSE.md](LICENSE.md) を参照してください。一部のファイル・ライブラリは別ライセンスで提供される場合があり、その旨は各ファイル先頭に記載されています。

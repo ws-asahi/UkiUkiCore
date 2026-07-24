@@ -404,10 +404,16 @@ class HardwareSerial : public Stream {
 #if defined(USART0)
   extern HardwareSerial Serial0;
 #endif
-#if defined(USART1)
+#if defined(USART1) && (!defined(WAZAMONO_NO_USART1) || defined(WAZAMONO_SERIAL1_IS_USART0))
+  /* Wazamono: with WAZAMONO_NO_USART1 the USART1 object is compiled out
+   * (UART1.cpp); Serial1 then only exists if it is the alias of Serial0
+   * (WAZAMONO_SERIAL1_IS_USART0, see UART0.cpp). */
   extern HardwareSerial Serial1;
 #endif
-#if defined(USART2)
+#if defined(USART2) || (defined(WAZAMONO_SERIAL2_IS_USART1) && defined(USART1))
+  /* Wazamono: with WAZAMONO_SERIAL2_IS_USART1, the USART1 object is defined
+   * under the name Serial2 (UART1.cpp) and Serial1 is an alias of Serial0
+   * (UART0.cpp), so both names resolve even though there is no USART2. */
   extern HardwareSerial Serial2;
 #endif
 #if defined(USART3)

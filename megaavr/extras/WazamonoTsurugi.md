@@ -105,15 +105,15 @@ Arduino Uno R3 と同じ番号付け（D0–D13、A0–A5）です。A0–A5 は
 
 | D# | MCU | アナログ別名 | ADC ch | 主な機能 |
 |----|-----|--------------|--------|----------|
-| D0 | PA5 | A6 | AIN25 | **RX**（Serial0 / USART0 ALT1） |
-| D1 | PA4 | A7 | AIN24 | **TX**（Serial0 / USART0 ALT1） |
-| D2 | PA6 | A8 | AIN26 | USART0 XCK |
-| D3 | PF5 | A9 | AIN21 | ~PWM(TCB1 ALT1) / tone() |
+| D0 | PA5 | A6 | AIN25 | **RX**（Serial1 / USART0 ALT1） |
+| D1 | PA4 | A7 | AIN24 | **TX**（Serial1 / USART0 ALT1） |
+| D2 | PA7 | A8 | AIN27 | USART0 XDIR / AC0 OUT / EVOUTA / CLKOUT |
+| D3 | PA6 | A9 | AIN26 | ~PWM(**TCB1 + CCL LUT0**) / USART0 XCK / tone() と共用 |
 | D4 | PF4 | A10 | AIN20 | 汎用 I/O（PWM なし。TCB0 は millis） |
 | D5 | PD0 | A11 | AIN0 | ~PWM(TCA0 WO0) / CCL |
 | D6 | PD1 | A12 | AIN1 | ~PWM(TCA0 WO1) / CCL |
 | D7 | PC3 | A13 | AIN31 | 汎用 I/O（実測で VDD 駆動を確認） |
-| D8 | PA7 | A14 | AIN27 | 汎用 I/O（5V ネイティブ） |
+| D8 | PF5 | A14 | AIN21 | 汎用 I/O（TCB1 WO 駐機位置 ※D3 PWM の注記参照） |
 | D9 | PD2 | A15 | AIN2 | ~PWM(TCA0 WO2) / CCL / AC0 AINP0 / EVOUTD |
 | D10 | PD3 | A16 | AIN3 | ~PWM(TCA0 WO3) / CCL / AC0 AINN0 / **SS** |
 | D11 | PD4 | A17 | AIN4 | ~PWM(TCA0 WO4) / SPI **MOSI** |
@@ -144,8 +144,8 @@ variant 側でピン割り当てが確定済みのため、スケッチで `swap
 | `Serial` | USB CDC | USB-C | シリアルモニタ（仮想 COM）。日常の `Serial.print()` は Uno と同じ感覚で使えます |
 | `Serial1` | USART0（ALT1 固定） | D0(RX) / D1(TX) | Uno R3 の D0/D1 ハードウェア UART |
 
-> **名前について:** この基板では D0/D1 の UART が **USART0** に配線されているため、ハードウェア UART は本来 `Serial1` ではなく **`Serial0`** ですが、ボード設定でSerial1へリネームしています。（ハードウェア定義のSerial1はピン構成上使用不可）
-`Serial` は USB CDC なので、シリアルモニタ用途は Uno R3 と同じく `Serial` を使います。外部機器と D0/D1 でやり取りする場合のみ `Serial0` を使ってください。
+> **名前について:** D0/D1 の UART は Uno R4 と同じく **`Serial1`** です（実体は USART0。`Serial0` でも同じポートに届きます）。シリコン上の USART1 は本ボードでは使用可能なピン位置が無いため、コアから完全に除外しています（`WAZAMONO_NO_USART1`）。
+`Serial` は USB CDC なので、シリアルモニタ用途は Uno R3 と同じく `Serial` を使います。外部機器と D0/D1 でやり取りする場合のみ `Serial1` を使ってください。
 
 ### SPI（ホスト）
 
@@ -173,12 +173,16 @@ Uno R3 と同じ A4/A5 に配置されています（TWI0 既定位置）。
 ### PWM（`analogWrite()`）
 
 - **D5, D6, D9, D10, D11, D12** … TCA0（PORTD へ割り当て、WO0–WO5）
-- **D3** … TCB1（ALT1 = PF5）
+- **D3** … TCB1 の 8bit PWM 波形を **CCL LUT0 経由**で出力（PA6 = LUT0-OUT 代替位置）
 - Uno R3に対してD12へPWM機能が追加されています。
 
-> **Uno R3 / tone() との関係:** `tone()` はタイマー **TCB1** を使います。
-TCB1 は D3 PWM と共用のため、`tone()` 実行中は D3 の PWM のみ停止します（TCA0 の PWM と millis は動作継続）。
-これは Uno R3 の Timer2（`tone()` 実行中は D3 および D11が無効）に相当する挙動です。
+> **D3 PWM の仕組み:** D3（PA6）は TCB の WO ピンではなく **LUT0 の代替出力ピン**です。`analogWrite(D3, x)` は空いている TCB1 を 8bit PWM モードで走らせ、その内部波形を CCL LUT0 の内部入力（INSEL1 = TCB）としてスルー出力します（コア機構 `wazamono_lutpwm`）。本物のハードウェア PWM であり CPU 負荷はありません。TCB1 自身の WO ピン位置は ALT1（PF5 = D8）へ退避してあり、既定では PF5 に波形は出ません。
+>
+> **自動無効化:** TCB1 または LUT0 が他の用途に使われている間、`analogWrite(D3)` は PWM をあきらめて単純な HIGH/LOW 出力（127 を閾値）に切り替わります。
+> - `tone()` は TCB1 を使うため、実行中は D3 の PWM のみ停止します（TCA0 の PWM と millis は動作継続）。これは Uno R3 の Timer2（`tone()` 実行中は D3/D11 が停止）に相当する挙動です。
+> - LUT0 を CCL レジスタ直接操作で使用中も同様に D3 の PWM が無効化されます（設定を上書きすることはありません）。
+>
+> **ハードウェア検証待ちの項目:** データシート表 24-2 の解釈次第で、CCL が TCB1 波形を受けるのに `CCMPEN=1` が必要になる可能性があります。その場合は variant の `WAZAMONO_TCB1_LUTPWM_CCMPEN` を 1 に変更しますが、D3 PWM 動作中は駐機先の **D8（PF5）にも同じ波形が現れる**制約が生じます（CCMPEN はピン方向設定に関わらず出力を上書きするため）。
 
 ### アナログ入力
 

@@ -16,13 +16,13 @@
  *   D#   MCU   Uno R3 role / notes                          A#,  AIN
  *   D0   PA5   RX  (Serial0 / USART0 RX, ALT1)              A6,  AIN25
  *   D1   PA4   TX  (Serial0 / USART0 TX, ALT1)              A7,  AIN24
- *   D2   PA6   (USART0 XCK, ALT1)                           A8,  AIN26
- *   D3   PF5   ~PWM(TCB1, ALT1)                             A9,  AIN21
+ *   D2   PA7   (USART0 XDIR | AC0 OUT | EVOUTA | CLKOUT)    A8,  AIN27
+ *   D3   PA6   ~PWM(TCB1 via CCL LUT0) | USART0 XCK         A9,  AIN26
  *   D4   PF4   (general I/O; no PWM - TCB0 is millis)       A10, AIN20
  *   D5   PD0   ~PWM(TCA0 WO0) | CCL                         A11, AIN0
  *   D6   PD1   ~PWM(TCA0 WO1) | CCL                         A12, AIN1
- *   D7   PC3   (general I/O; VDD-driven, confirmed by test) A13, AIN31
- *   D8   PA7   (general I/O)                                A14, AIN27
+ *   D7   PC3   (general I/O; VDD-driven, confirmed) | LUT1-OUT  A13, AIN31
+ *   D8   PF5   (general I/O; see D3 PWM note below)         A14, AIN21
  *   D9   PD2   ~PWM(TCA0 WO2) | CCL | AC0 AINP0 | EVOUTD    A15, AIN2
  *   D10  PD3   ~PWM(TCA0 WO3) | CCL | AC0 AINN0 | (SS)      A16, AIN3
  *   D11  PD4   ~PWM(TCA0 WO4) | SPI MOSI                    A17, AIN4
@@ -43,20 +43,30 @@
  *
  *  ===== Peripheral routing (set by this variant + boards.txt) =====
  *   TCA0  -> PORTD (WO0..WO5 = PD0,PD1,PD2,PD3,PD4,PD5 = D6,D5,D9,D10,D11,D12)
- *   TCB1  -> ALT1 (PF5 = D3)  : ~PWM on D3 (shared with tone(), see below)
+ *   TCB1  -> D3 PWM *through CCL LUT0*: D3 is PA6 = LUT0-OUT (alternate
+ *           position). TCB1 runs in 8-bit PWM mode and its internal WO signal
+ *           feeds LUT0 (INSEL1 = TCB, DS40002548A 30.2.2.1); the LUT passes it
+ *           to the pin. analogWrite(D3, x) does all of this transparently
+ *           (core wazamono_lutpwm.c). TCB1's own WO pin position is parked on
+ *           ALT1/PF5 (TCB1_PINS) and its pin override stays off by default.
  *   millis-> TCB0 : boards.txt passes -DMILLIS_USE_TIMERB0, so TCB1 is free for D3.
  *   tone()-> TCB1 : Tone.cpp auto-selects TCB1 when millis is on TCB0. tone() and
  *           D3 PWM share TCB1, so calling tone() suspends D3 PWM only; D11 PWM
  *           (TCA0) and millis (TCB0) keep running (cf. Uno R3 Timer2 = D3+D11).
+ *           Likewise, taking LUT0 over (direct CCL register use) suspends D3 PWM:
+ *           analogWrite(D3) then falls back to plain digital output.
  *   SPI0  -> ALT4 (PD4 MOSI / PD5 MISO / PD6 SCK = D11/D12/D13). Board is SPI host;
  *           default CS exposed as PIN_SPI_SS = PD3 (D10, Uno convention). The ALT4
  *           hardware SS is PD7 (= AREF here); run SPI host with Client Select
  *           Disable (SPI0.CTRLB.SSD = 1) so the AREF level cannot flip host ->
  *           client mode.
  *   TWI0  -> default (PA2 SDA / PA3 SCL) = D18/D19 = A4/A5 (Uno I2C convention).
- *   USART0-> Serial0, ALT1 (PA4 TX / PA5 RX) = D1/D0. (The Uno R3 D0/D1 UART.)
+ *   USART0-> "Serial1", ALT1 (PA4 TX / PA5 RX) = D1/D0. The Uno R3 D0/D1 UART,
+ *           named Serial1 to match the Uno R4 convention (WAZAMONO_SERIAL1_IS_
+ *           USART0; the object is Serial0, Serial1 is its alias - see UART0.cpp).
  *   USART1-> exists on the AVR DU but has NO usable pin position on Tsurugi
- *           (DU USART1 is only PD6/PD7, which are SPI SCK / AREF here). Inert.
+ *           (DU USART1 is only PD6/PD7, which are SPI SCK / AREF here).
+ *           Compiled out entirely (WAZAMONO_NO_USART1).
  *   LED   -> on-board LED follows D13 (PD6, SPI SCK) through a unity-gain op-amp
  *           buffer on the board - the same arrangement as the Arduino Uno R3 - so
  *           the LED never loads the SCK line. No firmware is involved.
@@ -64,10 +74,9 @@
  *           reference; it has no digital pin number.
  *   Serial-> native USB CDC (USBSerial), Leonardo/Micro convention.
  *
- *   NOTE on names: the Uno R3 D0/D1 UART is wired to USART0 on this board, so the
- *   hardware UART is "Serial0" (not "Serial1" as on the Tachi). "Serial" is the
- *   native USB CDC (serial monitor), so day-to-day Serial.print() behaves exactly
- *   like a classic Uno; use "Serial0" only to talk to an external device on D0/D1.
+ *   NOTE on names: "Serial" is the native USB CDC (serial monitor), so day-to-day
+ *   Serial.print() behaves exactly like a classic Uno. The D0/D1 hardware UART is
+ *   "Serial1", matching the Arduino Uno R4. (Serial0 also works - same port.)
  */
 
 #ifndef Pins_Arduino_h
@@ -87,13 +96,13 @@
 /* ---- Digital pin number for each MCU pin (Uno R3 layout, D0..D19 contiguous) ---- */
 #define PIN_PA5 (0)   // D0  RX  (USART0 RX, ALT1)
 #define PIN_PA4 (1)   // D1  TX  (USART0 TX, ALT1)
-#define PIN_PA6 (2)   // D2  (USART0 XCK)
-#define PIN_PF5 (3)   // D3  ~PWM(TCB1, ALT1)
+#define PIN_PA7 (2)   // D2  (USART0 XDIR / AC0 OUT / EVOUTA / CLKOUT)
+#define PIN_PA6 (3)   // D3  ~PWM(TCB1 via CCL LUT0) / USART0 XCK
 #define PIN_PF4 (4)   // D4  general I/O (no PWM: TCB0 = millis)
 #define PIN_PD0 (5)   // D5  TCA0 WO0
 #define PIN_PD1 (6)   // D6  TCA0 WO1
 #define PIN_PC3 (7)   // D7  general I/O (VDD-driven output, confirmed by measurement)
-#define PIN_PA7 (8)   // D8  general I/O
+#define PIN_PF5 (8)   // D8  general I/O (TCB1 WO parking position - see D3 PWM note)
 #define PIN_PD2 (9)   // D9  TCA0 WO2
 #define PIN_PD3 (10)  // D10 TCA0 WO3 / SS (Uno convention, SSD=1)
 #define PIN_PD4 (11)  // D11 TCA0 WO4 / SPI MOSI
@@ -162,16 +171,19 @@
 
 /* ---- PWM ----
  * millis lives on TCB0 (boards.txt -DMILLIS_USE_TIMERB0), leaving TCB1 free for
- * D3 PWM (TCB1 ALT1 = PF5) and for tone(): Tone.cpp routes tone to TCB1 whenever
- * millis is on TCB0, so tone shares TCB1 with D3 PWM - calling tone() suspends D3
- * PWM only, while D11 PWM on TCA0 keeps running (cf. Uno R3 Timer2 = D3+D11).
+ * D3 PWM and for tone(). D3 (PA6) is not a TCB WO pin: it is LUT0's alternate
+ * output, and analogWrite(D3) delivers TCB1's 8-bit PWM waveform through LUT0
+ * (see the WAZAMONO_TCB1_LUTPWM_* block below and cores/dxcore/wazamono_lutpwm.h).
+ * tone(): Tone.cpp routes tone to TCB1 whenever millis is on TCB0, so tone shares
+ * TCB1 with D3 PWM - calling tone() suspends D3 PWM only, while D11 PWM on TCA0
+ * keeps running (cf. Uno R3 Timer2 = D3+D11).
  * TCA0 -> PORTD: WO0..WO5 = PD0,PD1,PD2,PD3,PD4,PD5 = D6,D5,D9,D10,D11,D12. */
 #if defined(MILLIS_USE_TIMERB1)
   #define digitalPinHasPWMTCB(p) (0)                   /* TCB1 is millis; no TCB PWM */
 #elif defined(MILLIS_USE_TIMERB0)
-  #define digitalPinHasPWMTCB(p) ((p) == PIN_PF5)      /* TCB0=millis -> TCB1 free -> D3 PWM */
+  #define digitalPinHasPWMTCB(p) ((p) == PIN_PA6)      /* TCB0=millis -> TCB1 free -> D3 PWM (via LUT0) */
 #else
-  #define digitalPinHasPWMTCB(p) ((p) == PIN_PF5)
+  #define digitalPinHasPWMTCB(p) ((p) == PIN_PA6)
 #endif
 #define digitalPinHasPWMTCA(p) ( \
     (p) == PIN_PD0 || (p) == PIN_PD1 || (p) == PIN_PD2 || \
@@ -180,11 +192,31 @@
 /* TCA0 routed to PORTD: WO0..WO5 = PD0..PD5 = D6,D5,D9,D10,D11,D12. */
 #define TCA0_PINS                       (PORTMUX_TCA0_PORTD_gc)
 #define TCB0_PINS                       (0x00)   // TCB0 = millis; WO unused (default PA2 pos)
-#define TCB1_PINS                       (0x01)   // TCB1 WO -> ALT1 (PF5 = D3)
+#define TCB1_PINS                       (0x02)   // PORTMUX.TCBROUTEA bit 1: TCB1 WO parked on ALT1
+                                                 // (PF5 = D8). The D3 waveform travels through LUT0,
+                                                 // not through a WO pin; parking keeps the default
+                                                 // position PA3 (= A5/SCL) clear. (DS40002548A 17.3.5)
 
 #define PIN_TCA0_WO0_INIT               (PIN_PD0)
 #define PIN_TCB0_WO_INIT                (PIN_PA2)   // TCB0 = millis; not enabled for PWM
-#define PIN_TCB1_WO_INIT                (PIN_PF5)   // D3 PWM (TCB1 ALT1)
+#define PIN_TCB1_WO_INIT                (PIN_PF5)   // parked (see TCB1_PINS); PWM leaves via LUT0/D3
+
+/* ---- D3 PWM: TCB1 through CCL LUT0 (core mechanism, wazamono_lutpwm.{h,c}) ----
+ * analogWrite(D3, x) makes TCB1's PWM8 waveform reach D3 = PA6 = LUT0-OUT (alt):
+ *   TCB1 WO (internal) -> LUT0 INSEL1 = TCB -> TRUTH 0xCC -> PA6.
+ * The digital_pin_to_timer[] entry for D3 is TIMERB1, which sends analogWrite()
+ * down the standard TCB path; the macros below tell the core hook which LUT
+ * carries the waveform. Conflicts disable D3 analogWrite automatically:
+ * tone()/TCB1 reconfiguration (CNTMODE check) and LUT0 use by other code
+ * (signature check in wazamono_lutpwm.c).
+ * CCMPEN stays 0: the CCL taps the internal WO signal. If hardware testing
+ * shows the LUT needs CCMPEN=1 (Table 24-2 ambiguity, see wazamono_lutpwm.h),
+ * set it to 1 - at the cost of D8 (= PF5, the parked WO position) being driven
+ * with the same waveform while D3 PWM is active. */
+#define WAZAMONO_TCB1_LUTPWM_PIN        (PIN_PA6)   /* D3 */
+#define WAZAMONO_TCB1_LUTPWM_LUT        (0)         /* LUT0 */
+#define WAZAMONO_TCB1_LUTPWM_LUT_ALT    (1)         /* CCLROUTEA: LUT0-OUT alt = PA6 */
+#define WAZAMONO_TCB1_LUTPWM_CCMPEN     (0)         /* pending hardware verification */
 
 #define digitalPinHasPWM(p)             (digitalPinHasPWMTCB(p) || digitalPinHasPWMTCA(p))
 
@@ -210,7 +242,11 @@
 #define PIN_WIRE_SDA_PINSWAP_3          (NOT_A_PIN)
 #define PIN_WIRE_SCL_PINSWAP_3          (NOT_A_PIN)
 
-/* ---- USART0 -> "Serial0" = the Uno R3 D0/D1 UART. Default position ALT1 (PA4/PA5) ---- */
+/* ---- USART0 -> user-facing "Serial1" = the Uno R3 D0/D1 UART (Uno R4 naming).
+ * Default position ALT1 (PA4/PA5). The object is Serial0; UART0.cpp emits the
+ * Serial1 alias. USART1 has no usable pins here and is compiled out. ---- */
+#define WAZAMONO_SERIAL1_IS_USART0
+#define WAZAMONO_NO_USART1
 #define HWSERIAL0_MUX                   (0x00 /* PORTMUX_USART0_DEFAULT_gc - PA0/PA1 = crystal */)
 #define HWSERIAL0_MUX_PINSWAP_1         (0x01 /* PORTMUX_USART0_ALT1_gc - PA4..PA7 */)
 #define HWSERIAL0_MUX_PINSWAP_2         (0x02 /* PORTMUX_USART0_ALT2_gc - PA2/PA3 (= I2C) */)
@@ -234,8 +270,9 @@
 #define PIN_HWSERIAL0_XCK_PINSWAP_3     (PIN_PD6)
 #define PIN_HWSERIAL0_XDIR_PINSWAP_3    (PIN_PD7)
 
-/* ---- USART1 -> "Serial1": instantiated by the core, but NO usable pin position on
- *   Tsurugi (DU USART1 is only PD6/PD7 (ALT2) = SPI SCK / AREF here). Left inert. ---- */
+/* ---- USART1: NO usable pin position on Tsurugi (DU USART1 is only PD6/PD7
+ *   (ALT2) = SPI SCK / AREF here). WAZAMONO_NO_USART1 above compiles the object
+ *   out (UART1.cpp); the defines below are kept for table completeness. ---- */
 #define HWSERIAL1_MUX                   (0x00 /* PORTMUX_USART1_DEFAULT_gc - no pins */)
 #define HWSERIAL1_MUX_PINSWAP_1         (0x01 << 3 /* ALT1 absent on DU - placeholder */)
 #define HWSERIAL1_MUX_PINSWAP_2         (0x02 << 3 /* PORTMUX_USART1_ALT2_gc - PD6/PD7 (occupied) */)
@@ -264,13 +301,13 @@
 #define PIN_A5   (PIN_PA3)   // D19  SCL
 #define PIN_A6   (PIN_PA5)   // D0
 #define PIN_A7   (PIN_PA4)   // D1
-#define PIN_A8   (PIN_PA6)   // D2
-#define PIN_A9   (PIN_PF5)   // D3
+#define PIN_A8   (PIN_PA7)   // D2
+#define PIN_A9   (PIN_PA6)   // D3
 #define PIN_A10  (PIN_PF4)   // D4
 #define PIN_A11  (PIN_PD0)   // D5
 #define PIN_A12  (PIN_PD1)   // D6
 #define PIN_A13  (PIN_PC3)   // D7
-#define PIN_A14  (PIN_PA7)   // D8
+#define PIN_A14  (PIN_PF5)   // D8
 #define PIN_A15  (PIN_PD2)   // D9
 #define PIN_A16  (PIN_PD3)   // D10
 #define PIN_A17  (PIN_PD4)   // D11
@@ -302,13 +339,13 @@
 #undef D19
 static const uint8_t D0  = PIN_PA5;  // RX
 static const uint8_t D1  = PIN_PA4;  // TX
-static const uint8_t D2  = PIN_PA6;
-static const uint8_t D3  = PIN_PF5;  // ~PWM(TCB1)
+static const uint8_t D2  = PIN_PA7;
+static const uint8_t D3  = PIN_PA6;  // ~PWM(TCB1 via CCL LUT0)
 static const uint8_t D4  = PIN_PF4;
 static const uint8_t D5  = PIN_PD0;
 static const uint8_t D6  = PIN_PD1;
 static const uint8_t D7  = PIN_PC3;
-static const uint8_t D8  = PIN_PA7;  
+static const uint8_t D8  = PIN_PF5;
 static const uint8_t D9  = PIN_PD2;
 static const uint8_t D10 = PIN_PD3;  // SS (Uno convention)
 static const uint8_t D11 = PIN_PD4;  // MOSI
@@ -369,13 +406,13 @@ static const uint8_t A19  = PIN_A19;
   const uint8_t digital_pin_to_port[] = {
     PA,         //  0 PA5  D0  RX/USART0 RX
     PA,         //  1 PA4  D1  TX/USART0 TX
-    PA,         //  2 PA6  D2  USART0 XCK
-    PF,         //  3 PF5  D3  TCB1 PWM (ALT1)
+    PA,         //  2 PA7  D2  USART0 XDIR / AC0 OUT / EVOUTA
+    PA,         //  3 PA6  D3  TCB1 PWM via CCL LUT0
     PF,         //  4 PF4  D4
     PD,         //  5 PD0  D5  TCA0 WO0
     PD,         //  6 PD1  D6  TCA0 WO1
     PC,         //  7 PC3  D7
-    PA,         //  8 PA7  D8  (native 5V)
+    PF,         //  8 PF5  D8
     PD,         //  9 PD2  D9  TCA0 WO2
     PD,         // 10 PD3  D10 TCA0 WO3 / SS
     PD,         // 11 PD4  D11 TCA0 WO4 / MOSI
@@ -397,13 +434,13 @@ static const uint8_t A19  = PIN_A19;
   const uint8_t digital_pin_to_bit_position[] = {
     PIN5_bp,   //  0 PA5  D0
     PIN4_bp,   //  1 PA4  D1
-    PIN6_bp,   //  2 PA6  D2
-    PIN5_bp,   //  3 PF5  D3
+    PIN7_bp,   //  2 PA7  D2
+    PIN6_bp,   //  3 PA6  D3
     PIN4_bp,   //  4 PF4  D4
     PIN0_bp,   //  5 PD0  D5
     PIN1_bp,   //  6 PD1  D6
     PIN3_bp,   //  7 PC3  D7
-    PIN7_bp,   //  8 PA7  D8
+    PIN5_bp,   //  8 PF5  D8
     PIN2_bp,   //  9 PD2  D9
     PIN3_bp,   // 10 PD3  D10
     PIN4_bp,   // 11 PD4  D11
@@ -433,13 +470,13 @@ static const uint8_t A19  = PIN_A19;
   const uint8_t digital_pin_to_bit_mask[] = {
     PIN5_bm,   //  0 PA5  D0
     PIN4_bm,   //  1 PA4  D1
-    PIN6_bm,   //  2 PA6  D2
-    PIN5_bm,   //  3 PF5  D3
+    PIN7_bm,   //  2 PA7  D2
+    PIN6_bm,   //  3 PA6  D3
     PIN4_bm,   //  4 PF4  D4
     PIN0_bm,   //  5 PD0  D5
     PIN1_bm,   //  6 PD1  D6
     PIN3_bm,   //  7 PC3  D7
-    PIN7_bm,   //  8 PA7  D8
+    PIN5_bm,   //  8 PF5  D8
     PIN2_bm,   //  9 PD2  D9
     PIN3_bm,   // 10 PD3  D10
     PIN4_bm,   // 11 PD4  D11
@@ -467,17 +504,18 @@ static const uint8_t A19  = PIN_A19;
   };
 
   /* TCA0 PWM is resolved dynamically from PORTMUX, so TCA0 pins are NOT_ON_TIMER
-   * here. Only the TCB output used for PWM is listed (PF4 = TCB0). TCB1 = millis. */
+   * here. D3 (PA6) is marked TIMERB1: it carries TCB1's PWM through CCL LUT0
+   * (see WAZAMONO_TCB1_LUTPWM_* above). millis = TCB0. */
   const uint8_t digital_pin_to_timer[] = {
     NOT_ON_TIMER, //  0 PA5  D0
     NOT_ON_TIMER, //  1 PA4  D1
-    NOT_ON_TIMER, //  2 PA6  D2
-    TIMERB1,      //  3 PF5  D3  (TCB1 - D3 PWM, ALT1)
+    NOT_ON_TIMER, //  2 PA7  D2
+    TIMERB1,      //  3 PA6  D3  (TCB1 PWM delivered via CCL LUT0)
     NOT_ON_TIMER, //  4 PF4  D4  (no PWM: TCB0 = millis)
     NOT_ON_TIMER, //  5 PD0  D5  (TCA0 WO0, dynamic)
     NOT_ON_TIMER, //  6 PD1  D6  (TCA0 WO1, dynamic)
     NOT_ON_TIMER, //  7 PC3  D7
-    NOT_ON_TIMER, //  8 PA7  D8
+    NOT_ON_TIMER, //  8 PF5  D8  (TCB1 WO parked here; not a PWM pin)
     NOT_ON_TIMER, //  9 PD2  D9  (TCA0 WO2, dynamic)
     NOT_ON_TIMER, // 10 PD3  D10 (TCA0 WO3, dynamic)
     NOT_ON_TIMER, // 11 PD4  D11 (TCA0 WO4, dynamic)
@@ -527,8 +565,9 @@ static const uint8_t A19  = PIN_A19;
  *  Serial -> native USB CDC   (Leonardo/Micro convention)
  * =================================================================
  *  Serial  = USBSerial (on-chip USB CDC)              <- primary / USB serial monitor
- *  Serial0 = USART0   (D0/D1, ALT1 - the Uno R3 hardware UART)
- *  Serial1 = USART1   (exists in silicon, but no usable pins on Tsurugi - inert)
+ *  Serial1 = USART0   (D0/D1, ALT1 - the Uno R3 hardware UART; Uno R4 naming.
+ *                      Alias of Serial0 - both names reach the same port.)
+ *  USART1  = compiled out (WAZAMONO_NO_USART1: no usable pins on Tsurugi).
  *  Define HAVE_NO_USB_SERIAL_REDIRECT (from boards.txt) to keep Serial==USART0.
  */
 #if defined(USB0) && !defined(HAVE_NO_USB_SERIAL_REDIRECT)
@@ -542,17 +581,11 @@ static const uint8_t A19  = PIN_A19;
     #define SERIAL_PORT_USBVIRTUAL  Serial
   #endif
   #ifndef SERIAL_PORT_HARDWARE
-    #define SERIAL_PORT_HARDWARE    Serial0     /* Uno R3 D0/D1 hardware UART (USART0) */
+    #define SERIAL_PORT_HARDWARE    Serial1     /* Uno R3 D0/D1 hardware UART (USART0) */
   #endif
 #endif
 
-/* ---- analogReference(): EXTERNAL disabled on Tsurugi ----
- * PD7 (the VREFA pin) is repurposed as D7, so there is no external reference
- * input. Undefining EXTERNAL turns analogReference(EXTERNAL) into a compile
- * error, steering sketches to the internal references (1.024/2.048/2.5/4.096 V)
- * or VDD. (This header is #included from Arduino.h AFTER EXTERNAL is defined.) */
-#ifdef EXTERNAL
-  #undef EXTERNAL
-#endif
+/* ---- analogReference(EXTERNAL) is available: PD7 (VREFA) is wired to the
+ * AREF header pin (index 20; no Dn alias), exactly like the Uno R3. ---- */
 
 #endif

@@ -103,27 +103,28 @@ ATmega と比べて EEPROM は小さくなりましたが（256 B）、代わり
 
 ## ピンマッピング
 
-XIAO と同じパッド配置（D0–D10）に加え、オンボード LED を D13 に割り当てています。各パッドは `A#` のアナログ別名も持ちます（ADC 入力のない D4/D5 を除く）。
+XIAO と同じパッド配置（D0–D10）に加え、オンボード LED を D13/D14 に割り当てています。各パッドは `A#` のアナログ別名も持ちます（ADC 入力のない D6/D7 を除く）。
 
 | D# | MCU | アナログ別名 | ADC ch | 主な機能 |
 |----|-----|--------------|--------|----------|
-| D0 | PA7 | **A0** | AIN27 | AC0 出力 / EVOUTA |
-| D1 | PD5 | **A1** | AIN5 | 汎用 I/O |
-| D2 | PA3 | **A2** | AIN23 | ~PWM(TCA0 WO3) / CCL LUT0-OUT |
-| D3 | PA2 | **A3** | AIN22 | ~PWM(TCA0 WO2) / Serial2 XCK / CCL LUT0-IN2 |
-| D4 | PA0 | — | — | **I2C SDA** / Serial2 TX / ~PWM(TCA0 WO0) / CCL LUT0-IN0 |
-| D5 | PA1 | — | — | **I2C SCL** / Serial2 RX / ~PWM(TCA0 WO1) / CCL LUT0-IN1 |
-| D6 | PD6 | **A6** | AIN6 | **Serial1 TX**（USART1 ALT2） |
-| D7 | PD7 | **A7** | AIN7 | **Serial1 RX**（USART1 ALT2）/ EVOUTD |
+| D0 | PC3 | **A0** | AIN31 | **~PWM（TCB1 + CCL LUT1）** |
+| D1 | PA7 | **A1** | AIN27 | SPI **SS** / AC0 出力 / EVOUTA / CLKOUT |
+| D2 | PD6 | **A2** | AIN6 | **Serial2 TX**（USART1 ALT2）/ CCL LUT2-OUT |
+| D3 | PD7 | **A3** | AIN7 | **Serial2 RX**（USART1 ALT2）/ EVOUTD |
+| D4 | PA2 | **A4** | AIN22 | **I2C SDA** / ~PWM(TCA0 WO2) / Serial1 XCK / CCL LUT0-IN2 |
+| D5 | PA3 | **A5** | AIN23 | **I2C SCL** / ~PWM(TCA0 WO3) / Serial1 XDIR / CCL LUT0-OUT |
+| D6 | PA0 | — | — | **Serial1 TX**（USART0 既定位置）/ ~PWM(TCA0 WO0) / CCL LUT0-IN0 |
+| D7 | PA1 | — | — | **Serial1 RX**（USART0 既定位置）/ ~PWM(TCA0 WO1) / CCL LUT0-IN1 |
 | D8 | PA6 | **A8** | AIN26 | SPI **SCK** |
 | D9 | PA5 | **A9** | AIN25 | SPI **MISO** / ~PWM(TCA0 WO5) |
 | D10 | PA4 | **A10** | AIN24 | SPI **MOSI** / ~PWM(TCA0 WO4) |
-| D13 | PD4 | — | — | **LED_BUILTIN**（オンボード、パッドなし） |
+| D13 | PD4 | **A13** | AIN4 | **LED_BUILTIN** / USB-CDC **RX** アクティビティ LED |
+| D14 | PD5 | **A14** | AIN5 | USB-CDC **TX** アクティビティ LED |
 
-**パッドに出ない内部ピン:** PC3（VBUS 検出, AIN31）/PF6（RESET）/PF7（UPDI）
+**パッドに出ない内部ピン:** PF6（RESET）/PF7（UPDI）
 
-> `~` は PWM 出力可能ピンを示します。 XIAOは通常全てのピンで PWM を実行可能ですが Kunai では機能が限定されます。
-> XIAO では通常 A0–A10 がすべて存在しますが、Kunai では **A4/A5 が欠番**です（D4=PA0・D5=PA1 に ADC 入力がないため）。
+> `~` は PWM 出力可能ピンを示します。XIAO は通常全てのピンで PWM を実行可能ですが Kunai では機能が限定されます。
+> XIAO では通常 A0–A10 がすべて存在しますが、Kunai では **A6/A7 が欠番**です（D6=PA0・D7=PA1 に ADC 入力がないため）。
 
 ---
 
@@ -136,12 +137,11 @@ variant 側でピン割り当てが確定済みのため、スケッチで `swap
 | オブジェクト | 実体 | ピン | 備考 |
 |--------------|------|------|------|
 | `Serial` | USB CDC | USB-C | シリアルモニタ（仮想 COM） |
-| `Serial1` | USART1（ALT2 固定） | D6(TX) / D7(RX) | XIAO の TX/RX パッド相当のハードウェア UART |
-| `Serial2` | USART0（DEFAULT 固定） | D4 / D5 | 予備 UART。**I2C とピン共有・排他利用** |
+| `Serial1` | USART0（既定位置） | D6(TX) / D7(RX) | XIAO の TX/RX パッド相当のハードウェア UART（Uno R4 と同じ命名） |
+| `Serial2` | USART1（ALT2 固定） | D2(TX) / D3(RX) | 予備 UART |
 
-> `Serial0` は DxCore 内部での USART0 の名称です。ユーザ向けには `Serial2` を使用してください。
-> `Serial2`（USART0）は I2C（D4/D5）と同じ PA0/PA1 を使うため、両者は同時に使えません。
-> USART0は多機能で2つ目の SPI や RS-485 を使用する際の DIR 信号を持ちます。
+> `Serial1` の実体は USART0 です（`Serial0` でも同じポートに届きます）。水晶を持たない Kunai では PA0/PA1 が空くため、USART0 をチップ既定位置のまま XIAO の TX/RX パッドに配置できています。
+> USART0 は多機能で、2つ目の SPI や RS-485 を使用する際の XDIR 信号（D5）・XCK（D4）を持ちます。
 
 ### SPI（ホスト）
 
@@ -150,36 +150,37 @@ variant 側でピン割り当てが確定済みのため、スケッチで `swap
 | MOSI | D10（PA4） |
 | MISO | D9（PA5） |
 | SCK | D8（PA6） |
-| SS | D0（PA7） |
+| SS | D1（PA7） |
 
-SPI0 既定位置（PORTA）に配置。ボードは SPI ホストで、チップセレクトは任意の GPIO を使用してください（ハードウェア SS の PA7 は AC0 出力と共用）。
+SPI0 既定位置（PORTA）に配置。ボードは SPI ホストで、チップセレクトは任意の GPIO を使用してください（ハードウェア SS の PA7/D1 は SSD=1 運用のためソフトウェア CS として自由に使えます）。
 
 ### I2C（Wire）
 
 | 信号 | ピン |
 |------|------|
-| SDA | D4（PA0） |
-| SCL | D5（PA1） |
+| SDA | D4（PA2） |
+| SCL | D5（PA3） |
 
-I2C は **TWI0 ALT3（PA0/PA1）** に配線されています。
-AVR DU のチップ既定 TWI 位置は PA2/PA3 ですが、variant の `initVariant()`（[wazamono_kunai_init.cpp](../variants/WazamonoKunai/wazamono_kunai_init.cpp)）が起動時に `PORTMUX.TWIROUTEA` を ALT3 へ設定するため、
-**通常の `Wire.begin()` でそのまま D4/D5 が SDA/SCL になります**（`Wire.swap(3)` を呼ぶ必要はありません）。
-前述のとおり `Serial2`（USART0）とピンを共有します。
+I2C は **TWI0 の既定位置（PA2/PA3）** そのままで XIAO の A4/A5 位置に一致します。PORTMUX の変更は不要で、**通常の `Wire.begin()` でそのまま D4/D5 が SDA/SCL になります**。
 
 ### PWM（`analogWrite()`）
 
-- **D2, D3, D4, D5, D9, D10** … TCA0（PORTA へ割り当て、WO0–WO5 = PA0–PA5）
-- `millis()` / `micros()` は **TCB0**、`tone()` は **TCB1**（DxCore の `tone()` はソフトウェアでピンをトグルするため任意のピンで動作し、TCA0 の 6ch PWM を妨げません）。
-- `tone()` と `Servo` はどちらも TCB1 を使うため排他です。
+- **D4, D5, D6, D7, D9, D10** … TCA0（PORTA へ割り当て、WO0–WO5 = PA0–PA5）
+- **D0** … TCB1 の 8bit PWM 波形を **CCL LUT1 経由**で出力（PC3 = LUT1-OUT）
 
-> PWM 非対応: D0(PA7)・D1(PD5)・D6(PD6)・D7(PD7)・D8(PA6)。
+> **D0 PWM の仕組み:** D0（PC3）は TCB の WO ピンではなく **LUT1 の出力ピン**です。`analogWrite(D0, x)` は空いている TCB1 を 8bit PWM モードで走らせ、その内部波形を CCL LUT1 の内部入力（INSEL1 = TCB）としてスルー出力します（コア機構 `wazamono_lutpwm`）。本物のハードウェア PWM であり CPU 負荷はありません。TCB1 自身の WO ピン位置は ALT1（PF5）へ退避しますが、**PF5 は 20 ピン品に存在しない**ため完全に無害です。
+>
+> **自動無効化:** TCB1 または LUT1 が他の用途に使われている間、`analogWrite(D0)` は PWM をあきらめて単純な HIGH/LOW 出力（127 を閾値）に切り替わります。`tone()` は TCB1 を使うため、実行中は D0 の PWM のみ停止します（TCA0 の PWM と millis は動作継続）。LUT1 を CCL レジスタ直接操作で使用中も同様です（CustomLogic ライブラリの Kunai 用ユニットは LUT0 なので競合しません）。
+- `millis()` / `micros()` は **TCB0**。
+- `tone()` と `Servo` はどちらも TCB1 を使うため排他です（実行中は D0 PWM も停止）。
+
+> PWM 非対応: D1(PA7)・D2(PD6)・D3(PD7)・D8(PA6)・D13(PD4)・D14(PD5)。
 
 ### アナログ入力
 
-- パッドの **A0–A3・A6–A10**（A4/A5 は欠番）
-- VBUS 検出ピン PC3 は `analogRead(AIN31)` で参照可能
+- パッドの **A0–A5・A8–A10**（A6/A7 は欠番）と、LED ピンの **A13/A14**
 
-> アナログ入力非対応: A4(PA0)・A5(PA1)。
+> アナログ入力非対応: D6(PA0)・D7(PA1)。
 
 ---
 
@@ -189,7 +190,7 @@ USB 用の 48 MHz（CLK_USB）は内蔵 PLL48M が生成し、USB の SOF に同
 **システムクロックの選択とは独立**しているため、内蔵オシレータ動作でも USB は機能します。
 
 Kunai は **水晶を搭載しない**設計で、システムクロックは内蔵 OSCHF の **24 MHz 固定**です。
-水晶用の PA0/PA1 は GPIO（D4/D5 = I2C）として使用されています。
+水晶用の PA0/PA1 は GPIO（D6/D7 = Serial1 TX/RX）として使用されています。
 
 > USB ホスト切断時は動作クロックが安定しない場合があります。
 
@@ -199,7 +200,7 @@ Kunai は **水晶を搭載しない**設計で、システムクロックは内
 
 - **入力:** USB-C（5V）。
 - **VUSB（USB トランシーバ 3.3V）:** AVR DU の**内蔵 USB レギュレータ**から供給します（boards.txt で `-DUSB_VREG_INTERNAL` を指定）。
-- **VBUS 検出:** PC3（AIN31）で USB の接続を検出。
+- **VBUS 検出:** なし（PC3 は D0 として使用。USB 接続状態はソフトウェアでは USB フレームの有無で判断します）。
 - AVR32DU20 は 1.8–5.5V の全範囲で 24 MHz 動作が可能です。
 
 > Kunai の確定 BOM・回路図は現在準備中です。
@@ -210,11 +211,14 @@ Kunai は **水晶を搭載しない**設計で、システムクロックは内
 
 | 部品 | 接続 | 用途 |
 |------|------|------|
-| LED_BUILTIN | D13（PD4） | オンボード LED |
+| LED_BUILTIN | D13（PD4） | オンボード LED（USB-CDC **RX** アクティビティ表示を兼用） |
+| TX LED | D14（PD5） | USB-CDC **TX** アクティビティ表示 |
 | リセット | RESET（PF6） | リセット入力 |
 
 `LED_BUILTIN` は **D13（PD4）** です（XIAO 同様、ヘッダ/パッドには出ていません）。
 アクティブ LOW なので D13 が LOW に設定された時に点灯します。
+
+XIAO と同様、D13 の LED は USB CDC（`Serial`）の **受信アクティビティ表示**を兼ね、D14 の LED が**送信アクティビティ**を表示します（Pro Micro の RX/TX LED 相当。実装は [wazamono_kunai_init.cpp](../variants/WazamonoKunai/wazamono_kunai_init.cpp) の weak フック上書き）。スケッチから `digitalWrite(D13, ...)` した場合は、CDC 通信の瞬間だけ短いパルスが重なります。
 
 ---
 

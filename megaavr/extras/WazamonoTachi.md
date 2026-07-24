@@ -74,7 +74,7 @@ Wazamono Tachi が置き換える Pro Micro / Arduino Leonardo は **ATmega32U4*
 - **複数電圧への対応** — AVRxtのコア特性を活かして 5V または 3.3V の切り替えを**周辺部品の変更なしに可能**です。3.3V 動作時、ATmega32U4 は通常 8 MHz に制限されるのに対し、AVR64DU32 は全電圧範囲で 24 MHz を維持できるため、3.3V では最大で約 3 倍の差になります。
 - **メモリ** — Flash 2 倍（64 KB）、SRAM 約 3.2 倍（8 KB）。大きなバッファ、USB 複合デバイス、ライブラリを多用するスケッチで余裕が生まれます。
 - **新世代の周辺機能** — CCL（3 つの論理ブロック）とイベントシステム（3 チャネル）により、CPU を介さないハードウェアレベルの信号処理・自動ルーティングが可能です。ATmega32U4 にはいずれもありません。
-（Tachiでは2つのCCLと3つのイベントシステムが使用可能です）
+（Tachiでは4つのLUT出力すべてがピンに接続され、うちLUT2/LUT3は入力ピンも利用可能です。イベント出力は3系統＝EVOUTA/D/Fが使用可能です）
 - **アナログ** — ADC チャネルが 12 → 21 に増加し、全チャネルがアナログ入力に対応します。
 - **追加のUART** — 2系統のUARTシリアル通信を利用可能です。
 
@@ -102,34 +102,35 @@ ATmega と比べて EEPROM は小さくなりましたが（256 B）、代わり
 
 ## ピンマッピング
 
-論理ピン番号（`D#`）と MCU ピン、機能の対応です。Pro Micro と同様に D11–D13・D22–D29 は欠番です。
+論理ピン番号（`D#`）と MCU ピン、機能の対応です。Pro Micro と同様に D11–D12・D22–D29 は欠番です（D13 は Tachi 独自の LED_BUILTIN として追加）。
 
 | D# | MCU | アナログ別名 | ADC ch | 主な機能 |
 |----|-----|--------------|--------|----------|
-| D0 | PD7 | A30 | AIN7 | **Serial1 RX**（USART1 ALT2）/イベント出力(EVOUTD) |
-| D1 | PD6 | A31 | AIN6 | **Serial1 TX**（USART1 ALT2） |
-| D2 | PA2 | A32 | AIN22 | **I2C SDA**/Serial2 TX（USART0 ALT2）/EVOUTA |
-| D3 | PA3 | A33 | AIN23 | **I2C SCL**/Serial2 RX（USART0 ALT2）/~PWM(TCB1) |
-| D4 | PA7 | A6 | AIN27 | SPI **SS** / AC0 出力 |
-| D5 | PF0 | A34 | AIN16 | ~PWM(TCA0 WO0) / CCL |
-| D6 | PF1 | A7 | AIN17 | ~PWM(TCA0 WO1) / CCL |
-| D7 | PF2 | A35 | AIN18 | ~PWM(TCA0 WO2) / CCL / EVOUTF |
-| D8 | PF3 | A8 | AIN19 | ~PWM(TCA0 WO3) / CCL |
-| D9 | PF4 | A9 | AIN20 | ~PWM(TCA0 WO4) |
-| D10 | PF5 | A10 | AIN21 | ~PWM(TCA0 WO5) |
-| D14 | PA5 | A36 | AIN25 | SPI **MISO** |
-| D15 | PA6 | A37 | AIN26 | SPI **SCK** |
-| D16 | PA4 | A38 | AIN24 | SPI **MOSI** |
-| D17 | PD5 | — | AIN5 | **LED_BUILTIN** / RX LED（オンボード、ヘッダなし） |
-| D18 | PD3 | **A0** | AIN3 | アナログ入力 A0 |
-| D19 | PD2 | **A1** | AIN2 | アナログ入力 A1 |
-| D20 | PD1 | **A2** | AIN1 | アナログ入力 A2 |
-| D21 | PD0 | **A3** | AIN0 | アナログ入力 A3 |
-| D30 | PD4 | — | AIN4 | TX LED（オンボード、ヘッダなし） |
+| D0 | PA5 | A11 | AIN25 | **Serial1 RX**（USART0 ALT1） |
+| D1 | PA4 | A12 | AIN24 | **Serial1 TX**（USART0 ALT1） |
+| D2 | PA2 | A13 | AIN22 | **I2C SDA** |
+| D3 | PA3 | A14 | AIN23 | **I2C SCL**/~PWM(TCB1)/CCL(LUT0-OUT) |
+| D4 | PD7 | A6 | AIN7 | SPI **SS**/Serial2 RX（USART1 ALT2） |
+| D5 | PD0 | A15 | AIN0 | ~PWM(TCA0 WO0)/CCL(LUT2-IN0) |
+| D6 | PD1 | A7 | AIN1 | ~PWM(TCA0 WO1)/CCL(LUT2-IN1) |
+| D7 | PA6 | A16 | AIN26 | USART0 XCK |
+| D8 | PA7 | A8 | AIN27 | USART0 XDIR/AC0 出力/EVOUTA/CLKOUT |
+| D9 | PD2 | A9 | AIN2 | ~PWM(TCA0 WO2)/CCL(LUT2-IN2)/AC0 AINP0/EVOUTD |
+| D10 | PD3 | A10 | AIN3 | ~PWM(TCA0 WO3)/CCL(LUT2-OUT)/AC0 AINN0 |
+| D13 | PC3 | A19 | AIN31 | **LED_BUILTIN**（オンボード、Active-HIGH）/CCL(LUT1-OUT) |
+| D14 | PD5 | A20 | AIN5 | SPI **MISO**/~PWM(TCA0 WO5) |
+| D15 | PD6 | A21 | AIN6 | SPI **SCK**/Serial2 TX（USART1 ALT2） |
+| D16 | PD4 | A22 | AIN4 | SPI **MOSI**/~PWM(TCA0 WO4) |
+| D17 | PF4 | A23 | AIN20 | RX LED（オンボード、Active-LOW、ヘッダなし） |
+| D18 | PF0 | **A0** | AIN16 | アナログ入力 A0/CCL(LUT3-IN0) |
+| D19 | PF1 | **A1** | AIN17 | アナログ入力 A1/CCL(LUT3-IN1) |
+| D20 | PF2 | **A2** | AIN18 | アナログ入力 A2/CCL(LUT3-IN2)/EVOUTF |
+| D21 | PF3 | **A3** | AIN19 | アナログ入力 A3/CCL(LUT3-OUT) |
+| D30 | PF5 | A30 | AIN21 | TX LED（オンボード、Active-LOW、ヘッダなし） |
 
-**ヘッダに出ない内部ピン:** PC3（VBUS 検出, AIN31）/PA0・PA1（24 MHz 水晶）/PF6（RESET）/PF7（UPDI）
+**ヘッダに出ない内部ピン:** PA0・PA1（24 MHz 水晶）/PF6（RESET）/PF7（UPDI）
 
-> `~` は PWM 出力可能ピンを示します。`A0`–`A3` はボードのシルク表記に対応するアナログ入力です。各デジタルピンは ADC チャネルを持つため、A6–A10・A30–A38 としても参照できます。
+> `~` は PWM 出力可能ピンを示します。`A0`–`A3` はボードのシルク表記に対応するアナログ入力です。PWM ピンは本家 Pro Micro（D3/D5/D6/D9/D10）と完全に一致し、さらに D14/D16 にも PWM を出力できます（SPI と排他）。アナログ別名も本家（A6=D4, A7=D6, A8=D8, A9=D9, A10=D10）に一致します。
 
 ---
 
@@ -138,21 +139,21 @@ ATmega と比べて EEPROM は小さくなりましたが（256 B）、代わり
 | オブジェクト | 実体 | ピン | 備考 |
 |--------------|------|------|------|
 | `Serial` | USB CDC | USB-C | シリアルモニタ（仮想 COM） |
-| `Serial1` | USART1（ALT2 固定） | D0(RX) / D1(TX) | Pro Micro 互換ハードウェア UART |
-| `Serial2` | USART0（ALT2 固定） | D2(SDA) / D3(SCL) | 予備 UART。I2C とピン共有・**排他利用** |
+| `Serial1` | USART0（ALT1 固定） | D0(RX) / D1(TX) | Pro Micro 互換ハードウェア UART。XCK(D7)/XDIR(D8) 付きのフル機能位置で、RS-485 の方向制御や USART-SPI ホストモードにも対応 |
+| `Serial2` | USART1（ALT2 固定） | D4(RX) / D15(TX) | 予備 UART。SPI（SS/SCK）とピン共有・**排他利用** |
 
-> `Serial0` は DxCore 内部での USART0 の名称です。ユーザ向けには `Serial2` を使用してください。
+> 本家 Pro Micro と同じく、D0/D1 のハードウェア UART が `Serial1` です。`Serial0` は DxCore 内部での USART0 の名称で、`Serial1` と同一オブジェクトを指します。
 
 ### SPI（ホスト）
 
 | 信号 | ピン |
 |------|------|
-| MOSI | D16（PA4） |
-| MISO | D14（PA5） |
-| SCK | D15（PA6） |
-| SS | D4（PA7） |
+| MOSI | D16（PD4） |
+| MISO | D14（PD5） |
+| SCK | D15（PD6） |
+| SS | D4（PD7） |
 
-チップセレクトは任意の GPIO を使用してください（SS ピンは AC0 出力と共用）。
+チップセレクトは任意の GPIO を使用してください（SPI0 ALT4 位置。SCK/SS は `Serial2` と共用・排他利用）。
 
 ### I2C
 
@@ -161,20 +162,21 @@ ATmega と比べて EEPROM は小さくなりましたが（256 B）、代わり
 | SDA | D2（PA2） |
 | SCL | D3（PA3） |
 
-前述のとおり `Serial2`（USART0）とピンを共有します。
+この版では I2C は UART とピンを共有しません。`Wire`・`Serial1`・`Serial2` は同時に使用できます。
 
 ### PWM（`analogWrite()`）
 
-- **D5–D10** … TCA0（PORTF へ割り当て、WO0–WO5）
+- **D5/D6/D9/D10/D14/D16** … TCA0（PORTD へ割り当て、WO0–WO5）
 - **D3** … TCB1
-- `millis()` / `micros()` は **TCB0** を使用するため、TCB1（D3）と TCA0（D5–D10）は PWM に使用できます。
+- `millis()` / `micros()` は **TCB0** を使用するため、TCB1（D3）と TCA0 は PWM に使用できます。
+- 本家 Pro Micro の PWM ピン（D3/D5/D6/D9/D10）を完全再現。D14/D16 は SPI 使用時には PWM に使えません。
 
 ### アナログ入力
 
-- シルク表記の **A0–A3**（= D18–D21 = PD3/PD2/PD1/PD0）
-- 各デジタルピンも ADC チャネルを持ち、A6–A10・A30–A38 として参照可能
+- シルク表記の **A0–A3**（= D18–D21 = PF0/PF1/PF2/PF3）
+- 各デジタルピンも ADC チャネルを持ち、A6–A16・A19–A23・A30 として参照可能
 
----
+--
 
 ## クロック
 
@@ -213,13 +215,14 @@ USB 用の 48 MHz（CLK_USB）は内蔵 PLL48M が生成し、USB の SOF に同
 | 部品 | 色 | 接続 | 用途 |
 |------|----|----|------|
 | 電源 LED | 黄緑 | 電源ライン | 通電表示 |
-| TX LED | 橙 | D30（PD4） | 送信表示（オンボード） |
-| RX LED | 橙 | D17（PD5） | 受信表示。`LED_BUILTIN` |
+| LED_BUILTIN | 黄緑 | D13（PC3、Active-HIGH） | ユーザー LED（Uno/Leonardo の D13 相当） |
+| TX LED | 橙 | D30（PF5、Active-LOW） | 送信表示（オンボード） |
+| RX LED | 橙 | D17（PF4、Active-LOW） | 受信表示（オンボード） |
 | リセット | — | RESET（PF6） | タクトスイッチ |
 
-`LED_BUILTIN` は **D17（PD5、RX LED）** です。
+`LED_BUILTIN` は **D13（PC3）** の専用 LED です（本家 Pro Micro には D13 がなく RX LED が代用でしたが、Tachi では独立させています）。
 
----
+--
 
 ## 書き込み
 

@@ -9,7 +9,7 @@
 #
 #    board             MCU         LED   pol       USB ident (VID:PID)
 #    ----------------  ----------  ----  --------  -------------------
-#    Wazamono Tachi    avr64du32   PD5   act-LOW   0x1209:0x0005
+#    Wazamono Tachi    avr64du32   PC3   act-HIGH  0x1209:0x0005
 #    Wazamono Tsurugi  avr64du32   PD6   act-HIGH  0x1209:0x0007
 #    Wazamono Kunai    avr32du20   PD4   act-LOW   0x1209:0x0009
 #
@@ -112,7 +112,7 @@ build() {            # $1=class  $2=mcu  $3=LEDport  $4=LEDpin  $5=board  $6=LED
 }
 
 #     class             mcu        LEDport LEDpin board     LEDpol(AH|AL) VREG
-build wazamonotachi   avr64du32   PORTD   5      TACHI     AL            0
+build wazamonotachi   avr64du32   PORTC   3      TACHI     AH            0
 build wazamonotsurugi avr64du32   PORTD   6      TSURUGI   AH            1
 build wazamonokunai   avr32du20   PORTD   4      KUNAI     AL            0
 

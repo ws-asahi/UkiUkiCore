@@ -12,53 +12,64 @@
  *           -> USB CLK_USB (48 MHz) is still produced by OSCHF + PLL48M and is
  *              auto-tuned to the USB SOF, independently of this crystal.
  *
- *  ===== Pin numbering: Pro Micro compatible (NONCANONICAL) =====
+ *  ===== Pin numbering: Pro Micro compatible (NONCANONICAL), rev.2 =====
  *   D#   MCU   Pro Micro role / notes
- *   D0   PD7   RX  (Serial1 / USART1 RX, ALT2)      A30, AIN7
- *   D1   PD6   TX  (Serial1 / USART1 TX, ALT2)      A31, AIN6
- *   D2   PA2   SDA (Grove I2C) | Serial0 TX (ALT2)  A32, AIN22
- *   D3   PA3   SCL (Grove I2C) | Serial0 RX (ALT2) | ~PWM(TCB1)  A33, AIN23
- *   D4   PA7   ~AC0 OUT | (hardware SPI SS)         A6,  AIN27
- *   D5   PF0   ~PWM(TCA0 WO0)                       A34, AIN16
- *   D6   PF1   ~PWM(TCA0 WO1)                       A7,  AIN17
- *   D7   PF2   ~PWM(TCA0 WO2)                       A35, AIN18
- *   D8   PF3   ~PWM(TCA0 WO3)                       A8,  AIN19
- *   D9   PF4   ~PWM(TCA0 WO4)                       A9,  AIN20
- *   D10  PF5   ~PWM(TCA0 WO5)                       A10, AIN21
- *   D11..D13   (do not exist - gap, like the 32U4 Pro Micro)
- *   D14  PA5   MISO                                 A36, AIN25
- *   D15  PA6   SCK                                  A37, AIN26
- *   D16  PA4   MOSI                                 A38, AIN24
- *   D17  PD5   RX LED + LED_BUILTIN (on-board, no header)   AIN5
- *   D18  PD0   A0                                   AIN0
- *   D19  PD1   A1                                   AIN1
- *   D20  PD2   A2                                   AIN2
- *   D21  PD3   A3                                   AIN3
+ *   D0   PA5   RX  (Serial1 = USART0 RX, ALT1)       A11, AIN25
+ *   D1   PA4   TX  (Serial1 = USART0 TX, ALT1)       A12, AIN24
+ *   D2   PA2   SDA (Grove I2C)                       A13, AIN22
+ *   D3   PA3   SCL (Grove I2C) | ~PWM(TCB1) | LUT0-OUT   A14, AIN23
+ *   D4   PD7   (hardware SPI SS) | Serial2 RX (USART1)   A6,  AIN7
+ *   D5   PD0   ~PWM(TCA0 WO0) | LUT2-IN0             A15, AIN0
+ *   D6   PD1   ~PWM(TCA0 WO1) | LUT2-IN1             A7,  AIN1
+ *   D7   PA6   USART0 XCK                            A16, AIN26
+ *   D8   PA7   USART0 XDIR | AC0 OUT | EVOUTA | CLKOUT   A8, AIN27
+ *   D9   PD2   ~PWM(TCA0 WO2) | LUT2-IN2 | AINP0 | EVOUTD  A9, AIN2
+ *   D10  PD3   ~PWM(TCA0 WO3) | LUT2-OUT | AINN0     A10, AIN3
+ *   D11..D12   (do not exist - gap, like the 32U4 Pro Micro)
+ *   D13  PC3   LED_BUILTIN (on-board, active-HIGH) | LUT1-OUT   A19, AIN31
+ *              (D13 does not exist on a real Pro Micro; added as the classic
+ *               Uno/Leonardo LED pin. LUT1 has no input pins on the DU-32, so
+ *               the CCL can drive this LED from internal/event inputs.)
+ *   D14  PD5   MISO | ~PWM(TCA0 WO5)                 A20, AIN5
+ *   D15  PD6   SCK  | Serial2 TX (USART1)            A21, AIN6
+ *   D16  PD4   MOSI | ~PWM(TCA0 WO4)                 A22, AIN4
+ *   D17  PF4   RX LED (on-board, active-LOW, no header)   A23, AIN20
+ *   D18  PF0   A0 | LUT3-IN0                         AIN16
+ *   D19  PF1   A1 | LUT3-IN1                         AIN17
+ *   D20  PF2   A2 | LUT3-IN2 | EVOUTF                AIN18
+ *   D21  PF3   A3 | LUT3-OUT                         AIN19
  *   D22..D29   (do not exist - gap)
- *   D30  PD4   TX LED (on-board, no header)         AIN4
+ *   D30  PF5   TX LED (on-board, active-LOW, no header)   A30, AIN21
  *   --- not on the Pro Micro header (appended so the arrays are complete) ---
- *        PC3   VBUS detect (VUSB power domain)      AIN31   index 31
- *        PA0   XTALHF1 (24 MHz crystal)             index 32  (NOT_A_PIN)
- *        PA1   XTALHF2 (24 MHz crystal)             index 33  (NOT_A_PIN)
- *        PF6   RESET                                index 34
- *        PF7   UPDI                                 index 35  (== PIN_PF7, highest)
+ *        PA0   XTALHF1 (24 MHz crystal)              index 31  (NOT_A_PIN)
+ *        PA1   XTALHF2 (24 MHz crystal)              index 32  (NOT_A_PIN)
+ *        PF6   RESET                                 index 33
+ *        PF7   UPDI                                  index 34  (== PIN_PF7, highest)
  *
  *  ===== Peripheral routing (set by this variant + boards.txt) =====
- *   TCA0  -> PORTF (WO0..WO5 = PF0..PF5 = D5..D10)   : TCA0_PINS below
+ *   TCA0  -> PORTD (WO0..WO5 = PD0..PD5 = D5/D6/D9/D10/D16/D14) : TCA0_PINS below
+ *            -> classic Pro Micro PWM set D3/D5/D6/D9/D10 is fully reproduced;
+ *               D14/D16 gain bonus PWM (mutually exclusive with SPI use).
  *   TCB1  -> PA3 (D3) default position               : ~PWM on D3
  *   millis-> TCB0  : boards.txt MUST pass -DMILLIS_USE_TIMERB0 so TCB1 is free for D3 PWM
- *   SPI0  -> default (PA4/PA5/PA6/PA7). Hardware SS (PA7) shared with D4/AC0 OUT;
- *           board is SPI host, so chip-selects are user GPIO (auto-SS not used).
- *   TWI0  -> default (PA2 SDA / PA3 SCL) = the Grove connector.
- *   USART1-> Serial1, ALT2 (PD6 TX / PD7 RX) = D1/D0. (Only usable USART1 position.)
- *   USART0-> Serial2, ALT2 (PA2 TX / PA3 RX) = D2/D3.  <-- shares pins with Grove I2C,
- *           so Serial2 and Wire are mutually exclusive (use one or the other).
+ *   SPI0  -> ALT4 (PD4/PD5/PD6/PD7 = D16/D14/D15/D4), the ONLY position offered:
+ *            the DEFAULT position (PA4..PA7) is occupied by USART0/Serial1.
+ *            Board is SPI host; chip-selects are user GPIO (auto-SS not used).
+ *   TWI0  -> default (PA2 SDA / PA3 SCL) = the Grove connector. No UART sharing
+ *            in this revision: Wire and Serial1/Serial2 can all run together.
+ *   USART0-> Serial1, ALT1 (PA4 TX / PA5 RX / PA6 XCK / PA7 XDIR) = D1/D0/D7/D8.
+ *            Full-function position: XCK/XDIR enable USART-SPI-host and RS-485.
+ *   USART1-> Serial2, ALT2 (PD6 TX / PD7 RX) = D15/D4. (Only usable USART1
+ *            position.) Shares pins with SPI SCK/SS, so Serial2 and SPI are
+ *            mutually exclusive (use one or the other).
  *   Serial-> native USB CDC (USBSerial), Leonardo/Micro convention.
  *
  *   NOTE on names: in DxCore USART0 is "Serial0" and USART1 is "Serial1".
- *   USART1 on the Pro Micro header pins D0/D1 is therefore Serial1 (matching the
- *   classic Pro Micro). The extra UART on D2/D3 (USART0) is exposed to users as
- *   Serial2 (ascending board convention); Serial0 remains as its internal alias.
+ *   On this board the Pro Micro D0/D1 UART is USART0, so the user-facing name
+ *   Serial1 must attach to USART0. WAZAMONO_SERIAL1_IS_USART0 (below) makes
+ *   the core emit Serial1 as an alias of the Serial0 object (UART0.cpp), and
+ *   WAZAMONO_SERIAL2_IS_USART1 renames USART1's object to Serial2 (UART1.cpp,
+ *   HardwareSerial.h). Serial0 remains as the internal alias for USART0.
  */
 
 #ifndef Pins_Arduino_h
@@ -75,68 +86,76 @@
 #define WAZAMONO_BOARD_TACHI 1  /* Board identification macro (matches bootloader convention) */
 #define NONCANONICAL_PIN_NUMBERS
 
+/* ---- User-facing serial names (core support in UART0.cpp / UART1.cpp /
+ * HardwareSerial.h; this header is included by Arduino.h *before* UART.h, so
+ * these are visible to every core translation unit): ---------------------
+ *   Serial1 -> USART0 (D0/D1, the Pro Micro hardware UART)  [alias of Serial0]
+ *   Serial2 -> USART1 (D15 TX / D4 RX)                      [renamed object]  */
+#define WAZAMONO_SERIAL1_IS_USART0
+#define WAZAMONO_SERIAL2_IS_USART1
+
          /*##  ### #   #  ###
           #   #  #  ##  # #
           ####   #  # # #  ###
           #      #  #  ##     #
           #     ### #   #  # */
-/* Digital pin number for each MCU pin (Pro Micro layout). */
-#define PIN_PD7 (0)   // D0  RX  (USART1 RX)
-#define PIN_PD6 (1)   // D1  TX  (USART1 TX)
-#define PIN_PA2 (2)   // D2  SDA / Serial0 TX
-#define PIN_PA3 (3)   // D3  SCL / Serial0 RX / TCB1 PWM
-#define PIN_PA7 (4)   // D4  AC0 OUT / SPI SS
-#define PIN_PF0 (5)   // D5  TCA0 WO0
-#define PIN_PF1 (6)   // D6  TCA0 WO1
-#define PIN_PF2 (7)   // D7  TCA0 WO2
-#define PIN_PF3 (8)   // D8  TCA0 WO3
-#define PIN_PF4 (9)   // D9  TCA0 WO4
-#define PIN_PF5 (10)  // D10 TCA0 WO5
-//  no  D11..D13               (gap)
-#define PIN_PA5 (14)  // D14 MISO
-#define PIN_PA6 (15)  // D15 SCK
-#define PIN_PA4 (16)  // D16 MOSI
-#define PIN_PD5 (17)  // D17 RX LED + LED_BUILTIN
+/* Digital pin number for each MCU pin (Pro Micro layout, rev.2). */
+#define PIN_PA5 (0)   // D0  RX  (Serial1 = USART0 RX)
+#define PIN_PA4 (1)   // D1  TX  (Serial1 = USART0 TX)
+#define PIN_PA2 (2)   // D2  SDA
+#define PIN_PA3 (3)   // D3  SCL / TCB1 PWM / LUT0-OUT
+#define PIN_PD7 (4)   // D4  SPI SS / Serial2 RX
+#define PIN_PD0 (5)   // D5  TCA0 WO0
+#define PIN_PD1 (6)   // D6  TCA0 WO1
+#define PIN_PA6 (7)   // D7  USART0 XCK
+#define PIN_PA7 (8)   // D8  USART0 XDIR / AC0 OUT / EVOUTA / CLKOUT
+#define PIN_PD2 (9)   // D9  TCA0 WO2 / AINP0 / EVOUTD
+#define PIN_PD3 (10)  // D10 TCA0 WO3 / AINN0
+//  no  D11..D12               (gap)
+#define PIN_PC3 (13)  // D13 LED_BUILTIN (active-HIGH) / LUT1-OUT
+#define PIN_PD5 (14)  // D14 MISO / TCA0 WO5
+#define PIN_PD6 (15)  // D15 SCK / Serial2 TX
+#define PIN_PD4 (16)  // D16 MOSI / TCA0 WO4
+#define PIN_PF4 (17)  // D17 RX LED (active-LOW, on-board only)
+#define PIN_PF0 (18)  // D18 A0
+#define PIN_PF1 (19)  // D19 A1
+#define PIN_PF2 (20)  // D20 A2 / EVOUTF
+#define PIN_PF3 (21)  // D21 A3
+//  no  D22..D29               (gap)
+#define PIN_PF5 (30)  // D30 TX LED (active-LOW, on-board only)
+#define PIN_PA0 (31)  // XTALHF1 (crystal)
+#define PIN_PA1 (32)  // XTALHF2 (crystal)
+#define PIN_PF6 (33)  // RESET
+#define PIN_PF7 (34)  // UPDI  (highest index -> sets NUM_DIGITAL_PINS = 35)
 
 /* ---- Event output pins: FIXED by the board's pin-configuration table ----
  * One pin per event output, no alternatives. Libraries (CustomLogic, and the
- * Event library in its Wazamono form) route event outputs to these pins only.
- *   EVOUTA -> PA2 = D2   (PORTMUX default; shared with I2C SDA)
- *   EVOUTD -> PD7 = D0   (PORTMUX ALT1;    shared with Serial1 RX)
- *   EVOUTF -> PF2 = D7   (PORTMUX default) */
-#define WAZAMONO_EVOUTA_PIN            (PIN_PA2)
-#define WAZAMONO_EVOUTA_ALT            (0)
-#define WAZAMONO_EVOUTD_PIN            (PIN_PD7)
-#define WAZAMONO_EVOUTD_ALT            (1)
+ * EventSystem library in its Wazamono form) route event outputs to these only.
+ *   EVOUTA -> PA7 = D8   (PORTMUX ALT1;    default PA2 is the Grove SDA)
+ *   EVOUTD -> PD2 = D9   (PORTMUX default)
+ *   EVOUTF -> PF2 = D20  (PORTMUX default) */
+#define WAZAMONO_EVOUTA_PIN            (PIN_PA7)
+#define WAZAMONO_EVOUTA_ALT            (1)
+#define WAZAMONO_EVOUTD_PIN            (PIN_PD2)
+#define WAZAMONO_EVOUTD_ALT            (0)
 #define WAZAMONO_EVOUTF_PIN            (PIN_PF2)
 #define WAZAMONO_EVOUTF_ALT            (0)
-#define PIN_PD0 (18)  // D18 A0
-#define PIN_PD1 (19)  // D19 A1
-#define PIN_PD2 (20)  // D20 A2
-#define PIN_PD3 (21)  // D21 A3
-//  no  D22..D29               (gap)
-#define PIN_PD4 (30)  // D30 TX LED
-#define PIN_PC3 (31)  // VBUS detect (not on header)
-#define PIN_PA0 (32)  // XTALHF1 (crystal)
-#define PIN_PA1 (33)  // XTALHF2 (crystal)
-#define PIN_PF6 (34)  // RESET
-#define PIN_PF7 (35)  // UPDI  (highest index -> sets NUM_DIGITAL_PINS = 36)
 
          /*##   ##   ###  ###  ###  ###
           #   # #  # #      #  #    #
           ####  ####  ###   #  #     ###
           #   # #  #     #  #  #        #
           ####  #  # ####  ###  ###  # */
-#define PINS_COUNT                     (36)  // length of the pin tables (incl. gaps/reserved)
+#define PINS_COUNT                     (35)  // length of the pin tables (incl. gaps/reserved)
 #define NUM_ANALOG_INPUTS              (31)  // highest ADC channel in use is AIN31 (PC3)
-// NUM_DIGITAL_PINS / NUM_TOTAL_PINS  -> auto = PIN_PF7 + 1 = 36
+// NUM_DIGITAL_PINS / NUM_TOTAL_PINS  -> auto = PIN_PF7 + 1 = 35
 // NUM_INTERNALLY_USED_PINS           -> auto = 2 (external crystal: PA0, PA1)
 
 #if !defined(LED_BUILTIN)
-  #define LED_BUILTIN                  (PIN_PD5)   // D17, RX LED (active-LOW on board)
+  #define LED_BUILTIN                  (PIN_PC3)   // D13, dedicated LED (active-HIGH)
 #endif
-#define LED_BUILTIN_RX                 (PIN_PD5)   // D17 RX LED  (Pro Micro convention)
-#define LED_BUILTIN_TX                 (PIN_PD4)   // D30 TX LED  (Pro Micro convention)
+#define LED_BUILTIN_RX                 (PIN_PF4)   // D17 RX LED (active-LOW, Pro Micro convention)
+#define LED_BUILTIN_TX                 (PIN_PF5)   // D30 TX LED (active-LOW, Pro Micro convention)
 
 #ifdef CORE_ATTACH_OLD
   #define EXTERNAL_NUM_INTERRUPTS      (48)
@@ -179,16 +198,20 @@
   #define digitalPinHasPWMTCB(p) (((p) == PIN_PA2) || ((p) == PIN_PA3))
 #endif
 
-/* TCA0 is routed to PORTF, so WO0..WO5 land on PF0..PF5 = D5..D10 (contiguous). */
-#define TCA0_PINS                       (PORTMUX_TCA0_PORTF_gc)
+/* TCA0 is routed to PORTD, so WO0..WO5 land on PD0..PD5 = D5/D6/D9/D10/D16/D14.
+ * Together with TCB1 on D3 this reproduces the classic Pro Micro PWM pin set
+ * (D3, D5, D6, D9, D10) exactly, plus bonus PWM on D14/D16 (SPI-exclusive). */
+#define TCA0_PINS                       (PORTMUX_TCA0_PORTD_gc)
 #define TCB0_PINS                       (0x00)   // TCB0 WO on PA2 (default)
 #define TCB1_PINS                       (0x00)   // TCB1 WO on PA3 (default)
 
-#define PIN_TCA0_WO0_INIT               (PIN_PF0)
+#define PIN_TCA0_WO0_INIT               (PIN_PD0)
 #define PIN_TCB0_WO_INIT                (PIN_PA2)
 #define PIN_TCB1_WO_INIT                (PIN_PA3)
 
-#define digitalPinHasPWM(p)             (digitalPinHasPWMTCB(p) || ((p) >= PIN_PF0 && (p) <= PIN_PF5))
+#define digitalPinHasPWM(p)             (digitalPinHasPWMTCB(p) || \
+    ((p) == PIN_PD0) || ((p) == PIN_PD1) || ((p) == PIN_PD2) || \
+    ((p) == PIN_PD3) || ((p) == PIN_PD4) || ((p) == PIN_PD5))
 
          /*##   ###  ####  ##### #   # #   # #   #
           #   # #   # #   #   #   ## ## #   #  # #
@@ -197,18 +220,15 @@
           #      ###  #   #   #   #   #  ###  #   */
 #define SPI_INTERFACES_COUNT            (1)
 
-// SPI 0  (host; chip-selects are user GPIO)
-#define SPI_MUX                         (PORTMUX_SPI0_DEFAULT_gc)
-#define SPI_MUX_PINSWAP_4               (PORTMUX_SPI0_ALT4_gc)
+// SPI 0  (host; chip-selects are user GPIO). ALT4 (PD4..PD7) is the ONLY
+// position on this board: the DEFAULT position (PA4..PA7) belongs to
+// USART0/Serial1, so it is deliberately not offered to the SPI library.
+#define SPI_MUX                         (PORTMUX_SPI0_ALT4_gc)
 #define SPI_MUX_PINSWAP_NONE            (PORTMUX_SPI0_NONE_gc)
-#define PIN_SPI_MOSI                    (PIN_PA4)   // D16
-#define PIN_SPI_MISO                    (PIN_PA5)   // D14
-#define PIN_SPI_SCK                     (PIN_PA6)   // D15
-#define PIN_SPI_SS                      (PIN_PA7)   // D4 (hardware SS; shared with AC0 OUT)
-#define PIN_SPI_MOSI_PINSWAP_4          (PIN_PD4)
-#define PIN_SPI_MISO_PINSWAP_4          (PIN_PD5)
-#define PIN_SPI_SCK_PINSWAP_4           (PIN_PD6)
-#define PIN_SPI_SS_PINSWAP_4            (PIN_PD7)
+#define PIN_SPI_MOSI                    (PIN_PD4)   // D16
+#define PIN_SPI_MISO                    (PIN_PD5)   // D14
+#define PIN_SPI_SCK                     (PIN_PD6)   // D15
+#define PIN_SPI_SS                      (PIN_PD7)   // D4 (hardware SS; host mode -> user GPIO)
 
 // TWI 0  (Grove I2C)
 #define PIN_WIRE_SDA                    (PIN_PA2)   // D2
@@ -218,13 +238,15 @@
 #define PIN_WIRE_SDA_PINSWAP_3          (NOT_A_PIN) // ALT3 = PA0/PA1 = crystal, unavailable
 #define PIN_WIRE_SCL_PINSWAP_3          (NOT_A_PIN)
 
-// USART0 -> "Serial0", default position ALT2 (PA2/PA3 = D2/D3)
+// USART0 -> user-facing "Serial1" (internal Serial0), default position ALT1
+// (PA4 TX / PA5 RX / PA6 XCK / PA7 XDIR = D1/D0/D7/D8): the full-function
+// position, enabling USART-SPI-host mode and RS-485 XDIR on header pins.
 #define HWSERIAL0_MUX                   (0x00 /* PORTMUX_USART0_DEFAULT_gc */)
 #define HWSERIAL0_MUX_PINSWAP_1         (0x01 /* PORTMUX_USART0_ALT1_gc */)
 #define HWSERIAL0_MUX_PINSWAP_2         (0x02 /* PORTMUX_USART0_ALT2_gc */)
 #define HWSERIAL0_MUX_PINSWAP_3         (0x03 /* PORTMUX_USART0_ALT3_gc */)
 #define HWSERIAL0_MUX_PINSWAP_NONE      (0x05)
-#define HWSERIAL0_MUX_DEFAULT          (2)   /* Tachi default: USART0 ALT2 (PA2/PA3). DEFAULT(PA0/PA1) is the crystal. */
+#define HWSERIAL0_MUX_DEFAULT          (1)   /* Tachi default: USART0 ALT1 (PA4..PA7). DEFAULT(PA0/PA1) is the crystal. */
 #define PIN_HWSERIAL0_TX                (PIN_PA0)
 #define PIN_HWSERIAL0_RX                (PIN_PA1)
 #define PIN_HWSERIAL0_XCK               (PIN_PA2)
@@ -242,7 +264,7 @@
 #define PIN_HWSERIAL0_XCK_PINSWAP_3     (PIN_PD6)
 #define PIN_HWSERIAL0_XDIR_PINSWAP_3    (PIN_PD7)
 
-// USART1 -> "Serial1", only usable position is ALT2 (PD6/PD7 = D1/D0)
+// USART1 -> user-facing "Serial2", only usable position is ALT2 (PD6/PD7 = D15/D4)
 #define HWSERIAL1_MUX                   (0x00 /* PORTMUX_USART1_DEFAULT_gc - no pins */)
 #define HWSERIAL1_MUX_PINSWAP_1         (0x01 << 3 /* ALT1 absent on DU - placeholder so the PINSWAP_2 row is built */)
 #define HWSERIAL1_MUX_PINSWAP_2         (0x02 << 3 /* PORTMUX_USART1_ALT2_gc */)
@@ -266,34 +288,39 @@
           ##### # # # ##### #    #   # #  ##     ####   #  # # #  ###
           #   # #  ## #   # #    #   # #   #     #      #  #  ##     #
           #   # #   # #   # ####  ###   ###      #     ### #   #  # */
-/* Arduino analog aliases. Pro Micro keeps A0..A3 and A6..A10; A4/A5 do not exist
- * on the Pro Micro. The extra ADC-capable pins are exposed as A30..A38. */
-#define PIN_A0   (PIN_PD0)
-#define PIN_A1   (PIN_PD1)
-#define PIN_A2   (PIN_PD2)
-#define PIN_A3   (PIN_PD3)
+/* Arduino analog aliases (rev.2). The classic Pro Micro aliases are reproduced
+ * exactly: A0..A3 = D18..D21, A6 = D4, A7 = D6, A8 = D8, A9 = D9, A10 = D10;
+ * A4/A5 do not exist on a Pro Micro. Every other ADC-capable pin gets an
+ * extension alias: A11..A16 continue from the D0..D7 group (A = D + 11) and
+ * A19..A23 cover D13..D17 (A = D + 6); A30 = D30 (TX LED). */
+#define PIN_A0   (PIN_PF0)   // D18
+#define PIN_A1   (PIN_PF1)   // D19
+#define PIN_A2   (PIN_PF2)   // D20
+#define PIN_A3   (PIN_PF3)   // D21
 #define PIN_A4   (NOT_A_PIN)
 #define PIN_A5   (NOT_A_PIN)
-#define PIN_A6   (PIN_PA7)   // D4
-#define PIN_A7   (PIN_PF1)   // D6
-#define PIN_A8   (PIN_PF3)   // D8
-#define PIN_A9   (PIN_PF4)   // D9
-#define PIN_A10  (PIN_PF5)   // D10
-#define PIN_A30  (PIN_PD7)   // D0
-#define PIN_A31  (PIN_PD6)   // D1
-#define PIN_A32  (PIN_PA2)   // D2
-#define PIN_A33  (PIN_PA3)   // D3
-#define PIN_A34  (PIN_PF0)   // D5
-#define PIN_A35  (PIN_PF2)   // D7
-#define PIN_A36  (PIN_PA5)   // D14
-#define PIN_A37  (PIN_PA6)   // D15
-#define PIN_A38  (PIN_PA4)   // D16
-/* PD5(D17, RX LED/LED_BUILTIN) and PD4(D30, TX LED) are on-board only (no header
- * pin per the Pro Micro pin table), so they get no analog alias. */
+#define PIN_A6   (PIN_PD7)   // D4
+#define PIN_A7   (PIN_PD1)   // D6
+#define PIN_A8   (PIN_PA7)   // D8
+#define PIN_A9   (PIN_PD2)   // D9
+#define PIN_A10  (PIN_PD3)   // D10
+#define PIN_A11  (PIN_PA5)   // D0
+#define PIN_A12  (PIN_PA4)   // D1
+#define PIN_A13  (PIN_PA2)   // D2
+#define PIN_A14  (PIN_PA3)   // D3
+#define PIN_A15  (PIN_PD0)   // D5
+#define PIN_A16  (PIN_PA6)   // D7
+#define PIN_A19  (PIN_PC3)   // D13 (LED_BUILTIN)
+#define PIN_A20  (PIN_PD5)   // D14
+#define PIN_A21  (PIN_PD6)   // D15
+#define PIN_A22  (PIN_PD4)   // D16
+#define PIN_A23  (PIN_PF4)   // D17 (RX LED, on-board only)
+#define PIN_A30  (PIN_PF5)   // D30 (TX LED, on-board only)
 
-/* --- Uno R4 style number-prefixed digital pin aliases (header pins only) ---
- * D-number == Arduino digital pin number. Internal-only pins (PC3 VBUS-detect,
- * PA0/PA1 crystal, PF6 RESET, PF7 UPDI) are intentionally NOT exposed as Dn.
+/* --- Uno R4 style number-prefixed digital pin aliases ---
+ * D-number == Arduino digital pin number. Internal-only pins (PA0/PA1 crystal,
+ * PF6 RESET, PF7 UPDI) are intentionally NOT exposed as Dn. The on-board LEDs
+ * D13/D17/D30 ARE exposed so sketches can drive them by number.
  * #undef guards clear any stray macro definitions, matching the Uno R4 pattern. */
 #undef D0
 #undef D1
@@ -306,6 +333,7 @@
 #undef D8
 #undef D9
 #undef D10
+#undef D13
 #undef D14
 #undef D15
 #undef D16
@@ -315,26 +343,27 @@
 #undef D20
 #undef D21
 #undef D30
-static const uint8_t D0  = PIN_PD7;  // RX
-static const uint8_t D1  = PIN_PD6;  // TX
+static const uint8_t D0  = PIN_PA5;  // RX (Serial1)
+static const uint8_t D1  = PIN_PA4;  // TX (Serial1)
 static const uint8_t D2  = PIN_PA2;  // SDA
-static const uint8_t D3  = PIN_PA3;  // SCL
-static const uint8_t D4  = PIN_PA7;  // SPI SS / AC0 OUT
-static const uint8_t D5  = PIN_PF0;
-static const uint8_t D6  = PIN_PF1;
-static const uint8_t D7  = PIN_PF2;
-static const uint8_t D8  = PIN_PF3;
-static const uint8_t D9  = PIN_PF4;
-static const uint8_t D10 = PIN_PF5;
-static const uint8_t D14 = PIN_PA5;  // MISO
-static const uint8_t D15 = PIN_PA6;  // SCK
-static const uint8_t D16 = PIN_PA4;  // MOSI
-static const uint8_t D17 = PIN_PD5;  // RX LED / LED_BUILTIN (on-board only, no header pin)
-static const uint8_t D18 = PIN_PD0;  // A0
-static const uint8_t D19 = PIN_PD1;  // A1
-static const uint8_t D20 = PIN_PD2;  // A2
-static const uint8_t D21 = PIN_PD3;  // A3
-static const uint8_t D30 = PIN_PD4;  // TX LED (on-board only, no header pin)
+static const uint8_t D3  = PIN_PA3;  // SCL / ~PWM(TCB1)
+static const uint8_t D4  = PIN_PD7;  // SPI SS / Serial2 RX
+static const uint8_t D5  = PIN_PD0;  // ~PWM
+static const uint8_t D6  = PIN_PD1;  // ~PWM
+static const uint8_t D7  = PIN_PA6;  // USART0 XCK
+static const uint8_t D8  = PIN_PA7;  // USART0 XDIR / AC0 OUT / EVOUTA
+static const uint8_t D9  = PIN_PD2;  // ~PWM
+static const uint8_t D10 = PIN_PD3;  // ~PWM
+static const uint8_t D13 = PIN_PC3;  // LED_BUILTIN (active-HIGH)
+static const uint8_t D14 = PIN_PD5;  // MISO / ~PWM
+static const uint8_t D15 = PIN_PD6;  // SCK / Serial2 TX
+static const uint8_t D16 = PIN_PD4;  // MOSI / ~PWM
+static const uint8_t D17 = PIN_PF4;  // RX LED (active-LOW, on-board only)
+static const uint8_t D18 = PIN_PF0;  // A0
+static const uint8_t D19 = PIN_PF1;  // A1
+static const uint8_t D20 = PIN_PF2;  // A2
+static const uint8_t D21 = PIN_PF3;  // A3
+static const uint8_t D30 = PIN_PF5;  // TX LED (active-LOW, on-board only)
 
 static const uint8_t A0   = PIN_A0;
 static const uint8_t A1   = PIN_A1;
@@ -345,15 +374,18 @@ static const uint8_t A7   = PIN_A7;
 static const uint8_t A8   = PIN_A8;
 static const uint8_t A9   = PIN_A9;
 static const uint8_t A10  = PIN_A10;
+static const uint8_t A11  = PIN_A11;
+static const uint8_t A12  = PIN_A12;
+static const uint8_t A13  = PIN_A13;
+static const uint8_t A14  = PIN_A14;
+static const uint8_t A15  = PIN_A15;
+static const uint8_t A16  = PIN_A16;
+static const uint8_t A19  = PIN_A19;
+static const uint8_t A20  = PIN_A20;
+static const uint8_t A21  = PIN_A21;
+static const uint8_t A22  = PIN_A22;
+static const uint8_t A23  = PIN_A23;
 static const uint8_t A30  = PIN_A30;
-static const uint8_t A31  = PIN_A31;
-static const uint8_t A32  = PIN_A32;
-static const uint8_t A33  = PIN_A33;
-static const uint8_t A34  = PIN_A34;
-static const uint8_t A35  = PIN_A35;
-static const uint8_t A36  = PIN_A36;
-static const uint8_t A37  = PIN_A37;
-static const uint8_t A38  = PIN_A38;
 
 /* Direct ADC channel identifiers (ADC_CH() sets the 0x80 "this is a channel" flag). */
 #define AIN0   ADC_CH(0)
@@ -384,30 +416,30 @@ static const uint8_t A38  = PIN_A38;
           #      #  #  ##     #   # #  #  #  #  #   #   #       #
           #     ### #   #     #   # #   # #   # #   #   #    # */
 #ifdef ARDUINO_MAIN
-  // Indexed by digital pin number (0..35). Gaps and USB pins are NOT_A_PORT.
+  // Indexed by digital pin number (0..34). Gaps and USB pins are NOT_A_PORT.
   const uint8_t digital_pin_to_port[] = {
-    PD,         //  0 PD7  RX/USART1 RX
-    PD,         //  1 PD6  TX/USART1 TX
-    PA,         //  2 PA2  SDA/Serial0 TX
-    PA,         //  3 PA3  SCL/Serial0 RX/TCB1
-    PA,         //  4 PA7  AC0 OUT/SS
-    PF,         //  5 PF0  TCA0 WO0
-    PF,         //  6 PF1  TCA0 WO1
-    PF,         //  7 PF2  TCA0 WO2
-    PF,         //  8 PF3  TCA0 WO3
-    PF,         //  9 PF4  TCA0 WO4
-    PF,         // 10 PF5  TCA0 WO5
+    PA,         //  0 PA5  D0 RX (Serial1)
+    PA,         //  1 PA4  D1 TX (Serial1)
+    PA,         //  2 PA2  D2 SDA
+    PA,         //  3 PA3  D3 SCL/TCB1
+    PD,         //  4 PD7  D4 SS/Serial2 RX
+    PD,         //  5 PD0  D5 TCA0 WO0
+    PD,         //  6 PD1  D6 TCA0 WO1
+    PA,         //  7 PA6  D7 XCK
+    PA,         //  8 PA7  D8 XDIR/AC0/EVOUTA
+    PD,         //  9 PD2  D9 TCA0 WO2
+    PD,         // 10 PD3  D10 TCA0 WO3
     NOT_A_PORT, // 11 (gap)
     NOT_A_PORT, // 12 (gap)
-    NOT_A_PORT, // 13 (gap)
-    PA,         // 14 PA5  MISO
-    PA,         // 15 PA6  SCK
-    PA,         // 16 PA4  MOSI
-    PD,         // 17 PD5  RX LED / LED_BUILTIN
-    PD,         // 18 PD0  A0
-    PD,         // 19 PD1  A1
-    PD,         // 20 PD2  A2
-    PD,         // 21 PD3  A3
+    PC,         // 13 PC3  D13 LED_BUILTIN
+    PD,         // 14 PD5  D14 MISO
+    PD,         // 15 PD6  D15 SCK/Serial2 TX
+    PD,         // 16 PD4  D16 MOSI
+    PF,         // 17 PF4  D17 RX LED
+    PF,         // 18 PF0  A0
+    PF,         // 19 PF1  A1
+    PF,         // 20 PF2  A2
+    PF,         // 21 PF3  A3
     NOT_A_PORT, // 22 (gap)
     NOT_A_PORT, // 23 (gap)
     NOT_A_PORT, // 24 (gap)
@@ -416,38 +448,37 @@ static const uint8_t A38  = PIN_A38;
     NOT_A_PORT, // 27 (gap)
     NOT_A_PORT, // 28 (gap)
     NOT_A_PORT, // 29 (gap)
-    PD,         // 30 PD4  TX LED
-    PC,         // 31 PC3  VBUS detect
-    PA,         // 32 PA0  XTALHF1
-    PA,         // 33 PA1  XTALHF2
-    PF,         // 34 PF6  RESET
-    PF          // 35 PF7  UPDI
+    PF,         // 30 PF5  D30 TX LED
+    PA,         // 31 PA0  XTALHF1
+    PA,         // 32 PA1  XTALHF2
+    PF,         // 33 PF6  RESET
+    PF          // 34 PF7  UPDI
   };
 
   /* Bit position within the port (for PINnCTRL access). */
   const uint8_t digital_pin_to_bit_position[] = {
-    PIN7_bp,   //  0 PD7
-    PIN6_bp,   //  1 PD6
+    PIN5_bp,   //  0 PA5
+    PIN4_bp,   //  1 PA4
     PIN2_bp,   //  2 PA2
     PIN3_bp,   //  3 PA3
-    PIN7_bp,   //  4 PA7
-    PIN0_bp,   //  5 PF0
-    PIN1_bp,   //  6 PF1
-    PIN2_bp,   //  7 PF2
-    PIN3_bp,   //  8 PF3
-    PIN4_bp,   //  9 PF4
-    PIN5_bp,   // 10 PF5
+    PIN7_bp,   //  4 PD7
+    PIN0_bp,   //  5 PD0
+    PIN1_bp,   //  6 PD1
+    PIN6_bp,   //  7 PA6
+    PIN7_bp,   //  8 PA7
+    PIN2_bp,   //  9 PD2
+    PIN3_bp,   // 10 PD3
     NOT_A_PIN, // 11 (gap)
     NOT_A_PIN, // 12 (gap)
-    NOT_A_PIN, // 13 (gap)
-    PIN5_bp,   // 14 PA5
-    PIN6_bp,   // 15 PA6
-    PIN4_bp,   // 16 PA4
-    PIN5_bp,   // 17 PD5
-    PIN0_bp,   // 18 PD0
-    PIN1_bp,   // 19 PD1
-    PIN2_bp,   // 20 PD2
-    PIN3_bp,   // 21 PD3
+    PIN3_bp,   // 13 PC3
+    PIN5_bp,   // 14 PD5
+    PIN6_bp,   // 15 PD6
+    PIN4_bp,   // 16 PD4
+    PIN4_bp,   // 17 PF4
+    PIN0_bp,   // 18 PF0
+    PIN1_bp,   // 19 PF1
+    PIN2_bp,   // 20 PF2
+    PIN3_bp,   // 21 PF3
     NOT_A_PIN, // 22 (gap)
     NOT_A_PIN, // 23 (gap)
     NOT_A_PIN, // 24 (gap)
@@ -456,45 +487,44 @@ static const uint8_t A38  = PIN_A38;
     NOT_A_PIN, // 27 (gap)
     NOT_A_PIN, // 28 (gap)
     NOT_A_PIN, // 29 (gap)
-    PIN4_bp,   // 30 PD4
-    PIN3_bp,   // 31 PC3
+    PIN5_bp,   // 30 PF5
     #if ((CLOCK_SOURCE & 0x03) == 0) // internal clock -> PA0 is a usable GPIO
-      PIN0_bp, // 32 PA0
+      PIN0_bp, // 31 PA0
     #else                            // external crystal/clock -> PA0 = XTALHF1
       NOT_A_PIN,
     #endif
     #if ((CLOCK_SOURCE & 0x03) == 1) // external crystal also takes PA1
       NOT_A_PIN,
     #else
-      PIN1_bp, // 33 PA1
+      PIN1_bp, // 32 PA1
     #endif
-    PIN6_bp,   // 34 PF6 RESET
-    PIN7_bp    // 35 PF7 UPDI
+    PIN6_bp,   // 33 PF6 RESET
+    PIN7_bp    // 34 PF7 UPDI
   };
 
   const uint8_t digital_pin_to_bit_mask[] = {
-    PIN7_bm,   //  0 PD7
-    PIN6_bm,   //  1 PD6
+    PIN5_bm,   //  0 PA5
+    PIN4_bm,   //  1 PA4
     PIN2_bm,   //  2 PA2
     PIN3_bm,   //  3 PA3
-    PIN7_bm,   //  4 PA7
-    PIN0_bm,   //  5 PF0
-    PIN1_bm,   //  6 PF1
-    PIN2_bm,   //  7 PF2
-    PIN3_bm,   //  8 PF3
-    PIN4_bm,   //  9 PF4
-    PIN5_bm,   // 10 PF5
+    PIN7_bm,   //  4 PD7
+    PIN0_bm,   //  5 PD0
+    PIN1_bm,   //  6 PD1
+    PIN6_bm,   //  7 PA6
+    PIN7_bm,   //  8 PA7
+    PIN2_bm,   //  9 PD2
+    PIN3_bm,   // 10 PD3
     NOT_A_PIN, // 11 (gap)
     NOT_A_PIN, // 12 (gap)
-    NOT_A_PIN, // 13 (gap)
-    PIN5_bm,   // 14 PA5
-    PIN6_bm,   // 15 PA6
-    PIN4_bm,   // 16 PA4
-    PIN5_bm,   // 17 PD5
-    PIN0_bm,   // 18 PD0
-    PIN1_bm,   // 19 PD1
-    PIN2_bm,   // 20 PD2
-    PIN3_bm,   // 21 PD3
+    PIN3_bm,   // 13 PC3
+    PIN5_bm,   // 14 PD5
+    PIN6_bm,   // 15 PD6
+    PIN4_bm,   // 16 PD4
+    PIN4_bm,   // 17 PF4
+    PIN0_bm,   // 18 PF0
+    PIN1_bm,   // 19 PF1
+    PIN2_bm,   // 20 PF2
+    PIN3_bm,   // 21 PF3
     NOT_A_PIN, // 22 (gap)
     NOT_A_PIN, // 23 (gap)
     NOT_A_PIN, // 24 (gap)
@@ -503,47 +533,46 @@ static const uint8_t A38  = PIN_A38;
     NOT_A_PIN, // 27 (gap)
     NOT_A_PIN, // 28 (gap)
     NOT_A_PIN, // 29 (gap)
-    PIN4_bm,   // 30 PD4
-    PIN3_bm,   // 31 PC3
+    PIN5_bm,   // 30 PF5
     #if ((CLOCK_SOURCE & 0x03) == 0)
-      PIN0_bm, // 32 PA0
+      PIN0_bm, // 31 PA0
     #else
       NOT_A_PIN,
     #endif
     #if ((CLOCK_SOURCE & 0x03) == 1)
       NOT_A_PIN,
     #else
-      PIN1_bm, // 33 PA1
+      PIN1_bm, // 32 PA1
     #endif
-    PIN6_bm,   // 34 PF6 RESET
-    PIN7_bm    // 35 PF7 UPDI
+    PIN6_bm,   // 33 PF6 RESET
+    PIN7_bm    // 34 PF7 UPDI
   };
 
   /* TCA0 PWM is resolved dynamically from PORTMUX, so TCA0 pins are NOT_ON_TIMER
    * here. Only the TCB outputs are listed (PA2=TCB0, PA3=TCB1). */
   const uint8_t digital_pin_to_timer[] = {
-    NOT_ON_TIMER, //  0 PD7
-    NOT_ON_TIMER, //  1 PD6
+    NOT_ON_TIMER, //  0 PA5
+    NOT_ON_TIMER, //  1 PA4
     TIMERB0,      //  2 PA2  (TCB0 - used for millis on this board)
     TIMERB1,      //  3 PA3  (TCB1 - D3 PWM)
-    NOT_ON_TIMER, //  4 PA7
-    NOT_ON_TIMER, //  5 PF0  (TCA0 WO0, dynamic)
-    NOT_ON_TIMER, //  6 PF1  (TCA0 WO1, dynamic)
-    NOT_ON_TIMER, //  7 PF2  (TCA0 WO2, dynamic)
-    NOT_ON_TIMER, //  8 PF3  (TCA0 WO3, dynamic)
-    NOT_ON_TIMER, //  9 PF4  (TCA0 WO4, dynamic)
-    NOT_ON_TIMER, // 10 PF5  (TCA0 WO5, dynamic)
+    NOT_ON_TIMER, //  4 PD7
+    NOT_ON_TIMER, //  5 PD0  (TCA0 WO0, dynamic)
+    NOT_ON_TIMER, //  6 PD1  (TCA0 WO1, dynamic)
+    NOT_ON_TIMER, //  7 PA6
+    NOT_ON_TIMER, //  8 PA7
+    NOT_ON_TIMER, //  9 PD2  (TCA0 WO2, dynamic)
+    NOT_ON_TIMER, // 10 PD3  (TCA0 WO3, dynamic)
     NOT_ON_TIMER, // 11 (gap)
     NOT_ON_TIMER, // 12 (gap)
-    NOT_ON_TIMER, // 13 (gap)
-    NOT_ON_TIMER, // 14 PA5
-    NOT_ON_TIMER, // 15 PA6
-    NOT_ON_TIMER, // 16 PA4
-    NOT_ON_TIMER, // 17 PD5
-    NOT_ON_TIMER, // 18 PD0
-    NOT_ON_TIMER, // 19 PD1
-    NOT_ON_TIMER, // 20 PD2
-    NOT_ON_TIMER, // 21 PD3
+    NOT_ON_TIMER, // 13 PC3
+    NOT_ON_TIMER, // 14 PD5  (TCA0 WO5, dynamic)
+    NOT_ON_TIMER, // 15 PD6
+    NOT_ON_TIMER, // 16 PD4  (TCA0 WO4, dynamic)
+    NOT_ON_TIMER, // 17 PF4
+    NOT_ON_TIMER, // 18 PF0
+    NOT_ON_TIMER, // 19 PF1
+    NOT_ON_TIMER, // 20 PF2
+    NOT_ON_TIMER, // 21 PF3
     NOT_ON_TIMER, // 22 (gap)
     NOT_ON_TIMER, // 23 (gap)
     NOT_ON_TIMER, // 24 (gap)
@@ -552,12 +581,11 @@ static const uint8_t A38  = PIN_A38;
     NOT_ON_TIMER, // 27 (gap)
     NOT_ON_TIMER, // 28 (gap)
     NOT_ON_TIMER, // 29 (gap)
-    NOT_ON_TIMER, // 30 PD4
-    NOT_ON_TIMER, // 31 PC3
-    NOT_ON_TIMER, // 32 PA0
-    NOT_ON_TIMER, // 33 PA1
-    NOT_ON_TIMER, // 34 PF6 RESET
-    NOT_ON_TIMER  // 35 PF7 UPDI
+    NOT_ON_TIMER, // 30 PF5
+    NOT_ON_TIMER, // 31 PA0
+    NOT_ON_TIMER, // 32 PA1
+    NOT_ON_TIMER, // 33 PF6 RESET
+    NOT_ON_TIMER  // 34 PF7 UPDI
   };
 #endif
 
@@ -591,20 +619,13 @@ static const uint8_t A38  = PIN_A38;
  *  Serial -> native USB CDC   (Leonardo/Micro convention)
  * =================================================================
  *  Serial  = USBSerial (on-chip USB CDC)              <- primary / USB serial monitor
- *  Serial1 = USART1   (D0/D1, ALT2 - the Pro Micro hardware UART)
- *  Serial2 = USART0   (D2/D3, ALT2 - extra UART; shares pins with Wire/Grove I2C,
- *                      so Serial2 and Wire are mutually exclusive)
- *  Serial0 is the DxCore-internal name for USART0; the user-facing name is Serial2.
+ *  Serial1 = USART0   (D0/D1, ALT1 - the Pro Micro hardware UART; alias of the
+ *                      core's Serial0 object, see WAZAMONO_SERIAL1_IS_USART0)
+ *  Serial2 = USART1   (D15 TX / D4 RX, ALT2 - extra UART; shares pins with SPI
+ *                      SCK/SS, so Serial2 and SPI are mutually exclusive)
+ *  Serial0 remains the DxCore-internal name for USART0 (same object as Serial1).
  *  Define HAVE_NO_USB_SERIAL_REDIRECT (from boards.txt) to keep Serial==USART0.
  */
-
-/* Expose USART0 as Serial2 (ascending board convention). The core's Serial0
- * object is kept intact for upstream mergeability; this is only a user-facing
- * alias. Serial2 (USART2) does not exist on the AVR DU, so the name is free. */
-#ifndef Serial2
-  #define Serial2 Serial0
-#endif
-
 #if defined(USB0) && !defined(HAVE_NO_USB_SERIAL_REDIRECT)
   #ifndef Serial
     #define Serial                  USBSerial   /* Serial = native USB CDC   */
@@ -619,7 +640,7 @@ static const uint8_t A38  = PIN_A38;
     #define SERIAL_PORT_HARDWARE    Serial1     /* Pro Micro hardware UART on D0/D1 */
   #endif
   #ifndef SERIAL_PORT_HARDWARE_OPEN
-    #define SERIAL_PORT_HARDWARE_OPEN  Serial2  /* extra UART on D2/D3 (USART0) */
+    #define SERIAL_PORT_HARDWARE_OPEN  Serial2  /* extra UART on D15/D4 (USART1) */
   #endif
 #endif
 

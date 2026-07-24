@@ -11,7 +11,7 @@ REM  per-board build differences are passed in at build time:
 REM
 REM    board             MCU         LED   pol       USB ident (VID:PID)
 REM    ----------------  ----------  ----  --------  -------------------
-REM    Wazamono Tachi    avr64du32   PD5   act-LOW   0x1209:0x0005
+REM    Wazamono Tachi    avr64du32   PC3   act-HIGH  0x1209:0x0005
 REM    Wazamono Tsurugi  avr64du32   PD6   act-HIGH  0x1209:0x0007
 REM    Wazamono Kunai    avr32du20   PD4   act-LOW   0x1209:0x0009
 REM
@@ -20,7 +20,7 @@ REM    - LED polarity: LED_AH=1 (active-HIGH) | LED_AL=1 (active-LOW)
 REM                    Neither given => active-LOW; both given => LED_AH wins.
 REM    - USB identity: BOARD=TACHI | TSURUGI  (selects PID + product string)
 REM
-REM  Tachi's LED (PD5) is active-LOW (Pro Micro RX/TX convention); Tsurugi's
+REM  Tachi's LED (PC3 = D13, dedicated LED_BUILTIN) is active-HIGH; Tsurugi's
 REM  LED (PD6 = D13, op-amp buffered) is active-HIGH (Arduino Uno convention).
 REM  Each board passes its polarity explicitly below.
 REM
@@ -75,7 +75,7 @@ set "PATH=%GCCBIN%;%PATH%"
 if not defined MAKE set MAKE=make
 
 REM            class             mcu        LEDport LEDpin board     LEDpol(AH|AL) VREG(0|1)
-call :build wazamonotachi     avr64du32  PORTD   5      TACHI   AL 0
+call :build wazamonotachi     avr64du32  PORTC   3      TACHI   AH 0
 call :build wazamonotsurugi   avr64du32  PORTD   6      TSURUGI AH 1
 call :build wazamonokunai     avr32du20  PORTD   4      KUNAI   AL 0
 

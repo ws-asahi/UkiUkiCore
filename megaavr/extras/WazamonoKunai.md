@@ -154,6 +154,9 @@ variant 側でピン割り当てが確定済みのため、スケッチで `swap
 
 SPI0 既定位置（PORTA）に配置。ボードは SPI ホストで、チップセレクトは任意の GPIO を使用してください（ハードウェア SS の PA7/D1 は SSD=1 運用のためソフトウェア CS として自由に使えます）。
 
+> **クライアント（受信側）動作:** ハードウェア SS（D1/PA7）が実ピンにあるため、付属の **SPISlave ライブラリ**（ESP8266 互換 API）で SPI クライアントとしても動作できます。詳細は [libraries/SPISlave](../libraries/SPISlave/README.md) を参照。
+
+
 ### I2C（Wire）
 
 | 信号 | ピン |

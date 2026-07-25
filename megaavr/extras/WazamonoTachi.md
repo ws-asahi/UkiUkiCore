@@ -155,6 +155,8 @@ ATmega と比べて EEPROM は小さくなりましたが（256 B）、代わり
 
 チップセレクトは任意の GPIO を使用してください（SPI0 ALT4 位置。SCK/SS は `Serial2` と共用・排他利用）。
 
+> **クライアント（受信側）動作:** ハードウェア SS（D4/PD7）が実ピンにあるため、付属の **SPISlave ライブラリ**（ESP8266 互換 API）で SPI クライアントとしても動作できます。詳細は [libraries/SPISlave](../libraries/SPISlave/README.md) を参照。
+
 ### I2C
 
 | 信号 | ピン |

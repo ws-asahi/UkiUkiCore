@@ -204,6 +204,12 @@ USB 用の 48 MHz（CLK_USB）は内蔵 PLL48M が生成し USB の SOF に同�
 
 外部水晶を選択した場合、PA0/PA1 は GPIO として使用できなくなります。
 
+### クロック出力（CLKOUT）
+
+メインクロック（CLK_PER）を **D2（PA7）** へ出力できます。外部 IC へのクロック供給、他 MCU との同期、実クロックの測定に使えます。付属の **ClockOut ライブラリ**で `ClockOut.begin()` / `ClockOut.end()` により開閉します（詳細は [libraries/ClockOut](../libraries/ClockOut/README.md)）。
+
+> 24MHz の連続矩形波は EMI 源になるため、必要な期間だけ有効化する運用を推奨します。PA7 は AC0 出力・EVOUTA と共用のため、それらが使用中は `begin()` が `false` を返します。
+
 ---
 
 ## 電源

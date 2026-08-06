@@ -208,7 +208,7 @@ Kunai は **水晶を搭載しない**設計で、システムクロックは内
 ## 電源
 
 - **入力:** USB-C（5V）。
-- **VUSB（USB トランシーバ 3.3V）:** AVR DU の**内蔵 USB レギュレータ**から供給します（boards.txt で `-DUSB_VREG_INTERNAL` を指定）。
+- **VUSB（USB トランシーバ 3.3V）:** 基板上の**外部 3.3V LDO** から供給します（データシートの電源構成 3s 相当。内蔵 USB レギュレータは無効 = `USBVREG = 0` で、boards.txt に `-DUSB_VREG_INTERNAL` は指定しません）。全 Wazamono ボード共通の構成です。
 - **VBUS 検出:** なし（PC3 は D0 として使用。USB 接続状態はソフトウェアでは USB フレームの有無で判断します）。
 - AVR32DU20 は 1.8–5.5V の全範囲で 24 MHz 動作が可能です。
 

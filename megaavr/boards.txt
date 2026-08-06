@@ -2,22 +2,24 @@
 #  WazamonoCore - boards.txt
 #  The Wazamono product boards only (all other MCU/board families from DxCore
 #  are removed):
-#    - Wazamono Tachi    (AVR64DU32, Pro Micro form factor)
+#    - Wazamono Tachi    (AVR64DU28, Pro Micro form factor)
 #    - Wazamono Tsurugi  (AVR64DU32, Arduino Uno R3 form factor)
 #    - Wazamono Kunai    (AVR32DU20, Seeed XIAO form factor)
 #  Derived from DxCore's avrduusb (USB-CDC bootloader) definition;
 #  DxCore (C) Spence Konde, LGPL 2.1. Customizations (C) Workshop Asahi.
 #
-#  Tachi/Tsurugi (AVR64DU32) carry a 24 MHz crystal, so their Clock menu lets
-#  you pick WITH the crystal (production default) or WITHOUT it (internal OSCHF)
-#  to validate the board crystal-less. Kunai (AVR32DU20) is crystal-less by
-#  design: it has no Clock menu and is fixed to 24 MHz internal OSCHF.
+#  Only the Tsurugi (AVR64DU32) carries a 24 MHz crystal, so only it has a
+#  Clock menu (WITH the crystal = production default, or WITHOUT it, internal
+#  OSCHF, to validate the board crystal-less). Tachi (AVR64DU28, rev.3) and
+#  Kunai (AVR32DU20) are crystal-less by design: they have no Clock menu and
+#  are fixed to 24 MHz internal OSCHF; USB always runs from OSCHF + PLL48M
+#  auto-tuned to the USB SOF, independent of the system clock source.
 # =====================================================================
 
 menu.clock=Clock Speed
 
 # =====================  Wazamono Tachi (AVR64DU32)  ==================
-wazamonotachi.name=Wazamono Tachi (AVR64DU32)
+wazamonotachi.name=Wazamono Tachi (AVR64DU28)
 
 wazamonotachi.upload.tool=avrdude
 wazamonotachi.upload.prog_interlock=
@@ -83,23 +85,18 @@ wazamonotachi.upload.wait_for_upload_port=true
 wazamonotachi.bootloader.file=hex/{bootloader.class}.hex
 wazamonotachi.bootloader.appspm=
 
-# --- Clock: WITH 24 MHz crystal (default) or WITHOUT (internal OSCHF) ---
-#  clocksource: 0 = internal OSCHF, 1 = external HF crystal (PA0/PA1),
-#               2 = external clock (PA0 only). USB always uses the internal
-#               PLL48M (SOF-tuned), independent of this choice.
-wazamonotachi.menu.clock.24crystal=24 MHz external crystal (default)
-wazamonotachi.menu.clock.24crystal.build.speed=24
-wazamonotachi.menu.clock.24crystal.build.clocksource=1
-wazamonotachi.menu.clock.24internal=24 MHz internal (no crystal)
-wazamonotachi.menu.clock.24internal.build.speed=24
-wazamonotachi.menu.clock.24internal.build.clocksource=0
+# --- Clock: fixed 24 MHz internal OSCHF (rev.3 is crystal-less; no Clock menu).
+#     clocksource 0 = internal OSCHF. USB CLK_USB (48 MHz) = OSCHF + PLL48M,
+#     SOF-tuned. PA0/PA1 are plain GPIO (D17 = LED_BUILTIN, D7). ---
+wazamonotachi.build.speed=24
+wazamonotachi.build.clocksource=0
 
 # --- millis()/micros() timer. TCB0 is the default so TCB1 stays free for
 #     D3 PWM and TCA0 stays free for D5-D10 PWM. ---
 
-# --- Locked to AVR64DU32 (chip submenu removed). Variant + bootloader hex
-#     fixed to Wazamono Tachi. ---
-wazamonotachi.build.mcu=avr64du32
+# --- Locked to AVR64DU28 (chip submenu removed; rev.3 moved from the 32-pin
+#     to the 28-pin part). Variant + bootloader hex fixed to Wazamono Tachi. ---
+wazamonotachi.build.mcu=avr64du28
 wazamonotachi.build.variant=WazamonoTachi
 wazamonotachi.build.highestcb=B2
 wazamonotachi.upload.maximum_size=61440

@@ -4,6 +4,42 @@ WazamonoCore の変更履歴です。WazamonoCore は [DxCore](https://github.co
 
 ---
 
+## v0.0.4 — ピンマップ rev.3（Tachi の AVR64DU28 化 / VUSB 供給の統一）
+
+ハードウェア rev.3 に対応する変更です。**3 ボードとも burn-bootloader のやり直しが必要です**（Tachi は MCU が変わるため必須、Tsurugi は VREG 設定変更のため必須）。
+
+### Tachi（破壊的変更）
+
+- MCU を **AVR64DU32（32 ピン）→ AVR64DU28（28 ピン）** へ変更（コスト削減）。`boards.txt` の `build.mcu=avr64du28`。
+- **外部水晶を撤去**。クロックは内蔵 OSCHF 24 MHz 固定になり、Clock Speed メニューを削除（Kunai と同じ構成）。PA0/PA1 は GPIO として開放。
+- ピンマップ rev.3: D4=PF1(A6)、D7=PA1（ADC なし）、D8=PC3(A8)、D14–D16=SPI（変更なし）、D17=PA0、D18=PD7(**A0**/SPI SS/Serial2 RX/VREFA)、D19=PF0(A1)、D20=PA6(A2/XCK)、D21=PA7(A3/XDIR/EVOUTA/CLKOUT)。**D11–D13 は欠番**（旧 D13 の専用 LED は廃止）、旧 D30（TX LED）も廃止。
+- LED は **D17（PA0）の 1 灯のみ**: `LED_BUILTIN` = `LED_BUILTIN_RX`、アクティブ LOW、USB-CDC 受信アクティビティ表示を兼用。`LED_BUILTIN_TX` は未定義（参照はコンパイルエラー）。
+- アナログ別名: A0–A3 = D18–D21、A6–A10 は Pro Micro 互換のまま、**A11 は意図的に未定義**（Leonardo の A11=D12 との取り違え防止）、A12–A16 = D0–D5、A17 予約欠番、A18–A20 = D14–D16。
+- EVOUTF を削除（PF2 が存在しないため）。イベント出力は EVOUTA（D21）/EVOUTD（D9）の 2 系統。
+- Serial2 の RX が D4 → **D18** へ移動（TX は D15 のまま）。SPI の SS 表記も D4 → **D18**（同じ PD7）。
+
+### Tsurugi
+
+- ピンマップの変更はありません。
+- **VUSB（USB トランシーバ 3.3V）の供給を内蔵 USB レギュレータから基板上の外部 3.3V LDO（NJM2881F33）へ変更**し、Tachi / Kunai と回路構成を統一（電源構成 3s）。`boards.txt` から `-DUSB_VREG_INTERNAL` を削除し、ブートローダも VREG=0 でビルドするよう変更。
+
+### Kunai
+
+- オンボード LED の番号と役割を XIAO 準拠へ変更: **D11 = PD4 = LED_BUILTIN + TX アクティビティ LED / D12 = PD5 = RX アクティビティ LED**（旧 D13/D14 から番号変更、TX/RX の役割も入替）。アナログ別名 A13/A14 → A11/A12。
+- インデックス 13/14 は欠番になり、XIAO のユーザー LED「13」への `digitalWrite(13, ...)` は無害な no-op になります。
+
+### ブートローダ
+
+- ビルドマトリクスを更新: Tachi = `avr64du28` / LED **PA0**・アクティブ LOW / VREG=0、Tsurugi = VREG=0（変更）、Kunai = 変更なし。
+- **注意: `bootloaders/hex/` の hex はこのリリース時点で未再生成です。** wazamono-toolchain（avr-gcc 15.2.0-wazamono1）で `build_wazamono.(sh|bat)` を実行して hex を更新してから burn-bootloader を行ってください。旧 `usbcdcboot_wazamonotachi.hex` は avr64du32/PC3 向けのため rev.3 基板では使用できません。
+
+### ドキュメント
+
+- WazamonoTachi.md を rev.3 へ全面改訂（電源系: RAW 入力 + Torex XC6702D501 / XC8110 / XC6503D331、BOM から水晶を削除）。
+- ライブラリ README（EventSystem / CustomLogic / ClockOut / SPISlave）と例スケッチ（CompToPin / PinToPin / MultipleOutputs / TCA0Demo1–4 / ServoMaxTest）のボード別ピン表を現行 variant に一致するよう修正（3 ボードとも rev.1 時代の値が残存していたものを含む）。
+
+---
+
 ## v0.0.3 — ウォッチドッグの Pro Micro 互換対応
 
 SparkFun Pro Micro（ATmega32U4）向けのウォッチドッグコードを、無修正でビルド・動作できるようにしました。

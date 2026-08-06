@@ -35,9 +35,9 @@ void setup() {
 
 | | EVOUTA | EVOUTD | EVOUTF |
 |---|---|---|---|
-| **Tachi** | D2 | D0 | D7 |
-| **Tsurugi** | D8 | D9 | A2 |
-| **Kunai** | D0 | D7 | — |
+| **Tachi** | D21 | D9 | — |
+| **Tsurugi** | D2 | D9 | A2 |
+| **Kunai** | D1 | D3 | — |
 
 **CustomLogicの入力へ** — `EVENT_TO_LOGIC_A` / `EVENT_TO_LOGIC_B`
 (CustomLogic1へは `EVENT_TO_LOGIC1_A` / `_B`。Tachi/Tsurugiのみ)。

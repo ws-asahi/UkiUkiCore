@@ -1,7 +1,7 @@
 # WazamonoCore
 
 **Wazamono（業物）シリーズ専用 Arduino コア**
-USB ネイティブな新世代 AVR（AVR DU シリーズ: `AVR64DU32` / `AVR32DU20`）を搭載した Arduino 互換ボード「Wazamono」シリーズのためのボードサポートパッケージ（Arduino core）です。
+USB ネイティブな新世代 AVR（AVR DU シリーズ: `AVR64DU28` / `AVR64DU32` / `AVR32DU20`）を搭載した Arduino 互換ボード「Wazamono」シリーズのためのボードサポートパッケージ（Arduino core）です。
 
 ![platform](https://img.shields.io/badge/platform-AVR%20DU-blue)
 ![license](https://img.shields.io/badge/license-LGPL--2.1-green)
@@ -20,7 +20,7 @@ WazamonoCore は、これらのボードを Arduino IDE で開発するための
 
 | ボード | 由来 | MCU | フォームファクタ | 状態 |
 |--------|------|-----|------------------|------|
-| [**Wazamono 太刀（Tachi）**](megaavr/extras/WazamonoTachi.md) | Pro Micro 後継 | AVR64DU32 | Pro Micro 互換 / USB-C | 🚧 準備中 |
+| [**Wazamono 太刀（Tachi）**](megaavr/extras/WazamonoTachi.md) | Pro Micro 後継 | AVR64DU28 | Pro Micro 互換 / USB-C | 🚧 準備中 |
 | [**Wazamono 剣（Tsurugi）**](megaavr/extras/WazamonoTsurugi.md) | Arduino Uno R3 後継 | AVR64DU32 | Uno R3 互換 / USB-C | 🚧 準備中  |
 | [**Wazamono 苦無（Kunai）**](megaavr/extras/WazamonoKunai.md) | Seeeduino XIAO 後継 | AVR32DU20 | XIAO 互換 / USB-C | 🚧 準備中  |
 
@@ -32,9 +32,9 @@ WazamonoCore は、これらのボードを Arduino IDE で開発するための
 
 Wazamono シリーズは全機種が USB を内蔵した新世代 AVR「**AVR DU**」を採用しています。
 USB-シリアル変換チップなしで PC と直接通信できることが最大の特長です。
-Tachi / Tsurugi は **AVR64DU32**、小型の Kunai は **AVR32DU20** を搭載します。
+Tachi は **AVR64DU28**、Tsurugi は **AVR64DU32**、小型の Kunai は **AVR32DU20** を搭載します（AVR64DU28/32 はピン数のみが異なり、メモリ・周辺機能は共通です）。
 
-| 項目 | AVR64DU32（Tachi / Tsurugi） | AVR32DU20（Kunai） |
+| 項目 | AVR64DU28/32（Tachi / Tsurugi） | AVR32DU20（Kunai） |
 |------|------------------------------|--------------------|
 | Flash | 64 KB | 32 KB |
 | SRAM | 8 KB | 4 KB |
@@ -42,13 +42,13 @@ Tachi / Tsurugi は **AVR64DU32**、小型の Kunai は **AVR32DU20** を搭載�
 | USERROW | 512 B | 512 B |
 | 最大動作周波数 | 24 MHz | 24 MHz |
 | **USB** | USB 2.0 Full-Speed **デバイス** | USB 2.0 Full-Speed **デバイス** |
-| ADC | 10-bit 170 ksps × 1（21 チャネル） | 10-bit 170 ksps × 1（ピン数で制限） |
+| ADC | 10-bit 170 ksps × 1（ピン数で制限: 28p=17 / 32p=21 ch） | 10-bit 170 ksps × 1（ピン数で制限） |
 | タイマ | TCA0 ×1、TCB ×2 | TCA0 ×1、TCB ×2 |
 | USART / SPI / I2C | 2 / 1 / 1 | 2 / 1 / 1 |
 | CCL（LUT）/ EVSYS / AC | 4 / 6ch / 1 | 同等（周辺ブロックは共通） |
-| パッケージ | 32 ピン（VQFN） | 20 ピン（VQFN） |
+| パッケージ | 28 ピン（Tachi）/ 32 ピン（Tsurugi） | 20 ピン（VQFN） |
 
-<sub>諸元はデータシート DS40002548A（AVR64DU32）/ DS40002576（AVR16/32DU ファミリ）に基づく。
+<sub>諸元はデータシート DS40002548A（AVR64DU28/32）/ DS40002576（AVR16/32DU ファミリ）に基づく。
 両者はピン数・Flash・SRAM が主な差で、周辺機能ブロックは共通です</sub>
 
 ---
@@ -57,7 +57,7 @@ Tachi / Tsurugi は **AVR64DU32**、小型の Kunai は **AVR32DU20** を搭載�
 
 AVR DU は用途の異なる複数の不揮発メモリ領域を持ちます。
 旧 ATmega との大きな違いは、EEPROM が 256 B に減少した一方で、**チップ消去でも消えない USERROW（512 B）** など新しい領域が追加されている点です。
-容量・構成は全対応ボード（AVR64DU32 / AVR32DU20）で共通です。
+容量・構成は全対応ボード（AVR64DU28 / AVR64DU32 / AVR32DU20）で共通です。
 
 | 領域 | 容量 | 消去単位 | 書き換え耐久 | チップ消去で | 対応ライブラリ |
 |------|------|----------|--------------|--------------|----------------|
@@ -121,7 +121,7 @@ USERROW / Flash はフラッシュ型（ページ一括消去・耐久 1,000 回
 
 ## クイックスタート
 
-1. **ツール > ボード > WazamonoCore** から **Wazamono Tachi (AVR64DU32)** を選択
+1. **ツール > ボード > WazamonoCore** から **Wazamono Tachi (AVR64DU28)** を選択
 2. USB ケーブルで接続し、書き込み
 
 **Lチカ:**

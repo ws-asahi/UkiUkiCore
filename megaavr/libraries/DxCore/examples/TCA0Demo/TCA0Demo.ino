@@ -12,7 +12,7 @@
 unsigned int DutyCycle = 0;
 /* PWM comes out on TCA0 WO1, so the physical pin follows each board's PWM port mux. */
 #if defined(WAZAMONO_BOARD_TACHI)
-  uint8_t OutputPin = 6;                          // D6 (PF1, TCA0 WO1)
+  uint8_t OutputPin = 4;                          // D4 (PF1, TCA0 WO1)
   #define DEMO_TCA_MUX PORTMUX_TCA0_PORTF_gc
 #elif defined(WAZAMONO_BOARD_TSURUGI)
   uint8_t OutputPin = 6;                          // D6 (PD1, TCA0 WO1)

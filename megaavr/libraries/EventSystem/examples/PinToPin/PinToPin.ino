@@ -41,11 +41,11 @@ void setup() {
   Serial.begin(115200);
 
   #if defined(WAZAMONO_BOARD_TACHI)
-  bool ok = EventSystem.connect(8, 2);    // D8 -> D2 (EVOUTA)
+  bool ok = EventSystem.connect(8, 21);   // D8 -> D21 (EVOUTA)
   #elif defined(WAZAMONO_BOARD_TSURUGI)
-  bool ok = EventSystem.connect(10, 8);   // D10 -> D8 (EVOUTA)
+  bool ok = EventSystem.connect(10, 2);   // D10 -> D2 (EVOUTA)
   #elif defined(WAZAMONO_BOARD_KUNAI)
-  bool ok = EventSystem.connect(8, 0);    // D8 -> D0 (EVOUTA)
+  bool ok = EventSystem.connect(8, 1);    // D8 -> D1 (EVOUTA)
   #else
   #error "This example supports Wazamono boards only."
   #endif

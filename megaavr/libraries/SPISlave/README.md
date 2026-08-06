@@ -8,7 +8,7 @@ API は **ESP8266 Arduino コアに同梱されている SPISlave ライブラ�
 
 | ボード | SS ピン | SPI 位置 |
 |--------|---------|----------|
-| Wazamono Tachi | D4（PD7） | SPI0 ALT4（MOSI=D16 / MISO=D14 / SCK=D15） |
+| Wazamono Tachi | D18（PD7） | SPI0 ALT4（MOSI=D16 / MISO=D14 / SCK=D15） |
 | Wazamono Kunai | D1（PA7） | SPI0 既定（MOSI=D10 / MISO=D9 / SCK=D8） |
 
 > Wazamono Tsurugi はハードウェア SS の位置（PD7）が AREF ピンのためクライアントモードを提供しません（コンパイルエラーになります）。

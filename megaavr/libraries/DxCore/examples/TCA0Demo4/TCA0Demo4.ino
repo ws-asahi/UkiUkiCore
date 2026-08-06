@@ -17,9 +17,9 @@
 /* Split-mode PWM comes out on TCA0 WO2 and WO3, so the physical pins follow
  * each board's PWM port mux. */
 #if defined(WAZAMONO_BOARD_TACHI)
-  #define DEMO_WO2_PIN 7                          // D7 (PF2)
-  #define DEMO_WO3_PIN 8                          // D8 (PF3)
-  #define DEMO_TCA_MUX PORTMUX_TCA0_PORTF_gc
+  #define DEMO_WO2_PIN 9                          // D9 (PD2; PF2/PF3 absent on the DU-28)
+  #define DEMO_WO3_PIN 10                         // D10 (PD3)
+  #define DEMO_TCA_MUX PORTMUX_TCA0_PORTD_gc
 #elif defined(WAZAMONO_BOARD_TSURUGI)
   #define DEMO_WO2_PIN 9                          // D9 (PD2)
   #define DEMO_WO3_PIN 10                         // D10 (PD3)

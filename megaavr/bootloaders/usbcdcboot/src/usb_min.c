@@ -431,10 +431,11 @@ void usb_min_init(void) {
     oschf |=  (CLKCTRL_AUTOTUNE_SOF_gc | CLKCTRL_ALGSEL_INCR_gc);
     _PROTECTED_WRITE(CLKCTRL.OSCHFCTRLA, oschf);
 
-    /* VUSB supply. VREG=1 builds (Tsurugi): the internal regulator
-     * derives the 3.3 V VUSB rail (and D+ pull-up reference) from a 5 V VDD
-     * (power configurations 5b/5s). VREG=0 builds (Tachi/Kunai): the board
-     * feeds 3.3 V into VUSB externally (configuration 3s, datasheet directs
+    /* VUSB supply. VREG=1 builds: the internal regulator derives the 3.3 V
+     * VUSB rail (and D+ pull-up reference) from a 5 V VDD (power
+     * configurations 5b/5s); no Wazamono board uses this since rev.3.
+     * VREG=0 builds (Tachi/Tsurugi/Kunai): the board feeds 3.3 V into VUSB
+     * externally (configuration 3s, datasheet directs
      * USBVREG = 0). Selected per board by build_wazamono.sh/.bat via VREG=0/1
      * (VREG=1 -> -DUSB_VREG_INTERNAL, see Makefile); the board tag macro
      * (WAZAMONO_BOARD_x) now only selects the USB descriptor identity and no

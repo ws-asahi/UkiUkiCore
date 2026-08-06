@@ -9,23 +9,25 @@ REM
 REM  This does NOT modify the clean-room bootloader source. The only
 REM  per-board build differences are passed in at build time:
 REM
-REM    board             MCU         LED   pol       USB ident (VID:PID)
-REM    ----------------  ----------  ----  --------  -------------------
-REM    Wazamono Tachi    avr64du32   PC3   act-HIGH  0x1209:0x0005
-REM    Wazamono Tsurugi  avr64du32   PD6   act-HIGH  0x1209:0x0007
-REM    Wazamono Kunai    avr32du20   PD4   act-LOW   0x1209:0x0009
+REM    board             MCU         LED   pol       VREG  USB ident (VID:PID)
+REM    ----------------  ----------  ----  --------  ----  -------------------
+REM    Wazamono Tachi    avr64du28   PA0   act-LOW   0     0x1209:0x0005
+REM    Wazamono Tsurugi  avr64du32   PD6   act-HIGH  0     0x1209:0x0007
+REM    Wazamono Kunai    avr32du20   PD4   act-LOW   0     0x1209:0x0009
 REM
 REM    - LED pin     : LED_PORT / LED_PIN
 REM    - LED polarity: LED_AH=1 (active-HIGH) | LED_AL=1 (active-LOW)
 REM                    Neither given => active-LOW; both given => LED_AH wins.
 REM    - USB identity: BOARD=TACHI | TSURUGI  (selects PID + product string)
 REM
-REM  Tachi's LED (PC3 = D13, dedicated LED_BUILTIN) is active-HIGH; Tsurugi's
-REM  LED (PD6 = D13, op-amp buffered) is active-HIGH (Arduino Uno convention).
-REM  Each board passes its polarity explicitly below.
+REM  Tachi's LED (PA0 = D17, LED_BUILTIN = RX LED, rev.3) is active-LOW;
+REM  Tsurugi's LED (PD6 = D13, op-amp buffered) is active-HIGH (Arduino Uno
+REM  convention). Each board passes its polarity explicitly below. All boards
+REM  feed VUSB from an external 3.3 V LDO, so every build passes VREG=0.
 REM
-REM  The signature is read from SIGROW at runtime (stk500.c), so the single
-REM  avr64du32 hex serves every Wazamono board that shares the 64 KB flash.
+REM  The signature is read from SIGROW at runtime (stk500.c). Tachi (rev.3)
+REM  is built for avr64du28, Tsurugi for avr64du32 - same flash size, but
+REM  keep the per-board hexes separate.
 REM
 REM  --- Toolchain search order (first hit wins) -----------------------
 REM    0) %AVRGCC_ROOT%                     explicit override
@@ -75,8 +77,8 @@ set "PATH=%GCCBIN%;%PATH%"
 if not defined MAKE set MAKE=make
 
 REM            class             mcu        LEDport LEDpin board     LEDpol(AH|AL) VREG(0|1)
-call :build wazamonotachi     avr64du32  PORTC   3      TACHI   AH 0
-call :build wazamonotsurugi   avr64du32  PORTD   6      TSURUGI AH 1
+call :build wazamonotachi     avr64du28  PORTA   0      TACHI   AL 0
+call :build wazamonotsurugi   avr64du32  PORTD   6      TSURUGI AH 0
 call :build wazamonokunai     avr32du20  PORTD   4      KUNAI   AL 0
 
 echo.

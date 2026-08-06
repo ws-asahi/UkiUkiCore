@@ -76,11 +76,12 @@ endif
 # --- VUSB regulator (per-build) --------------------------------------
 # VREG=1:           enable the internal 5V->3.3V USB voltage regulator at
 #                   startup (5V VDD systems; power configurations 5b/5s).
-#                   Wazamono Tsurugi builds use this.
+#                   No Wazamono board uses this since pin map rev.3; kept
+#                   for development targets (e.g. unmodified Curiosity Nano).
 # VREG=0 (default): leave the regulator off; the board feeds 3.3V into the
-#                   VUSB pin externally (configuration 3s). Wazamono Tachi
-#                   and Kunai builds use this.
-# NOTE: WazamonoCore defaults to VREG=0, the safe side for Tachi/Kunai
+#                   VUSB pin externally (configuration 3s). ALL Wazamono
+#                   boards (Tachi/Tsurugi/Kunai) build with this.
+# NOTE: WazamonoCore defaults to VREG=0, the safe side for the product
 #       hardware -- an accidental VREG=1 hex would make the internal
 #       regulator fight the external 3.3V LDO on VUSB. (Upstream DxCore
 #       defaults to VREG=1.) build_wazamono.sh/.bat always pass VREG

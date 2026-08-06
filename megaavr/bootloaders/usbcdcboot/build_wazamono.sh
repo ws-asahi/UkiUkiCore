@@ -7,11 +7,14 @@
 #  The clean-room bootloader source is NOT modified. The only per-board
 #  difference is passed in at build time:
 #
-#    board             MCU         LED   pol       USB ident (VID:PID)
-#    ----------------  ----------  ----  --------  -------------------
-#    Wazamono Tachi    avr64du32   PC3   act-HIGH  0x1209:0x0005
-#    Wazamono Tsurugi  avr64du32   PD6   act-HIGH  0x1209:0x0007
-#    Wazamono Kunai    avr32du20   PD4   act-LOW   0x1209:0x0009
+#    board             MCU         LED   pol       VREG  USB ident (VID:PID)
+#    ----------------  ----------  ----  --------  ----  -------------------
+#    Wazamono Tachi    avr64du28   PA0   act-LOW   0     0x1209:0x0005
+#    Wazamono Tsurugi  avr64du32   PD6   act-HIGH  0     0x1209:0x0007
+#    Wazamono Kunai    avr32du20   PD4   act-LOW   0     0x1209:0x0009
+#
+#    All boards feed VUSB from an external 3.3 V LDO (VREG=0, power
+#    configuration 3s); no board enables the internal USB regulator.
 #
 #    - LED pin     : LED_PORT / LED_PIN
 #    - LED polarity: LED_AH=1 (active-HIGH) | LED_AL=1 (active-LOW)
@@ -112,8 +115,8 @@ build() {            # $1=class  $2=mcu  $3=LEDport  $4=LEDpin  $5=board  $6=LED
 }
 
 #     class             mcu        LEDport LEDpin board     LEDpol(AH|AL) VREG
-build wazamonotachi   avr64du32   PORTC   3      TACHI     AH            0
-build wazamonotsurugi avr64du32   PORTD   6      TSURUGI   AH            1
+build wazamonotachi   avr64du28   PORTA   0      TACHI     AL            0
+build wazamonotsurugi avr64du32   PORTD   6      TSURUGI   AH            0
 build wazamonokunai   avr32du20   PORTD   4      KUNAI     AL            0
 
 echo ""

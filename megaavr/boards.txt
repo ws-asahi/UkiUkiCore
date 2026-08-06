@@ -19,7 +19,7 @@
 menu.clock=Clock Speed
 
 # =====================  Wazamono Tachi (AVR64DU32)  ==================
-wazamonotachi.name=Wazamono Tachi (AVR64DU28)
+wazamonotachi.name=Wazamono Tachi (Pro Micro)
 
 wazamonotachi.upload.tool=avrdude
 wazamonotachi.upload.prog_interlock=
@@ -105,13 +105,7 @@ wazamonotachi.bootloader.class=usbcdcboot_wazamonotachi
 ##############################################################
 
 # =====================  Wazamono Tsurugi (AVR64DU32)  ===============
-#  Arduino Uno R3 form factor. Same AVR64DU32 + USB-CDC bootloader as
-#  the Tachi; differs in pin layout (Uno R3 compatible) and timer use:
-#  millis() is on TCB0 so TCB1 is free for D3 PWM (TCB1 ALT1 = PF5) and
-#  for tone() (Tone.cpp routes tone to TCB1 whenever millis is on TCB0;
-#  tone therefore shares TCB1 with D3 PWM - using tone() suspends D3 PWM
-#  only, exactly like Uno R3's Timer2, but D11 PWM (TCA0) is preserved).
-wazamonotsurugi.name=Wazamono Tsurugi (AVR64DU32)
+wazamonotsurugi.name=Wazamono Tsurugi (Uno)
 
 wazamonotsurugi.upload.tool=avrdude
 wazamonotsurugi.upload.prog_interlock=
@@ -190,14 +184,7 @@ wazamonotsurugi.bootloader.class=usbcdcboot_wazamonotsurugi
 ##############################################################
 
 # =====================  Wazamono Kunai (AVR32DU20)  ================
-#  Seeed XIAO form factor (21 x 17.8 mm). AVR32DU20 (32 KB flash / 4 KB SRAM,
-#  20-pin VQFN) + the same USB-CDC bootloader as the other boards. Crystal-less:
-#  the internal OSCHF runs at 24 MHz, so there is no Clock menu (speed + source
-#  are fixed below) and PA0/PA1 are free GPIO. Timer use mirrors the siblings:
-#  millis() on TCB0 leaves TCB1 free for tone() and all 6 PWM channels on TCA0
-#  (PORTA, WO0..WO5 = PA0..PA5). I2C is on TWI0 ALT3 (PA0/PA1 = D4/D5); the
-#  variant's initVariant() selects that mux at boot (see WazamonoKunai variant).
-wazamonokunai.name=Wazamono Kunai (AVR32DU20)
+wazamonokunai.name=Wazamono Kunai (Xiao)
 
 wazamonokunai.upload.tool=avrdude
 wazamonokunai.upload.prog_interlock=

@@ -15,9 +15,9 @@
  *      without a referenced symbol the archive member would be silently
  *      dropped at link time. boards.txt passes -Wl,-u,wazamono_kunai_variant_keep,
  *      which forces this translation unit in.
- *   2. The USB-CDC activity LEDs (XIAO-style dual-purpose D13 + dedicated D14):
- *        PD4 (D13) = LED_BUILTIN, doubles as the CDC RX activity LED
- *        PD5 (D14) = CDC TX activity LED
+ *   2. The USB-CDC activity LEDs (XIAO numbering: TX = D11, RX = D12):
+ *        PD4 (D11) = LED_BUILTIN, doubles as the CDC TX activity LED
+ *        PD5 (D12) = CDC RX activity LED
  *      Both active-LOW (matching the bootloader's PD4 blink polarity).
  *      usb_cdc.c publishes weak no-op hooks (usb_cdc_on_rx_activity /
  *      usb_cdc_on_tx_activity / usb_cdc_on_led_tick, the last called from the
@@ -25,7 +25,7 @@
  *      override them - the same arrangement as the Wazamono Tachi.
  *
  * The LEDs are initialized OFF (driven HIGH, active-LOW) and set as outputs in
- * initVariant(). A sketch that takes D13/D14 over as GPIO simply fights the
+ * initVariant(). A sketch that takes D11/D12 over as GPIO simply fights the
  * short activity pulses; digitalWrite works normally between them.
  */
 
@@ -35,8 +35,8 @@
 
 extern "C" { __attribute__((used)) char wazamono_kunai_variant_keep = 0; }
 
-#define KUNAI_RXLED_bm  PIN4_bm   /* PD4 = D13 (also LED_BUILTIN) */
-#define KUNAI_TXLED_bm  PIN5_bm   /* PD5 = D14 */
+#define KUNAI_TXLED_bm  PIN4_bm   /* PD4 = D11 (also LED_BUILTIN) */
+#define KUNAI_RXLED_bm  PIN5_bm   /* PD5 = D12 */
 
 /* One-shot length in SOF ticks (~ms), = 32U4 TX_RX_LED_PULSE_MS (Tachi parity). */
 #define KUNAI_LED_PULSE  100

@@ -23,12 +23,14 @@
  *   D8   PA6   SPI SCK                                       A8,  AIN26
  *   D9   PA5   SPI MISO | ~PWM(TCA0 WO5)                     A9,  AIN25
  *   D10  PA4   SPI MOSI | ~PWM(TCA0 WO4)                     A10, AIN24
- *   D13  PD4   LED_BUILTIN | USB-CDC RX activity LED         A13, AIN4
- *   D14  PD5   USB-CDC TX activity LED                       A14, AIN5
+ *   D11  PD4   LED_BUILTIN | USB-CDC TX activity LED         A11, AIN4
+ *   D12  PD5   USB-CDC RX activity LED                       A12, AIN5
  *   --- not exposed as a numbered Dn (appended so the arrays are complete) ---
  *        PF6   RESET                                index 15
  *        PF7   UPDI                                 index 16  (== PIN_PF7, highest)
- *   (D11/D12 do not exist - the XIAO numbering jumps from D10 to the LED pins.)
+ *   (D13/D14 do not exist as pins: indices 13/14 are gaps, so XIAO sketches
+ *    that blink the user LED "13" become harmless no-ops. The Seeeduino XIAO
+ *    puts its TX LED on 11 and RX LED on 12; rev.3 follows that numbering.)
  *
  *  ===== Peripheral routing (set by this variant + boards.txt) =====
  *   TCA0  -> PORTA (WO0..WO5 = PA0..PA5 = D6,D7,D4,D5,D10,D9) : TCA0_PINS below
@@ -57,10 +59,11 @@
  *           OUT = D5, alt OUT = D8). LUT1 belongs to D0 PWM (above). LUT2's
  *           alternate output pin is D2 (PD6); its input pins do not exist on
  *           the DU-20. LUT3 has no pins here.
- *   LED   -> PD4 (D13) is LED_BUILTIN and doubles as the USB-CDC RX activity
- *           LED; PD5 (D14) is the USB-CDC TX activity LED (Pro Micro-style,
- *           weak hooks in usb_cdc.c, overridden in wazamono_kunai_init.cpp).
- *           Both LEDs are active-LOW (matching the bootloader's PD4 blink).
+ *   LED   -> PD4 (D11) is LED_BUILTIN and doubles as the USB-CDC TX activity
+ *           LED; PD5 (D12) is the USB-CDC RX activity LED (XIAO numbering:
+ *           TX = 11, RX = 12; weak hooks in usb_cdc.c, overridden in
+ *           wazamono_kunai_init.cpp). Both LEDs are active-LOW (matching the
+ *           bootloader's PD4 blink).
  *   Serial-> native USB CDC (USBSerial), Leonardo/Micro convention.
  */
 
@@ -90,21 +93,21 @@
 #define PIN_PA6 (8)   // D8  SPI SCK / LUT0-OUT (alt)
 #define PIN_PA5 (9)   // D9  SPI MISO / TCA0 WO5
 #define PIN_PA4 (10)  // D10 SPI MOSI / TCA0 WO4
-#define PIN_PD4 (13)  // D13 LED_BUILTIN / USB-CDC RX activity LED
-#define PIN_PD5 (14)  // D14 USB-CDC TX activity LED
+#define PIN_PD4 (11)  // D11 LED_BUILTIN / USB-CDC TX activity LED
+#define PIN_PD5 (12)  // D12 USB-CDC RX activity LED
 #define PIN_PF6 (15)  // RESET
 #define PIN_PF7 (16)  // UPDI  (highest index -> sets NUM_DIGITAL_PINS = 17)
 
 /* ---- Counts ---- */
-#define PINS_COUNT                     (17)  // length of the pin tables (incl. reserved; 11/12 are gaps)
+#define PINS_COUNT                     (17)  // length of the pin tables (incl. reserved; 13/14 are gaps)
 #define NUM_ANALOG_INPUTS              (31)  // highest ADC channel in use is AIN31 (PC3)
 // NUM_DIGITAL_PINS / NUM_TOTAL_PINS  -> auto = PIN_PF7 + 1 = 17
 
 #if !defined(LED_BUILTIN)
-  #define LED_BUILTIN                  (PIN_PD4)   // D13, on-board LED (active-LOW)
+  #define LED_BUILTIN                  (PIN_PD4)   // D11, on-board LED (active-LOW)
 #endif
-#define LED_BUILTIN_RX                 (PIN_PD4)   // D13 doubles as USB-CDC RX activity LED
-#define LED_BUILTIN_TX                 (PIN_PD5)   // D14 USB-CDC TX activity LED (active-LOW)
+#define LED_BUILTIN_TX                 (PIN_PD4)   // D11 doubles as USB-CDC TX activity LED
+#define LED_BUILTIN_RX                 (PIN_PD5)   // D12 USB-CDC RX activity LED (active-LOW)
 
 /* ---- Event output pins: FIXED by the board's pin-configuration table ----
  * One pin per event output, no alternatives. Libraries (CustomLogic, and the
@@ -256,7 +259,7 @@
 #define PIN_HWSERIAL1_XDIR_PINSWAP_2    (NOT_A_PIN)
 
 /* ---- Arduino analog aliases. XIAO header = A0..A10 (A6/A7 skipped: PA0/PA1
- * have no ADC); the LED pins are also reachable as A13/A14. ---- */
+ * have no ADC); the LED pins are also reachable as A11/A12. ---- */
 #define PIN_A0   (PIN_PC3)   // D0
 #define PIN_A1   (PIN_PA7)   // D1
 #define PIN_A2   (PIN_PD6)   // D2
@@ -266,12 +269,12 @@
 #define PIN_A8   (PIN_PA6)   // D8
 #define PIN_A9   (PIN_PA5)   // D9
 #define PIN_A10  (PIN_PA4)   // D10
-#define PIN_A13  (PIN_PD4)   // D13  LED_BUILTIN
-#define PIN_A14  (PIN_PD5)   // D14
+#define PIN_A11  (PIN_PD4)   // D11  LED_BUILTIN
+#define PIN_A12  (PIN_PD5)   // D12
 
-/* --- XIAO style number-prefixed digital pin aliases (D0..D10 + D13/D14) ---
+/* --- XIAO style number-prefixed digital pin aliases (D0..D12 contiguous) ---
  * D-number == Arduino digital pin number. Internal-only pins (PF6 RESET,
- * PF7 UPDI) are intentionally NOT exposed as Dn. D11/D12 do not exist. */
+ * PF7 UPDI) are intentionally NOT exposed as Dn. D13/D14 do not exist. */
 #undef D0
 #undef D1
 #undef D2
@@ -283,8 +286,8 @@
 #undef D8
 #undef D9
 #undef D10
-#undef D13
-#undef D14
+#undef D11
+#undef D12
 static const uint8_t D0  = PIN_PC3;  // A0 / ~PWM(TCB1 via CCL LUT1)
 static const uint8_t D1  = PIN_PA7;  // A1 / SS
 static const uint8_t D2  = PIN_PD6;  // A2 / Serial2 TX
@@ -296,8 +299,8 @@ static const uint8_t D7  = PIN_PA1;  // RX (Serial1)
 static const uint8_t D8  = PIN_PA6;  // SCK
 static const uint8_t D9  = PIN_PA5;  // MISO
 static const uint8_t D10 = PIN_PA4;  // MOSI
-static const uint8_t D13 = PIN_PD4;  // LED_BUILTIN / USB-CDC RX activity LED
-static const uint8_t D14 = PIN_PD5;  // USB-CDC TX activity LED
+static const uint8_t D11 = PIN_PD4;  // LED_BUILTIN / USB-CDC TX activity LED
+static const uint8_t D12 = PIN_PD5;  // USB-CDC RX activity LED
 
 static const uint8_t A0   = PIN_A0;
 static const uint8_t A1   = PIN_A1;
@@ -308,8 +311,8 @@ static const uint8_t A5   = PIN_A5;
 static const uint8_t A8   = PIN_A8;
 static const uint8_t A9   = PIN_A9;
 static const uint8_t A10  = PIN_A10;
-static const uint8_t A13  = PIN_A13;
-static const uint8_t A14  = PIN_A14;
+static const uint8_t A11  = PIN_A11;
+static const uint8_t A12  = PIN_A12;
 
 /* Direct ADC channel identifiers (ADC_CH() sets the 0x80 "this is a channel" flag). */
 #define AIN4   ADC_CH(4)
@@ -325,8 +328,8 @@ static const uint8_t A14  = PIN_A14;
 #define AIN31  ADC_CH(31)
 
 /* ---- Pin arrays (ARDUINO_MAIN). Indexed by digital pin number (0..16).
- * Indices 11 and 12 are gaps (NOT_A_PIN / NOT_A_PORT): the XIAO numbering
- * jumps from D10 to D13. ---- */
+ * Indices 13 and 14 are gaps (NOT_A_PIN / NOT_A_PORT): the XIAO's "13" user
+ * LED has no counterpart here, so digitalWrite(13, ...) is a harmless no-op. ---- */
 #ifdef ARDUINO_MAIN
   const uint8_t digital_pin_to_port[] = {
     PC,         //  0 PC3  D0  A0 / TCB1 PWM via CCL LUT1
@@ -340,10 +343,10 @@ static const uint8_t A14  = PIN_A14;
     PA,         //  8 PA6  D8  SCK
     PA,         //  9 PA5  D9  MISO / TCA0 WO5
     PA,         // 10 PA4  D10 MOSI / TCA0 WO4
-    NOT_A_PORT, // 11 (gap - no D11 on the XIAO numbering)
-    NOT_A_PORT, // 12 (gap - no D12 on the XIAO numbering)
-    PD,         // 13 PD4  D13 LED_BUILTIN / CDC RX LED
-    PD,         // 14 PD5  D14 CDC TX LED
+    PD,         // 11 PD4  D11 LED_BUILTIN / CDC TX LED
+    PD,         // 12 PD5  D12 CDC RX LED
+    NOT_A_PORT, // 13 (gap - no D13; XIAO user-LED writes become no-ops)
+    NOT_A_PORT, // 14 (gap)
     PF,         // 15 PF6  RESET
     PF          // 16 PF7  UPDI
   };
@@ -360,10 +363,10 @@ static const uint8_t A14  = PIN_A14;
     PIN6_bp,   //  8 PA6  D8
     PIN5_bp,   //  9 PA5  D9
     PIN4_bp,   // 10 PA4  D10
-    NOT_A_PIN, // 11 (gap)
-    NOT_A_PIN, // 12 (gap)
-    PIN4_bp,   // 13 PD4  D13
-    PIN5_bp,   // 14 PD5  D14
+    PIN4_bp,   // 11 PD4  D11
+    PIN5_bp,   // 12 PD5  D12
+    NOT_A_PIN, // 13 (gap)
+    NOT_A_PIN, // 14 (gap)
     PIN6_bp,   // 15 PF6  RESET
     PIN7_bp    // 16 PF7  UPDI
   };
@@ -380,10 +383,10 @@ static const uint8_t A14  = PIN_A14;
     PIN6_bm,   //  8 PA6  D8
     PIN5_bm,   //  9 PA5  D9
     PIN4_bm,   // 10 PA4  D10
-    NOT_A_PIN, // 11 (gap)
-    NOT_A_PIN, // 12 (gap)
-    PIN4_bm,   // 13 PD4  D13
-    PIN5_bm,   // 14 PD5  D14
+    PIN4_bm,   // 11 PD4  D11
+    PIN5_bm,   // 12 PD5  D12
+    NOT_A_PIN, // 13 (gap)
+    NOT_A_PIN, // 14 (gap)
     PIN6_bm,   // 15 PF6  RESET
     PIN7_bm    // 16 PF7  UPDI
   };
@@ -403,10 +406,10 @@ static const uint8_t A14  = PIN_A14;
     NOT_ON_TIMER, //  8 PA6  D8
     NOT_ON_TIMER, //  9 PA5  D9  (TCA0 WO5, dynamic)
     NOT_ON_TIMER, // 10 PA4  D10 (TCA0 WO4, dynamic)
-    NOT_ON_TIMER, // 11 (gap)
-    NOT_ON_TIMER, // 12 (gap)
-    NOT_ON_TIMER, // 13 PD4  D13
-    NOT_ON_TIMER, // 14 PD5  D14
+    NOT_ON_TIMER, // 11 PD4  D11
+    NOT_ON_TIMER, // 12 PD5  D12
+    NOT_ON_TIMER, // 13 (gap)
+    NOT_ON_TIMER, // 14 (gap)
     NOT_ON_TIMER, // 15 PF6  RESET
     NOT_ON_TIMER  // 16 PF7  UPDI
   };

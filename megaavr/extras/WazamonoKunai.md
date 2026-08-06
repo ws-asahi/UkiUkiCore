@@ -103,7 +103,7 @@ ATmega と比べて EEPROM は小さくなりましたが（256 B）、代わり
 
 ## ピンマッピング
 
-XIAO と同じパッド配置（D0–D10）に加え、オンボード LED を D13/D14 に割り当てています。各パッドは `A#` のアナログ別名も持ちます（ADC 入力のない D6/D7 を除く）。
+XIAO と同じパッド配置（D0–D10）に加え、オンボード LED を XIAO と同じ番号 **D11（TX）/D12（RX）** に割り当てています。各パッドは `A#` のアナログ別名も持ちます（ADC 入力のない D6/D7 を除く）。D13/D14 は欠番です（XIAO のユーザー LED「13」への書き込みは何も起こさない no-op になります）。
 
 | D# | MCU | アナログ別名 | ADC ch | 主な機能 |
 |----|-----|--------------|--------|----------|
@@ -118,8 +118,8 @@ XIAO と同じパッド配置（D0–D10）に加え、オンボード LED を D
 | D8 | PA6 | **A8** | AIN26 | SPI **SCK** |
 | D9 | PA5 | **A9** | AIN25 | SPI **MISO** / ~PWM(TCA0 WO5) |
 | D10 | PA4 | **A10** | AIN24 | SPI **MOSI** / ~PWM(TCA0 WO4) |
-| D13 | PD4 | **A13** | AIN4 | **LED_BUILTIN** / USB-CDC **RX** アクティビティ LED |
-| D14 | PD5 | **A14** | AIN5 | USB-CDC **TX** アクティビティ LED |
+| D11 | PD4 | **A11** | AIN4 | **LED_BUILTIN** / USB-CDC **TX** アクティビティ LED |
+| D12 | PD5 | **A12** | AIN5 | USB-CDC **RX** アクティビティ LED |
 
 **パッドに出ない内部ピン:** PF6（RESET）/PF7（UPDI）
 
@@ -177,7 +177,7 @@ I2C は **TWI0 の既定位置（PA2/PA3）** そのままで XIAO の A4/A5 位
 - `millis()` / `micros()` は **TCB0**。
 - `tone()` と `Servo` はどちらも TCB1 を使うため排他です（実行中は D0 PWM も停止）。
 
-> PWM 非対応: D1(PA7)・D2(PD6)・D3(PD7)・D8(PA6)・D13(PD4)・D14(PD5)。
+> PWM 非対応: D1(PA7)・D2(PD6)・D3(PD7)・D8(PA6)・D11(PD4)・D12(PD5)。
 
 ### アナログ入力
 
@@ -220,14 +220,14 @@ Kunai は **水晶を搭載しない**設計で、システムクロックは内
 
 | 部品 | 接続 | 用途 |
 |------|------|------|
-| LED_BUILTIN | D13（PD4） | オンボード LED（USB-CDC **RX** アクティビティ表示を兼用） |
-| TX LED | D14（PD5） | USB-CDC **TX** アクティビティ表示 |
+| LED_BUILTIN | D11（PD4） | オンボード LED（USB-CDC **TX** アクティビティ表示を兼用） |
+| RX LED | D12（PD5） | USB-CDC **RX** アクティビティ表示 |
 | リセット | RESET（PF6） | リセット入力 |
 
-`LED_BUILTIN` は **D13（PD4）** です（XIAO 同様、ヘッダ/パッドには出ていません）。
-アクティブ LOW なので D13 が LOW に設定された時に点灯します。
+`LED_BUILTIN` は **D11（PD4）** です（XIAO 同様、ヘッダ/パッドには出ていません）。
+アクティブ LOW なので D11 が LOW に設定された時に点灯します。
 
-XIAO と同様、D13 の LED は USB CDC（`Serial`）の **受信アクティビティ表示**を兼ね、D14 の LED が**送信アクティビティ**を表示します（Pro Micro の RX/TX LED 相当。実装は [wazamono_kunai_init.cpp](../variants/WazamonoKunai/wazamono_kunai_init.cpp) の weak フック上書き）。スケッチから `digitalWrite(D13, ...)` した場合は、CDC 通信の瞬間だけ短いパルスが重なります。
+XIAO と同じ番号割り当て（TX LED = 11 / RX LED = 12）で、D11 の LED は USB CDC（`Serial`）の**送信アクティビティ表示**を兼ね、D12 の LED が**受信アクティビティ**を表示します（Pro Micro の RX/TX LED 相当。実装は [wazamono_kunai_init.cpp](../variants/WazamonoKunai/wazamono_kunai_init.cpp) の weak フック上書き）。スケッチから `digitalWrite(D11, ...)` した場合は、CDC 通信の瞬間だけ短いパルスが重なります。XIAO のユーザー LED「D13」に相当する専用 LED はありません（`digitalWrite(13, ...)` は no-op）。
 
 ---
 

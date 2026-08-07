@@ -99,7 +99,18 @@ wazamonotachi.build.clocksource=0
 #     Wazamono Tachi. ---
 wazamonotachi.build.mcu=avr64du32
 wazamonotachi.build.variant=WazamonoTachi
-wazamonotachi.build.highestcb=B2
+# build.highestcb = the highest-numbered TCB on this MCU. Upstream DxCore uses
+#   it only for the Millis menu's "Default (recommended)" option
+#   (menu.millis.tcbhighest.build.millistimer={build.highestcb}). WazamonoCore
+#   removes that menu and pins millis to TCB0 (build.millistimer=B0 above), so
+#   the key is currently unused; it is kept correct in case the menu returns.
+#   Every AVR DU part has exactly TWO TCBs (TCB0/TCB1) regardless of pin count
+#   - DS40002548A: "Two 16-bit Timer/Counter type B (TCB)", peripheral address
+#   map lists only TCB0 (0x0B00) and TCB1 (0x0B10) for 14/20/28/32 pins, and
+#   the vector table has only TCB0_INT (15) and TCB1_INT (29). Hence B1, not
+#   B2. (Upstream's avrdu rows say B2; that value is carried over from the
+#   DD-series, where 28/32-pin parts do have a TCB2.)
+wazamonotachi.build.highestcb=B1
 wazamonotachi.upload.maximum_size=61440
 wazamonotachi.upload.maximum_data_size=8192
 wazamonotachi.bootloader.class=usbcdcboot_wazamonotachi
@@ -178,7 +189,9 @@ wazamonotsurugi.menu.clock.24internal.build.clocksource=0
 # --- Locked to AVR64DU32. Variant + bootloader hex fixed to Wazamono Tsurugi. ---
 wazamonotsurugi.build.mcu=avr64du32
 wazamonotsurugi.build.variant=WazamonoTsurugi
-wazamonotsurugi.build.highestcb=B2
+# build.highestcb: see the note in the Tachi section - all AVR DU parts have
+#   exactly two TCBs, so this is B1 here as well.
+wazamonotsurugi.build.highestcb=B1
 wazamonotsurugi.upload.maximum_size=61440
 wazamonotsurugi.upload.maximum_data_size=8192
 wazamonotsurugi.bootloader.class=usbcdcboot_wazamonotsurugi
@@ -256,6 +269,8 @@ wazamonokunai.build.clocksource=0
 # --- Locked to AVR32DU20. Variant + bootloader hex fixed to Wazamono Kunai. ---
 wazamonokunai.build.mcu=avr32du20
 wazamonokunai.build.variant=WazamonoKunai
+# build.highestcb: see the note in the Tachi section - all AVR DU parts have
+#   exactly two TCBs, so this is B1 here as well.
 wazamonokunai.build.highestcb=B1
 wazamonokunai.upload.maximum_size=28672
 wazamonokunai.upload.maximum_data_size=4096

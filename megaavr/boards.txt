@@ -2,7 +2,7 @@
 #  WazamonoCore - boards.txt
 #  The Wazamono product boards only (all other MCU/board families from DxCore
 #  are removed):
-#    - Wazamono Tachi    (AVR64DU28, Pro Micro form factor)
+#    - Wazamono Tachi    (AVR64DU32, Pro Micro form factor)
 #    - Wazamono Tsurugi  (AVR64DU32, Arduino Uno R3 form factor)
 #    - Wazamono Kunai    (AVR32DU20, Seeed XIAO form factor)
 #  Derived from DxCore's avrduusb (USB-CDC bootloader) definition;
@@ -10,10 +10,10 @@
 #
 #  Only the Tsurugi (AVR64DU32) carries a 24 MHz crystal, so only it has a
 #  Clock menu (WITH the crystal = production default, or WITHOUT it, internal
-#  OSCHF, to validate the board crystal-less). Tachi (AVR64DU28, rev.3) and
-#  Kunai (AVR32DU20) are crystal-less by design: they have no Clock menu and
-#  are fixed to 24 MHz internal OSCHF; USB always runs from OSCHF + PLL48M
-#  auto-tuned to the USB SOF, independent of the system clock source.
+#  OSCHF, to validate the board crystal-less). Tachi (AVR64DU32, rev.4,
+#  crystal-less) and Kunai (AVR32DU20) have no Clock menu and are fixed to
+#  24 MHz internal OSCHF; USB always runs from OSCHF + PLL48M auto-tuned to
+#  the USB SOF, independent of the system clock source.
 # =====================================================================
 
 menu.clock=Clock Speed
@@ -85,18 +85,19 @@ wazamonotachi.upload.wait_for_upload_port=true
 wazamonotachi.bootloader.file=hex/{bootloader.class}.hex
 wazamonotachi.bootloader.appspm=
 
-# --- Clock: fixed 24 MHz internal OSCHF (rev.3 is crystal-less; no Clock menu).
+# --- Clock: fixed 24 MHz internal OSCHF (crystal-less; no Clock menu).
 #     clocksource 0 = internal OSCHF. USB CLK_USB (48 MHz) = OSCHF + PLL48M,
-#     SOF-tuned. PA0/PA1 are plain GPIO (D17 = LED_BUILTIN, D7). ---
+#     SOF-tuned. PA0/PA1 are not connected on this board (reserved). ---
 wazamonotachi.build.speed=24
 wazamonotachi.build.clocksource=0
 
 # --- millis()/micros() timer. TCB0 is the default so TCB1 stays free for
 #     D3 PWM and TCA0 stays free for D5-D10 PWM. ---
 
-# --- Locked to AVR64DU28 (chip submenu removed; rev.3 moved from the 32-pin
-#     to the 28-pin part). Variant + bootloader hex fixed to Wazamono Tachi. ---
-wazamonotachi.build.mcu=avr64du28
+# --- Locked to AVR64DU32 (chip submenu removed; rev.4 returned from the
+#     28-pin part to the 32-pin TQFP). Variant + bootloader hex fixed to
+#     Wazamono Tachi. ---
+wazamonotachi.build.mcu=avr64du32
 wazamonotachi.build.variant=WazamonoTachi
 wazamonotachi.build.highestcb=B2
 wazamonotachi.upload.maximum_size=61440

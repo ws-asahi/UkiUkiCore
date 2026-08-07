@@ -17,7 +17,7 @@ CLKOUT は **PA7 固定**で代替位置がありません。
 
 | ボード | CLKOUT ピン |
 |--------|-------------|
-| Wazamono Tachi | **D21** |
+| Wazamono Tachi | **D8** |
 | Wazamono Tsurugi | **D2** |
 | Wazamono Kunai | **D1** |
 
@@ -36,7 +36,7 @@ CLKOUT は **PA7 固定**で代替位置がありません。
 | `void end()` | 出力停止。PA7 を入力に戻す |
 | `bool isRunning()` | 実際に出力中かどうか。レジスタの CLKOUT ビットを直接読むため、**CFD（クロック故障検出）によるハードウェア自動停止も検出**できます |
 | `uint32_t frequency()` | 出力周波数 [Hz]（= CLK_PER = `F_CPU`） |
-| `uint8_t pin()` | CLKOUT の Arduino ピン番号（Tachi=21 / Tsurugi=2 / Kunai=1） |
+| `uint8_t pin()` | CLKOUT の Arduino ピン番号（Tachi=8 / Tsurugi=2 / Kunai=1） |
 
 ## 分周指定が無い理由
 

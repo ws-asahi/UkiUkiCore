@@ -41,7 +41,7 @@ void setup() {
   Serial.begin(115200);
 
   #if defined(WAZAMONO_BOARD_TACHI)
-  bool ok = EventSystem.connect(8, 21);   // D8 -> D21 (EVOUTA)
+  bool ok = EventSystem.connect(10, 8);   // D10 -> D8 (EVOUTA)
   #elif defined(WAZAMONO_BOARD_TSURUGI)
   bool ok = EventSystem.connect(10, 2);   // D10 -> D2 (EVOUTA)
   #elif defined(WAZAMONO_BOARD_KUNAI)

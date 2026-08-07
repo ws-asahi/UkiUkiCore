@@ -35,7 +35,7 @@ void setup() {
 
 | | EVOUTA | EVOUTD | EVOUTF |
 |---|---|---|---|
-| **Tachi** | D21 | D9 | — |
+| **Tachi** | D8 | D9 | A3 |
 | **Tsurugi** | D2 | D9 | A2 |
 | **Kunai** | D1 | D3 | — |
 

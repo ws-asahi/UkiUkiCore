@@ -22,7 +22,7 @@ void setup() {
   AnalogComp.setHysteresis(AC_HYST_MEDIUM);
 
   #if defined(WAZAMONO_BOARD_TACHI)
-  EventSystem.connect(EVENT_ANALOG_COMP, 21); // -> D21 (EVOUTA)
+  EventSystem.connect(EVENT_ANALOG_COMP, 8);  // -> D8 (EVOUTA)
   #elif defined(WAZAMONO_BOARD_TSURUGI)
   EventSystem.connect(EVENT_ANALOG_COMP, 2);  // -> D2 (EVOUTA)
   #elif defined(WAZAMONO_BOARD_KUNAI)

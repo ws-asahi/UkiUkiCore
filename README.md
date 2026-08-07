@@ -122,7 +122,7 @@ USERROW / Flash はフラッシュ型（ページ一括消去・耐久 1,000 回
 
 ## クイックスタート
 
-1. **ツール > ボード > WazamonoCore** から **Wazamono Tachi (AVR64DU28)** を選択
+1. **ツール > ボード > WazamonoCore** から **Wazamono Tachi (Pro Micro)** を選択
 2. USB ケーブルで接続し、書き込み
 
 **Lチカ:**

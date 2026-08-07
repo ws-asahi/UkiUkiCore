@@ -23,7 +23,7 @@ USB-シリアル変換チップを搭載せず、マイコン単体で USB-C に
 
 ---
 
-## ボード諸元（AVR64DU28）
+## ボード諸元（AVR64DU32）
 
 | 項目 | 値 |
 |------|----|
@@ -105,31 +105,34 @@ ATmega と比べて EEPROM は小さくなりましたが（256 B）、代わり
 
 ## ピンマッピング
 
-論理ピン番号（`D#`）と MCU ピン、機能の対応です（rev.3 / AVR64DU28）。Pro Micro と同様に D11 以降が欠番になります（本家の D11–D12 に加え、旧版で LED に割り当てていた D13 も rev.3 では欠番）。
+論理ピン番号（`D#`）と MCU ピン、機能の対応です（rev.4 / AVR64DU32）。Pro Micro と同様に D11–D13・D22–D29 が欠番になります（本家の D11–D12 に加え、D13 の専用 LED は設けません）。
 
 | D# | MCU | アナログ別名 | ADC ch | 主な機能 |
 |----|-----|--------------|--------|----------|
 | D0 | PA5 | A12 | AIN25 | **Serial1 RX**（USART0 ALT1） |
 | D1 | PA4 | A13 | AIN24 | **Serial1 TX**（USART0 ALT1） |
 | D2 | PA2 | A14 | AIN22 | **I2C SDA** |
-| D3 | PA3 | A15 | AIN23 | **I2C SCL**/~PWM(TCB1)/CCL(LUT0-OUT) |
-| D4 | PF1 | A6 | AIN17 | 汎用 I/O/CCL(LUT3-IN1) |
+| D3 | PA3 | A15 | AIN23 | **I2C SCL**/~PWM(TCB1) |
+| D4 | PF4 | A6 | AIN20 | 汎用 I/O |
 | D5 | PD0 | A16 | AIN0 | ~PWM(TCA0 WO0)/CCL(LUT2-IN0) |
 | D6 | PD1 | A7 | AIN1 | ~PWM(TCA0 WO1)/CCL(LUT2-IN1) |
-| D7 | PA1 | — | — | 汎用 I/O/CCL(LUT0-IN1)（ADC なし） |
-| D8 | PC3 | A8 | AIN31 | CCL(LUT1-OUT) |
+| D7 | PA6 | A17 | AIN26 | USART0 XCK/CCL(LUT0-OUT 代替) |
+| D8 | PA7 | A8 | AIN27 | USART0 XDIR/AC0 出力/EVOUTA/CLKOUT |
 | D9 | PD2 | A9 | AIN2 | ~PWM(TCA0 WO2)/CCL(LUT2-IN2)/AC0 AINP0/EVOUTD |
 | D10 | PD3 | A10 | AIN3 | ~PWM(TCA0 WO3)/CCL(LUT2-OUT)/AC0 AINN0 |
 | D14 | PD5 | A18 | AIN5 | SPI **MISO**/~PWM(TCA0 WO5) |
 | D15 | PD6 | A19 | AIN6 | SPI **SCK**/Serial2 TX（USART1 ALT2） |
 | D16 | PD4 | A20 | AIN4 | SPI **MOSI**/~PWM(TCA0 WO4) |
-| D17 | PA0 | — | — | **LED_BUILTIN**（= RX LED、Active-LOW、ヘッダなし）/CCL(LUT0-IN0)（ADC なし） |
+| D17 | PF3 | A21 | AIN19 | **RX LED（= LED_BUILTIN）**（Active-LOW、ヘッダなし）/CCL(LUT3-OUT) |
 | D18 | PD7 | **A0** | AIN7 | アナログ入力 A0/SPI **SS**/Serial2 RX（USART1 ALT2）/VREFA |
 | D19 | PF0 | **A1** | AIN16 | アナログ入力 A1/CCL(LUT3-IN0) |
-| D20 | PA6 | **A2** | AIN26 | アナログ入力 A2/USART0 XCK |
-| D21 | PA7 | **A3** | AIN27 | アナログ入力 A3/USART0 XDIR/AC0 出力/EVOUTA/CLKOUT |
+| D20 | PF1 | **A2** | AIN17 | アナログ入力 A2/CCL(LUT3-IN1) |
+| D21 | PF2 | **A3** | AIN18 | アナログ入力 A3/CCL(LUT3-IN2)/EVOUTF |
+| D30 | PC3 | A34 | AIN31 | **TX LED（= LED_BUILTIN_TX）**（Active-LOW、ヘッダなし）/CCL(LUT1-OUT) |
 
-> 各デジタルピンは ADC チャネルを持つため、A12～20としても参照できます。
+**基板上未接続（予約）:** PA0・PA1・PF5（AIN21 は使用不可）　**ヘッダに出ない内部ピン:** PF6（RESET）/PF7（UPDI）
+
+> ADC を持つ各デジタルピンは A12–A21・A34 としても参照できます（A4/A5/A11 は欠番）。D18（A0）は VREFA を兼ねるため、外部アナログ基準電圧を使う場合は A0/SS/Serial2 RX が使えなくなります。
 
 ---
 
@@ -158,11 +161,6 @@ ATmega と比べて EEPROM は小さくなりましたが（256 B）、代わり
 
 > **クライアント（受信側）動作:** ハードウェア SS（A0/PD7）が実ピンにあるため、付属の **SPISlave ライブラリ**（ESP8266 互換 API）で SPI クライアントとしても動作できます。
 > 詳細は [libraries/SPISlave](../libraries/SPISlave/README.md) を参照。
-
-### I2C
-
-| 信号 | ピン |
-|------|------|
 
 ### I2C（Wire）
 

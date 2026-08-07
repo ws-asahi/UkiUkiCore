@@ -28,7 +28,7 @@ void loop() {
 | **CustomLogic** (Tachi) | D5 (PD0) | D6 (PD1) | D9 (PD2) | D10 (PD3) | D15 (PD6) |
 | **CustomLogic** (Tsurugi) | D5 (PD0) | D6 (PD1) | D9 (PD2) | D10 (PD3) | D13 (PD6) |
 | **CustomLogic** (Kunai) | D6 (PA0) | D7 (PA1) | D4 (PA2) | D5 (PA3) | D8 (PA6) |
-| **CustomLogic1** (Tachi) | D19 (PF0) | D4 (PF1) | — | — | — |
+| **CustomLogic1** (Tachi) | A1 (PF0) | A2 (PF1) | A3 (PF2) | D17 (PF3) | — |
 | **CustomLogic1** (Tsurugi) | A0 (PF0) | A1 (PF1) | A2 (PF2) | A3 (PF3) | — |
 
 - Kunaiは1ユニットのみ(CustomLogic1はありません)
@@ -107,7 +107,7 @@ EventSystemライブラリを併用する必要はありません。
 
 | | EVOUTA | EVOUTD | EVOUTF |
 |---|---|---|---|
-| **Tachi** | D21 (PA7) | D9 (PD2) | — |
+| **Tachi** | D8 (PA7) | D9 (PD2) | A3 (PF2) |
 | **Tsurugi** | D2 (PA7) | D9 (PD2) | A2 (PF2) |
 | **Kunai** | D0 (PA7) | D7 (PD7) | — |
 

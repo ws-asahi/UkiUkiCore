@@ -4,6 +4,31 @@ WazamonoCore の変更履歴です。WazamonoCore は [DxCore](https://github.co
 
 ---
 
+## v0.0.5 — ピンマップ rev.4（Tachi を AVR64DU32 へ戻す）
+
+Tachi のハードウェア rev.4 に対応する変更です。**Tachi は burn-bootloader のやり直しが必要です**（MCU が avr64du28 → avr64du32 へ戻るため）。Tsurugi / Kunai に変更はありません。
+
+### Tachi（破壊的変更）
+
+- MCU を **AVR64DU28 → AVR64DU32（TQFP-32）** へ戻しました。実装面積の都合で TQFP が必要だったこと、28 ピン化のコスト削減効果（約 20 円）に対して機能削減が見合わなかったためです。水晶レス（内蔵 OSCHF 24 MHz 固定）は継続します。
+- ピンマップ rev.4: D4=**PF4**(A6)、D7=**PA6**(A17/XCK)、D8=**PA7**(A8/XDIR/AC0 出力/EVOUTA/CLKOUT)、D17=**PF3**(A21)、D18=PD7(A0/SPI SS/Serial2 RX/VREFA)、D19=PF0(A1)、D20=**PF1**(A2)、D21=**PF2**(A3/EVOUTF)、**D30=PC3(A34) を復活**。欠番は D11–D13・D22–D29。
+- LED を Pro Micro 準拠の 2 灯に戻しました（いずれもアクティブ LOW）: **RX LED = D17（PF3）= `LED_BUILTIN` = `LED_BUILTIN_RX`**、**TX LED = D30（PC3）= `LED_BUILTIN_TX`**。専用のユーザー LED（旧 D13）は設けません。
+- **PA0・PA1 は基板上未接続、PF5 は非公開（予約）**: 隠しインデックス（NOT_A_PORT/NOT_A_PIN）とし、誤って操作しても no-op になります。AIN21（PF5）は使用不可で `AIN21` マクロも定義しません。
+- EVOUTF（PF2 = D21）復活。LUT3 がフル利用可能に（IN0/IN1/IN2 = A1/A2/A3、OUT = D17）。LUT1-OUT は D30（TX LED）。
+- アナログ別名: A0–A3 = D18–D21、A6–A10 は Pro Micro 互換、A11 は引き続き意図的欠番、A12–A17 = D0–D7、A18–A21 = D14–D17、A34 = D30。
+
+### ブートローダ
+
+- ビルドマトリクス更新: Tachi = `avr64du32` / LED **PF3**・アクティブ LOW / VREG=0。
+- **注意: `bootloaders/hex/usbcdcboot_wazamonotachi.hex` は avr64du28/PA0 向けのままです。** wazamono-toolchain で `build_wazamono.(sh|bat)` を実行して再生成し、コミットしてから rev.4 基板へ burn-bootloader してください。Tsurugi / Kunai の hex は有効なままです。
+
+### ドキュメント
+
+- WazamonoTachi.md のピン表を rev.4 へ更新（諸元見出しの AVR64DU28 表記修正、重複した空の I2C 表を削除）。README のボードメニュー名を「Wazamono Tachi (Pro Micro)」へ。
+- ライブラリ README（EventSystem / CustomLogic / ClockOut）と例スケッチ（CompToPin / PinToPin / MultipleOutputs / TCA0Demo1–4）の Tachi 行を rev.4 値へ更新（EVOUTA=D8 など）。
+
+---
+
 ## v0.0.4 — ピンマップ rev.3（Tachi の AVR64DU28 化 / VUSB 供給の統一）
 
 ハードウェア rev.3 に対応する変更です。**3 ボードとも burn-bootloader のやり直しが必要です**（Tachi は MCU が変わるため必須、Tsurugi は VREG 設定変更のため必須）。

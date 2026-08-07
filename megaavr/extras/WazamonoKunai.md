@@ -3,7 +3,8 @@
 **Seeeduino XIAO 後継機 — AVR32DU20 / USB-C**
 
 Wazamono Kunai は、Seeed の XIAO と同じ超小型フォームファクタ（21 × 17.8 mm）を、USB ネイティブな新世代 AVR `AVR32DU20` で再設計したボードです。
-USB-シリアル変換チップを搭載せず、マイコン単体で USB-C により PC と直接つながります。XIAO シリーズの定番である SAMD21 版（Seeeduino XIAO）を **5V 動作の AVR** で置き換えることを狙ったボードです。
+USB-シリアル変換チップを搭載せず、マイコン単体で USB-C により PC と直接つながります。
+XIAO シリーズの定番である SAMD21 版（Seeeduino XIAO）を **5V / 3V 動作の AVR** で置き換えることを狙ったボードです。
 
 > このページは Wazamono Kunai 1 機種のドキュメントです。コア全体の概要は [README](../../README.md) を参照してください。
 > **状態: 開発中。** ピン定義・ブートローダは変更される可能性があります。確定 BOM/回路図は準備中です。
@@ -14,13 +15,12 @@ USB-シリアル変換チップを搭載せず、マイコン単体で USB-C に
 
 | 項目 | 内容 |
 |------|------|
-| 由来 | Seeeduino XIAO（SAMD21 版）後継 |
-| MCU | AVR32DU20（VQFN-20） |
-| フォームファクタ | XIAO 互換（21 × 17.8 mm、両側 7 パッド + 裏面パッド） |
+| MCU | AVR32DU20（20 ピン） |
+| フォームファクタ | Seeeduino XIAO 互換 |
 | USB | USB-C（USB 2.0 Full-Speed、マイコン内蔵） |
-| クロック | 24 MHz 内蔵オシレータ **固定**（水晶なし、クロックメニューなし） |
-| 電源 | USB 5V（VUSB は内蔵 3.3V レギュレータ） |
-| 書き込み | USB CDC ブートローダ（STK500v1、1200bps タッチ） |
+| クロック | 24 MHz 内蔵オシレータ（USB接続時に自動調整） |
+| 電源 | USB 5V または VIN入力（駆動電源は JP1 で 5V / 3.3V を選択） |
+| 書き込み | USB CDC ブートローダ（STK500v1） |
 
 ---
 
@@ -33,47 +33,56 @@ USB-シリアル変換チップを搭載せず、マイコン単体で USB-C に
 | EEPROM | 256 B |
 | USERROW | 512 B |
 | 最大動作周波数 | 24 MHz |
-| USB | USB 2.0 Full-Speed デバイス |
-| ADC | 10-bit 170 ksps × 1（チャネル数は 20 ピンパッケージにより制限） |
-| DAC | なし（AC 内部の DACREF のみ） |
-| タイマ | TCA0 ×1（PWM 6ch）、TCB ×2 / TCD は USB が占有のため非搭載 |
-| USART | 2（USART0 / USART1） |
-| SPI / TWI(I2C) | 各 1 |
-| CCL（LUT）/イベントシステム/AC | AVR64DU32 と同じ周辺ブロックを搭載 |
-| パッケージ | 20 ピン（VQFN 3×3） |
+| USB | USB 2.0 Full-Speed デバイス（In/Out 16 EP ずつ最大 32 EP） |
+| ADC | 10-bit 170 ksps × 1（11 チャネル） |
+| タイマ | TCA0 ×1（PWM 6ch）、TCB ×2 (TCB1 は通常 PWM 用) |
+| USART | 2（Serial1 / Serial2） |
+| SPI | 2（SPI / SPI1） |
+| I2C | 1 |
+| CCL（LUT） | 3 |
+| イベントシステム | 2 チャネル |
+| アナログコンパレータ（AC） | 1 |
 
-<sub>諸元は AVR16/32DU ファミリデータシート（DS40002576）に基づく。
-周辺機能ブロックは AVR64DU32（DS40002548A）と共通だが、20 ピンのため外部に出せるピン数が少なく、同時に使える機能が制限されます。</sub>
+<sub>諸元は AVR16/32DU ファミリデータシート（DS40002576）に基づく。</sub>
 
 ---
 
 ## SAMD21（Seeeduino XIAO）との比較
 
 Wazamono Kunai が置き換える Seeeduino XIAO は **ATSAMD21G18**（ARM Cortex-M0+、3.3V 動作）を搭載しています。
-AVR32DU20 は **8-bit の AVRxt コア**で、生の演算性能やメモリ容量では SAMD21 に及びませんが、**5V ネイティブ動作** と **高い出力電流値** ならではの周辺機能と扱いやすさで差別化します。
+AVR32DU20 は **8-bit の AVRxt コア**で、演算性能やメモリ容量では SAMD21 に及びませんが、
+**5V ネイティブ動作** と **高い出力電流値** ならではの周辺機能と扱いやすさで差別化します。
 また同一基板上で 5V と 3.3V の動作電圧切り替えが可能です。
 
 | 項目 | Wazamono Kunai (AVR32DU20) | Seeeduino XIAO (SAMD21G18) |
 |------|----------------------------|----------------------------|
 | コア | 8-bit AVRxt | 32-bit ARM Cortex-M0+ |
 | 最大クロック | 24 MHz | 48 MHz |
-| **動作電圧** | **5V**（1.8–5.5V） | 3.3V のみ（5V 非トレラント） |
+| 動作電圧 | 5V / 3.3V（1.8–5.5V） | 3.3V のみ（5V 非トレラント） |
 | Flash | 32 KB | 256 KB |
 | SRAM | 4 KB | 32 KB |
 | EEPROM | 256 B | なし（フラッシュエミュレーション） |
 | ADC | 10-bit | 12-bit |
 | DAC | なし | 10-bit ×1 |
 | USB | Full-Speed デバイス（内蔵） | Full-Speed デバイス（内蔵） |
-| シリアル系統 | USART ×2 / SPI ×1 / I2C ×1 | SERCOM ×6（用途を割当） |
-| CCL（論理ブロック）/イベントシステム | あり | なし |
+| USART | 2 | SERCOM ×6（用途を割当 |
+| SPI | 2（1つはホスト限定） | SERCOM ×6（用途を割当 |
+| I2C | 1 | SERCOM ×6（用途を割当 |
+| CCL（LUT） | 3 | なし |
+| イベントシステム | 2 ch | なし |
+| アナログコンパレータ（AC） | 1 | なし |
 
 ### Kunai を選ぶ理由
 
-- **5V ネイティブ動作** — XIAO の最大の制約だった「3.3V のみ」を解消。5V ロジックのセンサ・モジュール・リレー等をレベル変換なしで直接駆動できます。AVR32DU20 は 1.8–5.5V の全域で 24 MHz 動作が可能です。
+- **5V ネイティブ動作** — XIAO の最大の制約だった「3.3V のみ」を解消。5V ロジックのセンサ・モジュール・リレー等をレベル変換なしで直接駆動できます。
+- AVR32DU20 は 1.8–5.5V の全域で 24 MHz 動作が可能です。
 - **真の EEPROM** — 256 B の独立した EEPROM を搭載。SAMD21 はフラッシュエミュレーションのため、設定値の保存が手軽です。
-- **AVR / Arduino-AVR エコシステム** — 古典 AVR 向けの豊富なライブラリ・作例がそのまま、あるいは小修正で動きます。`<avr/io.h>` レベルの低レベル制御も馴染みやすい構成です。
-- **CCL / イベントシステム** — CPU を介さないハードウェアレベルの論理演算・信号ルーティングが可能。SAMD21 にはない機能です。
+- **AVR / Arduino-AVR エコシステム** — 古典 AVR 向けの豊富なライブラリ・作例がそのまま、あるいは小修正で動きます。
+- `<avr/io.h>` レベルの低レベル制御も馴染みやすい構成です。
+- **新世代の周辺機能** — CCL（3 論理ブロック）とイベントシステム（3 チャネル）により、CPU を介さないハードウェア信号処理が可能。
 - **ピンあたりの駆動能力** — AVR の堅牢な I/O により、5V・20mA クラスの出力が可能です。
+- **追加の UART** — 2 系統の UART シリアル通信を利用可能です。
+- **RS-422/485 への対応** — USARTを使用して RS-485 通信が可能（外部の追加チップが必要）
 
 ### 留意点
 
@@ -121,27 +130,20 @@ XIAO と同じパッド配置（D0–D10）に加え、オンボード LED を X
 | D11 | PD4 | **A11** | AIN4 | **LED_BUILTIN** / USB-CDC **TX** アクティビティ LED |
 | D12 | PD5 | **A12** | AIN5 | USB-CDC **RX** アクティビティ LED |
 
-**パッドに出ない内部ピン:** PF6（RESET）/PF7（UPDI）
-
-> `~` は PWM 出力可能ピンを示します。XIAO は通常全てのピンで PWM を実行可能ですが Kunai では機能が限定されます。
-> XIAO では通常 A0–A10 がすべて存在しますが、Kunai では **A6/A7 が欠番**です（D6=PA0・D7=PA1 に ADC 入力がないため）。
+> 各デジタルピンは ADC チャネルも持ちますが D6 / D7 は仕様上アナログ入力を持ちません。
 
 ---
-
-## ペリフェラル割り当て
-
-variant 側でピン割り当てが確定済みのため、スケッチで `swap()` を指定する必要はありません。
 
 ### シリアルポート
 
 | オブジェクト | 実体 | ピン | 備考 |
 |--------------|------|------|------|
 | `Serial` | USB CDC | USB-C | シリアルモニタ（仮想 COM） |
-| `Serial1` | USART0（既定位置） | D6(TX) / D7(RX) | XIAO の TX/RX パッド相当のハードウェア UART（Uno R4 と同じ命名） |
-| `Serial2` | USART1（ALT2 固定） | D2(TX) / D3(RX) | 予備 UART |
+| `Serial1` | USART0（ALT1 固定） | D7(RX) / D6(TX) | Pro Micro 互換ハードウェア UART。XCK(D4)/XDIR(D5) 付きのフル機能位置で、RS-485 の方向制御や USART-SPI ホストモードにも対応 |
+| `Serial2` | USART1（ALT2 固定） | D3(RX) / D2(TX) | 予備 UART。SPI（SS/SCK）とピン共有・**排他利用** |
 
-> `Serial1` の実体は USART0 です（`Serial0` でも同じポートに届きます）。水晶を持たない Kunai では PA0/PA1 が空くため、USART0 をチップ既定位置のまま XIAO の TX/RX パッドに配置できています。
-> USART0 は多機能で、2つ目の SPI や RS-485 を使用する際の XDIR 信号（D5）・XCK（D4）を持ちます。
+> 本家 Pro Micro と同じく、D0/D1 のハードウェア UART が `Serial1` です。
+> `Serial0` は DxCore 内部での USART0 の名称で、`Serial1` と同一オブジェクトを指します。
 
 ### SPI（ホスト）
 
@@ -156,7 +158,6 @@ SPI0 既定位置（PORTA）に配置。ボードは SPI ホストで、チッ�
 
 > **クライアント（受信側）動作:** ハードウェア SS（D1/PA7）が実ピンにあるため、付属の **SPISlave ライブラリ**（ESP8266 互換 API）で SPI クライアントとしても動作できます。詳細は [libraries/SPISlave](../libraries/SPISlave/README.md) を参照。
 
-
 ### I2C（Wire）
 
 | 信号 | ピン |
@@ -164,55 +165,34 @@ SPI0 既定位置（PORTA）に配置。ボードは SPI ホストで、チッ�
 | SDA | D4（PA2） |
 | SCL | D5（PA3） |
 
-I2C は **TWI0 の既定位置（PA2/PA3）** そのままで XIAO の A4/A5 位置に一致します。PORTMUX の変更は不要で、**通常の `Wire.begin()` でそのまま D4/D5 が SDA/SCL になります**。
+I2C は **TWI0 の既定位置（PA2/PA3）** そのままで XIAO の A4/A5 位置に一致します。
+通常の `Wire.begin()` でそのまま使えます。
 
 ### PWM（`analogWrite()`）
 
 - **D4, D5, D6, D7, D9, D10** … TCA0（PORTA へ割り当て、WO0–WO5 = PA0–PA5）
-- **D0** … TCB1 の 8bit PWM 波形を **CCL LUT1 経由**で出力（PC3 = LUT1-OUT）
+- **D0** … TCB1 の 8bit PWM 波形を **CCL LUT0 経由**で出力（PC3 = LUT1-OUT 代替位置）
 
-> **D0 PWM の仕組み:** D0（PC3）は TCB の WO ピンではなく **LUT1 の出力ピン**です。`analogWrite(D0, x)` は空いている TCB1 を 8bit PWM モードで走らせ、その内部波形を CCL LUT1 の内部入力（INSEL1 = TCB）としてスルー出力します（コア機構 `wazamono_lutpwm`）。本物のハードウェア PWM であり CPU 負荷はありません。TCB1 自身の WO ピン位置は ALT1（PF5）へ退避しますが、**PF5 は 20 ピン品に存在しない**ため完全に無害です。
->
-> **自動無効化:** TCB1 または LUT1 が他の用途に使われている間、`analogWrite(D0)` は PWM をあきらめて単純な HIGH/LOW 出力（127 を閾値）に切り替わります。`tone()` は TCB1 を使うため、実行中は D0 の PWM のみ停止します（TCA0 の PWM と millis は動作継続）。LUT1 を CCL レジスタ直接操作で使用中も同様です（CustomLogic ライブラリの Kunai 用ユニットは LUT0 なので競合しません）。
-- `millis()` / `micros()` は **TCB0**。
-- `tone()` と `Servo` はどちらも TCB1 を使うため排他です（実行中は D0 PWM も停止）。
-
-> PWM 非対応: D1(PA7)・D2(PD6)・D3(PD7)・D8(PA6)・D11(PD4)・D12(PD5)。
+> **自動無効化:** TCB1 が他の用途に使われている間、`analogWrite(D0)` は PWM をあきらめて単純な HIGH/LOW 出力（127 を閾値）に切り替わります。
+> - `tone()` は TCB1 を使うため、実行中は D0 の PWM のみ停止します。
 
 ### アナログ入力
 
 - パッドの **A0–A5・A8–A10**（A6/A7 は欠番）と、LED ピンの **A13/A14**
 
-> アナログ入力非対応: D6(PA0)・D7(PA1)。
-
----
-
-## クロック
-
-USB 用の 48 MHz（CLK_USB）は内蔵 PLL48M が生成し、USB の SOF に同期して自動調整されます。
-**システムクロックの選択とは独立**しているため、内蔵オシレータ動作でも USB は機能します。
-
-Kunai は **水晶を搭載しない**設計で、システムクロックは内蔵 OSCHF の **24 MHz 固定**です。
-水晶用の PA0/PA1 は GPIO（D6/D7 = Serial1 TX/RX）として使用されています。
-
-> USB ホスト切断時は動作クロックが安定しない場合があります。
-
-### クロック出力（CLKOUT）
-
-メインクロック（CLK_PER）を **D1（PA7）** へ出力できます。外部 IC へのクロック供給、他 MCU との同期、実クロックの測定に使えます。付属の **ClockOut ライブラリ**で `ClockOut.begin()` / `ClockOut.end()` により開閉します（詳細は [libraries/ClockOut](../libraries/ClockOut/README.md)）。
-
-> 24MHz の連続矩形波は EMI 源になるため、必要な期間だけ有効化する運用を推奨します。PA7 は AC0 出力・EVOUTA・SPI SS と共用のため、それらが使用中は `begin()` が `false` を返します。
+> ハードウェア仕様上の制約から D6 / D7 にはアナログ入力がありません。
 
 ---
 
 ## 電源
 
-- **入力:** USB-C（5V）。
-- **VUSB（USB トランシーバ 3.3V）:** 基板上の**外部 3.3V LDO** から供給します（データシートの電源構成 3s 相当。内蔵 USB レギュレータは無効 = `USBVREG = 0` で、boards.txt に `-DUSB_VREG_INTERNAL` は指定しません）。全 Wazamono ボード共通の構成です。
-- **VBUS 検出:** なし（PC3 は D0 として使用。USB 接続状態はソフトウェアでは USB フレームの有無で判断します）。
-- AVR32DU20 は 1.8–5.5V の全範囲で 24 MHz 動作が可能です。
+- **USB-C（5V）:** 理想ダイオードで逆流保護し、外部電源との併用時もホストを破損させません。
+- **VIN 入力:** 基板上の高耐圧 LDO で 5V を生成します。ドロップアウトを考慮した**実用最低入力は約 6.5V**、上限は放熱で決まります（推奨 6.5–16V）。
+- 誤って 24V の AC アダプタを接続しても破壊せず過熱保護で停止します。
+- **VUSB（USB トランシーバ 3.3V）:** 基板上の LDO から供給します。
+- **電圧切替:** ジャンパパッド **JP1** で VCC を 5V / 3.3V から選択します。AVR64DU32 は 1.8–5.5V の全範囲で 24 MHz 動作が可能です。
 
-> Kunai の確定 BOM・回路図は現在準備中です。
+<sub>電圧選択のためには JP1 のパッドを望む電圧側とはんだ付けします</sub>
 
 ---
 
@@ -220,14 +200,12 @@ Kunai は **水晶を搭載しない**設計で、システムクロックは内
 
 | 部品 | 接続 | 用途 |
 |------|------|------|
-| LED_BUILTIN | D11（PD4） | オンボード LED（USB-CDC **TX** アクティビティ表示を兼用） |
+| TX LED | D11（PD4） | USB-CDC **TX** アクティビティ表示 |
 | RX LED | D12（PD5） | USB-CDC **RX** アクティビティ表示 |
-| リセット | RESET（PF6） | リセット入力 |
 
-`LED_BUILTIN` は **D11（PD4）** です（XIAO 同様、ヘッダ/パッドには出ていません）。
-アクティブ LOW なので D11 が LOW に設定された時に点灯します。
+Rx / Tx LED は CDC 受信の瞬間に約 100ms のパルスで点灯し、スケッチからの `digitalWrite(D11, ...)` と共存します。
 
-XIAO と同じ番号割り当て（TX LED = 11 / RX LED = 12）で、D11 の LED は USB CDC（`Serial`）の**送信アクティビティ表示**を兼ね、D12 の LED が**受信アクティビティ**を表示します（Pro Micro の RX/TX LED 相当。実装は [wazamono_kunai_init.cpp](../variants/WazamonoKunai/wazamono_kunai_init.cpp) の weak フック上書き）。スケッチから `digitalWrite(D11, ...)` した場合は、CDC 通信の瞬間だけ短いパルスが重なります。XIAO のユーザー LED「D13」に相当する専用 LED はありません（`digitalWrite(13, ...)` は no-op）。
+> ハードウェア仕様上の制約から LED_BUILDIN（D13）は実装されていません。
 
 ---
 
@@ -241,14 +219,11 @@ XIAO と同じ番号割り当て（TX LED = 11 / RX LED = 12）で、D11 の LED
 
 <sub>開発用 VID/PID は pid.codes のテスト範囲（アプリ `0x1209:0x000A` / ブートローダ `0x1209:0x0009`）を使用しています。製品出荷前に正式な VID/PID へ置き換えてください。</sub>
 
-> **ブートローダ hex について:** Kunai 用のブートローダ hex（`usbcdcboot_wazamonokunai.hex`）はボード固有（MCU が AVR32DU20、VID/PID・LED ピンが他機種と異なる）のため別途ビルドが必要です。`megaavr/bootloaders/usbcdcboot/` で `build_wazamono.bat`（または `.sh`）を実行すると Tachi/Tsurugi とともに生成されます。
-
 ---
 
 ## 主要部品
 
 > Kunai の確定 BOM・回路図は現在準備中です。確定次第このページに追記します。
-> 中心部品は **AVR32DU20（VQFN-20）** で、USB-C コネクタ・USB D+/D- の ESD/TVS 保護・電源デカップリングを基本構成とします。
 
 ---
 

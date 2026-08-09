@@ -245,8 +245,12 @@
 /* ---- USART0 -> user-facing "Serial1" = the Uno R3 D0/D1 UART (Uno R4 naming).
  * Default position ALT1 (PA4/PA5). The object is Serial0; UART0.cpp emits the
  * Serial1 alias. USART1 has no usable pins here and is compiled out. ---- */
-#define WAZAMONO_SERIAL1_IS_USART0
-#define WAZAMONO_NO_USART1
+#ifndef WAZAMONO_SERIAL1_IS_USART0
+  #define WAZAMONO_SERIAL1_IS_USART0
+#endif
+#ifndef WAZAMONO_NO_USART1
+  #define WAZAMONO_NO_USART1
+#endif
 #define HWSERIAL0_MUX                   (0x00 /* PORTMUX_USART0_DEFAULT_gc - PA0/PA1 = crystal */)
 #define HWSERIAL0_MUX_PINSWAP_1         (0x01 /* PORTMUX_USART0_ALT1_gc - PA4..PA7 */)
 #define HWSERIAL0_MUX_PINSWAP_2         (0x02 /* PORTMUX_USART0_ALT2_gc - PA2/PA3 (= I2C) */)

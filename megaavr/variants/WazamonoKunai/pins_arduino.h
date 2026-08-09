@@ -212,7 +212,9 @@
 /* ---- USART0 -> user-facing "Serial1" = the XIAO D6/D7 UART. DEFAULT position
  * (PA0 TX / PA1 RX; the chip is crystal-less, so PA0/PA1 are free for it).
  * The object is Serial0; UART0.cpp emits the Serial1 alias. ---- */
-#define WAZAMONO_SERIAL1_IS_USART0
+#ifndef WAZAMONO_SERIAL1_IS_USART0
+  #define WAZAMONO_SERIAL1_IS_USART0
+#endif
 #define HWSERIAL0_MUX                   (0x00 /* PORTMUX_USART0_DEFAULT_gc - PA0/PA1 = D6/D7 */)
 #define HWSERIAL0_MUX_PINSWAP_1         (0x01 /* PORTMUX_USART0_ALT1_gc - PA4..PA7 (= SPI) */)
 #define HWSERIAL0_MUX_PINSWAP_2         (0x02 /* PORTMUX_USART0_ALT2_gc - PA2/PA3 (= I2C) */)
@@ -239,7 +241,9 @@
 /* ---- USART1 -> user-facing "Serial2" on D2/D3 (ALT2 = PD6/PD7, the only
  * USART1 pin position on the DU). The object is Serial1; UART1.cpp renames it
  * to Serial2 (WAZAMONO_SERIAL2_IS_USART1). ---- */
-#define WAZAMONO_SERIAL2_IS_USART1
+#ifndef WAZAMONO_SERIAL2_IS_USART1
+  #define WAZAMONO_SERIAL2_IS_USART1
+#endif
 #define HWSERIAL1_MUX                   (0x00 /* PORTMUX_USART1_DEFAULT_gc - no pins */)
 #define HWSERIAL1_MUX_PINSWAP_1         (0x01 << 3 /* ALT1 absent on DU - placeholder */)
 #define HWSERIAL1_MUX_PINSWAP_2         (0x02 << 3 /* PORTMUX_USART1_ALT2_gc - PD6/PD7 = D2/D3 */)

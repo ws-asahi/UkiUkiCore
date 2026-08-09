@@ -102,8 +102,12 @@
  * these are visible to every core translation unit): ---------------------
  *   Serial1 -> USART0 (D0/D1, the Pro Micro hardware UART)  [alias of Serial0]
  *   Serial2 -> USART1 (D15 TX / D18 RX)                     [renamed object]  */
-#define WAZAMONO_SERIAL1_IS_USART0
-#define WAZAMONO_SERIAL2_IS_USART1
+#ifndef WAZAMONO_SERIAL1_IS_USART0
+  #define WAZAMONO_SERIAL1_IS_USART0
+#endif
+#ifndef WAZAMONO_SERIAL2_IS_USART1
+  #define WAZAMONO_SERIAL2_IS_USART1
+#endif
 
          /*##  ### #   #  ###
           #   #  #  ##  # #

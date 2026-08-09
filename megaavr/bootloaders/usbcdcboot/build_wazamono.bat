@@ -23,7 +23,8 @@ REM
 REM  Tachi's LED (PF3 = D17, LED_BUILTIN = RX LED, rev.4) is active-LOW;
 REM  Tsurugi's LED (PD6 = D13, op-amp buffered) is active-HIGH (Arduino Uno
 REM  convention). Each board passes its polarity explicitly below. All boards
-REM  feed VUSB from an external 3.3 V LDO, so every build passes VREG=0.
+REM  Tachi/Kunai feed VUSB from an external 3.3 V LDO (VREG=0); the Tsurugi
+REM  uses the internal USB regulator at VDD = 5 V (VREG=1, power config 5b).
 REM
 REM  The signature is read from SIGROW at runtime (stk500.c). Tachi (rev.4)
 REM  and Tsurugi both target avr64du32 but keep separate hexes (different
@@ -78,7 +79,7 @@ if not defined MAKE set MAKE=make
 
 REM            class             mcu        LEDport LEDpin board     LEDpol(AH|AL) VREG(0|1)
 call :build wazamonotachi     avr64du32  PORTF   3      TACHI   AL 0
-call :build wazamonotsurugi   avr64du32  PORTD   6      TSURUGI AH 0
+call :build wazamonotsurugi   avr64du32  PORTD   6      TSURUGI AH 1
 call :build wazamonokunai     avr32du20  PORTD   4      KUNAI   AL 0
 
 echo.

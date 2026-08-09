@@ -474,12 +474,19 @@ void usbInit(void) {
      *    config 5b/5s). Boards with an EXTERNAL 3.3 V VUSB supply (an on-board
      *    LDO, power config 3s) must NOT enable the internal regulator, or it
      *    would fight the external supply. Selected per board in boards.txt via
-     *    -DUSB_VREG_INTERNAL. As of pin map rev.3 ALL Wazamono boards (Tachi/
-     *    Tsurugi/Kunai) feed VUSB from an external 3.3 V LDO, so no Wazamono
-     *    board sets it; the switch is kept for development targets that use
-     *    the internal regulator (e.g. an unmodified Curiosity Nano). */
+     *    -DUSB_VREG_INTERNAL. The Tachi and Kunai feed VUSB from an external
+     *    3.3 V LDO and must NOT set it; the Tsurugi runs VDD = 5 V and uses
+     *    the internal regulator (power configuration 5b, boards.txt passes
+     *    the define). This also makes the stock Tsurugi board selection work
+     *    on an AVR64DU32 Curiosity Nano without the J114/JP100 jumper.
+     * The write is unconditional in both directions: a bootloader or an
+     * earlier sketch may have left the opposite setting behind, and on
+     * external-VUSB boards a running internal regulator would fight the
+     * on-board LDO through the VUSB net. */
 #if defined(USB_VREG_INTERNAL)
     SYSCFG.VUSBCTRL = SYSCFG_USBVREG_bm;
+#else
+    SYSCFG.VUSBCTRL = 0;
 #endif
 
     /* 3. Settle */

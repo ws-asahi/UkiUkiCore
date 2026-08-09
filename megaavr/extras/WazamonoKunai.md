@@ -171,10 +171,11 @@ I2C は **TWI0 の既定位置（PA2/PA3）** そのままで XIAO の A4/A5 位
 ### PWM（`analogWrite()`）
 
 - **D4, D5, D6, D7, D9, D10** … TCA0（PORTA へ割り当て、WO0–WO5 = PA0–PA5）
-- **D0** … TCB1 の 8bit PWM 波形を **CCL LUT0 経由**で出力（PC3 = LUT1-OUT 代替位置）
+- **D0** … TCB1 の 8bit PWM 波形を **CCL LUT1 経由**で出力（PC3 = LUT1-OUT 既定位置）
 
 > **自動無効化:** TCB1 が他の用途に使われている間、`analogWrite(D0)` は PWM をあきらめて単純な HIGH/LOW 出力（127 を閾値）に切り替わります。
 > - `tone()` は TCB1 を使うため、実行中は D0 の PWM のみ停止します。
+> - LUT1 を CCL レジスタ直接操作で使用中も同様です（CustomLogic ライブラリの Kunai 用ユニットは LUT0 なので競合しません）。
 
 ### アナログ入力
 

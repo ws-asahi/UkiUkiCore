@@ -209,14 +209,13 @@
  * carries the waveform. Conflicts disable D3 analogWrite automatically:
  * tone()/TCB1 reconfiguration (CNTMODE check) and LUT0 use by other code
  * (signature check in wazamono_lutpwm.c).
- * CCMPEN stays 0: the CCL taps the internal WO signal. If hardware testing
- * shows the LUT needs CCMPEN=1 (Table 24-2 ambiguity, see wazamono_lutpwm.h),
- * set it to 1 - at the cost of D8 (= PF5, the parked WO position) being driven
- * with the same waveform while D3 PWM is active. */
+ * CCMPEN stays 0: the CCL taps the internal WO signal, which was measured on
+ * silicon to run regardless of that bit (see wazamono_lutpwm.h). D8 (= PF5,
+ * TCB1's parked WO position) therefore stays a plain GPIO while D3 PWM runs. */
 #define WAZAMONO_TCB1_LUTPWM_PIN        (PIN_PA6)   /* D3 */
 #define WAZAMONO_TCB1_LUTPWM_LUT        (0)         /* LUT0 */
 #define WAZAMONO_TCB1_LUTPWM_LUT_ALT    (1)         /* CCLROUTEA: LUT0-OUT alt = PA6 */
-#define WAZAMONO_TCB1_LUTPWM_CCMPEN     (0)         /* pending hardware verification */
+#define WAZAMONO_TCB1_LUTPWM_CCMPEN     (0)         /* verified on silicon; leave at 0 */
 
 #define digitalPinHasPWM(p)             (digitalPinHasPWMTCB(p) || digitalPinHasPWMTCA(p))
 

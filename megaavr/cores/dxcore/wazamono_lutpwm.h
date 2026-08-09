@@ -40,17 +40,23 @@
  *     Ownership is re-checked on every call, so a LUT taken over mid-flight
  *     is never clobbered, and one released later is re-acquired transparently.
  *
- * NOTE on WAZAMONO_TCB1_LUTPWM_CCMPEN: the CCMPEN bit description
- * (DS40002548A 24.5.2) scopes the bit to the *pin*: it makes the waveform
- * output available on the corresponding WO pin, overriding the port output
- * value regardless of the pin's direction. The CCL taps the internal
- * "TCB1 WO" signal, which this module expects to run regardless of CCMPEN.
- * However, Table 24-2 ("CCMPEN = 0 -> No output") is ambiguous about the
- * internal signal, so this expectation MUST be verified on hardware once.
- * If the LUT turns out to need CCMPEN = 1, set WAZAMONO_TCB1_LUTPWM_CCMPEN
- * to 1 in the variant - at the cost that the parked WO pin (PF5), where it
- * physically exists, is then driven with the waveform whenever this PWM is
- * active (CCMPEN overrides the pin regardless of direction).
+ * NOTE on WAZAMONO_TCB1_LUTPWM_CCMPEN - VERIFIED ON SILICON, keep it 0.
+ * The CCMPEN bit description (DS40002548A 24.5.2) scopes the bit to the *pin*:
+ * it makes the waveform available on the corresponding WO pin, overriding the
+ * port output value regardless of the pin's direction. Table 24-2 ("CCMPEN = 0
+ * -> No output") left it open whether the internal "TCB1 WO" signal the CCL
+ * taps runs as well, so it was measured on an AVR64DU32 Curiosity Nano:
+ *
+ *   TCB1 PWM8 (CCMPL = 0xFF, CCMPH = 0x80) -> LUT INSEL1 = TCB -> OUT pin
+ *     LUT0 ALT1 -> PA6 (Tsurugi D3):  waveform present with CCMPEN = 0
+ *     LUT1      -> PC3 (Kunai   D0):  waveform present with CCMPEN = 0
+ *   Both pins behaved identically with CCMPEN = 1, confirming the bit has no
+ *   bearing on the internal signal. (The same run also showed the CCL output
+ *   enable overriding the port direction: the OUT pin is driven without the
+ *   sketch setting it as an output.)
+ *
+ * The macro is kept as a per-variant escape hatch, but no Wazamono board needs
+ * it: setting it to 1 would only add the waveform on TCB1's parked WO pin.
  */
 
 #ifndef WAZAMONO_LUTPWM_H

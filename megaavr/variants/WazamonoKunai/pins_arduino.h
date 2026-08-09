@@ -181,14 +181,13 @@
  * (signature check in wazamono_lutpwm.c). LUT1 is not offered by the
  * CustomLogic library on the Kunai (its user unit is LUT0), so in practice
  * only direct CCL register use competes for it.
- * CCMPEN stays 0: the CCL taps the internal WO signal. If hardware testing
- * shows the LUT needs CCMPEN=1 (Table 24-2 ambiguity, see wazamono_lutpwm.h),
- * set it to 1 - harmless on the Kunai, since the parked WO position (PF5)
- * does not exist on the 20-pin DU. */
+ * CCMPEN stays 0: the CCL taps the internal WO signal, which was measured on
+ * silicon to run regardless of that bit (see wazamono_lutpwm.h). The exact
+ * LUT1 -> PC3 path used here was part of that measurement. */
 #define WAZAMONO_TCB1_LUTPWM_PIN        (PIN_PC3)   /* D0 */
 #define WAZAMONO_TCB1_LUTPWM_LUT        (1)         /* LUT1 */
 #define WAZAMONO_TCB1_LUTPWM_LUT_ALT    (0)         /* CCLROUTEA: LUT1-OUT default = PC3 */
-#define WAZAMONO_TCB1_LUTPWM_CCMPEN     (0)         /* pending hardware verification */
+#define WAZAMONO_TCB1_LUTPWM_CCMPEN     (0)         /* verified on silicon; leave at 0 */
 
 #define digitalPinHasPWM(p)             (digitalPinHasPWMTCB(p) || digitalPinHasPWMTCA(p))
 

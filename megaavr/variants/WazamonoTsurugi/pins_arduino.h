@@ -66,9 +66,9 @@
  *   USART0-> "Serial1", ALT1 (PA4 TX / PA5 RX) = D1/D0. The Uno R3 D0/D1 UART,
  *           named Serial1 to match the Uno R4 convention (WAZAMONO_SERIAL1_IS_
  *           USART0; the object is Serial0, Serial1 is its alias - see UART0.cpp).
- *   USART1-> exists on the AVR DU but has NO usable pin position on Tsurugi
- *           (DU USART1 is only PD6/PD7, which are SPI SCK / AREF here).
- *           Compiled out entirely (WAZAMONO_NO_USART1).
+ *   USART1-> "Serial2", ALT2 fixed (PD6 TX = D13 / PD7 RX = D20, the AREF
+ *           pin) - the only DU USART1 position that exists here. Shares its
+ *           pins with SPI0 SCK and the AREF function (user-level conflict).
  *   LED   -> on-board LED follows D13 (PD6, SPI SCK) through a unity-gain op-amp
  *           buffer on the board - the same arrangement as the Arduino Uno R3 - so
  *           the LED never loads the SCK line. No firmware is involved.
@@ -249,8 +249,8 @@
 #ifndef WAZAMONO_SERIAL1_IS_USART0
   #define WAZAMONO_SERIAL1_IS_USART0
 #endif
-#ifndef WAZAMONO_NO_USART1
-  #define WAZAMONO_NO_USART1
+#ifndef WAZAMONO_SERIAL2_IS_USART1
+  #define WAZAMONO_SERIAL2_IS_USART1   /* USART1 object is exposed as Serial2 (UART1.cpp) */
 #endif
 #define HWSERIAL0_MUX                   (0x00 /* PORTMUX_USART0_DEFAULT_gc - PA0/PA1 = crystal */)
 #define HWSERIAL0_MUX_PINSWAP_1         (0x01 /* PORTMUX_USART0_ALT1_gc - PA4..PA7 */)
@@ -275,14 +275,17 @@
 #define PIN_HWSERIAL0_XCK_PINSWAP_3     (PIN_PD6)
 #define PIN_HWSERIAL0_XDIR_PINSWAP_3    (PIN_PD7)
 
-/* ---- USART1: NO usable pin position on Tsurugi (DU USART1 is only PD6/PD7
- *   (ALT2) = SPI SCK / AREF here). WAZAMONO_NO_USART1 above compiles the object
- *   out (UART1.cpp); the defines below are kept for table completeness. ---- */
+/* ---- USART1 -> user-facing "Serial2" on ALT2: PD6 TX (= D13) / PD7 RX (= D20,
+ *   the AREF pin). The only DU USART1 pin position that exists on this board.
+ *   Serial2 shares its pins with SPI0 (SCK = PD6) and with the AREF function
+ *   (PD7): Serial2.begin() while SPI is active - or while a shield feeds an
+ *   external reference into AREF - is a user-level conflict, exactly like
+ *   using D0/D1 as GPIO on a classic Uno while Serial is open. ---- */
 #define HWSERIAL1_MUX                   (0x00 /* PORTMUX_USART1_DEFAULT_gc - no pins */)
 #define HWSERIAL1_MUX_PINSWAP_1         (0x01 << 3 /* ALT1 absent on DU - placeholder */)
-#define HWSERIAL1_MUX_PINSWAP_2         (0x02 << 3 /* PORTMUX_USART1_ALT2_gc - PD6/PD7 (occupied) */)
+#define HWSERIAL1_MUX_PINSWAP_2         (0x02 << 3 /* PORTMUX_USART1_ALT2_gc - PD6 TX / PD7 RX */)
 #define HWSERIAL1_MUX_PINSWAP_NONE      (0x03 << 3)
-#define HWSERIAL1_MUX_DEFAULT          (0)
+#define HWSERIAL1_MUX_DEFAULT          (2)   /* Tsurugi: USART1 fixed on ALT2 (PD6/PD7 = D13/D20) */
 #define PIN_HWSERIAL1_TX                (NOT_A_PIN)
 #define PIN_HWSERIAL1_RX                (NOT_A_PIN)
 #define PIN_HWSERIAL1_XCK               (NOT_A_PIN)
@@ -291,8 +294,8 @@
 #define PIN_HWSERIAL1_RX_PINSWAP_1      (NOT_A_PIN)
 #define PIN_HWSERIAL1_XCK_PINSWAP_1     (NOT_A_PIN)
 #define PIN_HWSERIAL1_XDIR_PINSWAP_1    (NOT_A_PIN)
-#define PIN_HWSERIAL1_TX_PINSWAP_2      (NOT_A_PIN)
-#define PIN_HWSERIAL1_RX_PINSWAP_2      (NOT_A_PIN)
+#define PIN_HWSERIAL1_TX_PINSWAP_2      (PIN_PD6)   /* D13 */
+#define PIN_HWSERIAL1_RX_PINSWAP_2      (PIN_PD7)   /* D20 / AREF */
 #define PIN_HWSERIAL1_XCK_PINSWAP_2     (NOT_A_PIN)
 #define PIN_HWSERIAL1_XDIR_PINSWAP_2    (NOT_A_PIN)
 
@@ -577,7 +580,8 @@ static const uint8_t A20  = PIN_A20;
  *  Serial  = USBSerial (on-chip USB CDC)              <- primary / USB serial monitor
  *  Serial1 = USART0   (D0/D1, ALT1 - the Uno R3 hardware UART; Uno R4 naming.
  *                      Alias of Serial0 - both names reach the same port.)
- *  USART1  = compiled out (WAZAMONO_NO_USART1: no usable pins on Tsurugi).
+ *  Serial2 = USART1   (D13 TX / D20(AREF) RX, ALT2 - shares pins with SPI0
+ *                      SCK and the AREF function; see the USART1 note above).
  *  Define HAVE_NO_USB_SERIAL_REDIRECT (from boards.txt) to keep Serial==USART0.
  */
 #if defined(USB0) && !defined(HAVE_NO_USB_SERIAL_REDIRECT)

@@ -178,13 +178,11 @@ wazamonotsurugi.upload.wait_for_upload_port=true
 wazamonotsurugi.bootloader.file=hex/{bootloader.class}.hex
 wazamonotsurugi.bootloader.appspm=
 
-# --- Clock: WITH 24 MHz crystal (default) or WITHOUT (internal OSCHF) ---
-wazamonotsurugi.menu.clock.24crystal=24 MHz external crystal (default)
-wazamonotsurugi.menu.clock.24crystal.build.speed=24
-wazamonotsurugi.menu.clock.24crystal.build.clocksource=1
-wazamonotsurugi.menu.clock.24internal=24 MHz internal (no crystal)
-wazamonotsurugi.menu.clock.24internal.build.speed=24
-wazamonotsurugi.menu.clock.24internal.build.clocksource=0
+# --- Clock: 24 MHz internal OSCHF, fixed (no IDE menu). Board rev.C carries
+#     no crystal: PA0/PA1 are the CDC TX/RX activity LEDs. USB's 48 MHz comes
+#     from PLL48M auto-tuned to the USB SOF, independent of CLK_PER. ---
+wazamonotsurugi.build.speed=24
+wazamonotsurugi.build.clocksource=0
 
 # --- Locked to AVR64DU32. Variant + bootloader hex fixed to Wazamono Tsurugi. ---
 wazamonotsurugi.build.mcu=avr64du32

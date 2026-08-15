@@ -6,11 +6,11 @@
  *
  * Board   : Wazamono Tsurugi (Arduino Uno R3 form factor, AVR64DU32, USB-C)
  * MCU     : AVR64DU32  (32-pin TQFP/VQFN)
- * Clock   : external 24 MHz crystal on PA0/PA1 (XTALHF1/XTALHF2)
- *           -> boards.txt must select an external-HF-crystal clock option, so
- *              CLOCK_SOURCE & 0x03 == 1 and PA0/PA1 are removed from the GPIO map.
- *           -> USB CLK_USB (48 MHz) is still produced by OSCHF + PLL48M and is
- *              auto-tuned to the USB SOF, independently of this crystal.
+ * Clock   : internal OSCHF, 24 MHz fixed (no crystal on the board; boards.txt
+ *           pins build.clocksource=0, no IDE clock menu). USB CLK_USB (48 MHz)
+ *           is produced by OSCHF + PLL48M and auto-tuned to the USB SOF.
+ *           PA0/PA1 (the XTALHF pads) are repurposed as the USB-CDC TX/RX
+ *           activity LEDs (active-LOW, 3.3 V rail).
  *
  *  ===== Pin numbering: Arduino Uno R3 compatible (NONCANONICAL) =====
  *   D#   MCU   Uno R3 role / notes                          A#,  AIN
@@ -38,8 +38,8 @@
  *   D20  PD7   AREF | GPIO | SPI0 SS(ALT4) | Serial2 RX      A20, AIN7
  *        (usable as plain GPIO whenever no external reference is applied
  *         to the AREF header pin - a modern-AVR capability the Uno R3 lacks)
- *        PA0   XTALHF1 (24 MHz crystal)             index 21  (NOT_A_PIN)
- *        PA1   XTALHF2 (24 MHz crystal)             index 22  (NOT_A_PIN)
+ *        PA0   TX activity LED (active-LOW)         index 21  (PIN_LED_TX)
+ *        PA1   RX activity LED (active-LOW)         index 22  (PIN_LED_RX)
  *        PF6   RESET                                index 23
  *        PF7   UPDI                                 index 24  (== PIN_PF7, highest)
  *
@@ -117,8 +117,8 @@
 #define PIN_PA2 (18)  // D18 A4 / SDA
 #define PIN_PA3 (19)  // D19 A5 / SCL
 #define PIN_PD7 (20)  // D20/A20 = AREF (VREFA) | GPIO | SPI0 SS(ALT4) | Serial2 RX
-#define PIN_PA0 (21)  // XTALHF1 (crystal)
-#define PIN_PA1 (22)  // XTALHF2 (crystal)
+#define PIN_PA0 (21)  // TX activity LED (active-LOW; USB-CDC traffic, variant-driven)
+#define PIN_PA1 (22)  // RX activity LED (active-LOW; USB-CDC traffic, variant-driven)
 #define PIN_PF6 (23)  // RESET
 #define PIN_PF7 (24)  // UPDI  (highest index -> sets NUM_DIGITAL_PINS = 25)
 
@@ -126,11 +126,18 @@
 #define PINS_COUNT                     (25)  // length of the pin tables (incl. reserved)
 #define NUM_ANALOG_INPUTS              (31)  // highest ADC channel in use is AIN31 (PC3)
 // NUM_DIGITAL_PINS / NUM_TOTAL_PINS  -> auto = PIN_PF7 + 1 = 25
-// NUM_INTERNALLY_USED_PINS           -> auto = 2 (external crystal: PA0, PA1)
+// NUM_INTERNALLY_USED_PINS           -> auto = 0 (no crystal; PA0/PA1 = TX/RX LEDs, still writable GPIO)
 
 #if !defined(LED_BUILTIN)
   #define LED_BUILTIN                  (PIN_PD6)   // D13, on-board LED (Uno convention)
 #endif
+/* USB-CDC activity LEDs (Pro Micro convention, both active-LOW, 3.3 V rail).
+ * Driven from the CDC hooks in wazamono_tsurugi_init.cpp; sketches may also
+ * digitalWrite() them - they just fight the ~100 ms activity pulses. */
+#define PIN_LED_TX                     (PIN_PA0)
+#define PIN_LED_RX                     (PIN_PA1)
+#define LED_BUILTIN_TX                 PIN_LED_TX
+#define LED_BUILTIN_RX                 PIN_LED_RX
 
 /* ---- Event output pins: FIXED by the board's pin-configuration table ----
  * One pin per event output, no alternatives. Libraries (CustomLogic, and the
@@ -259,12 +266,12 @@
 #ifndef WAZAMONO_SERIAL2_IS_USART1
   #define WAZAMONO_SERIAL2_IS_USART1   /* USART1 object is exposed as Serial2 (UART1.cpp) */
 #endif
-#define HWSERIAL0_MUX                   (0x00 /* PORTMUX_USART0_DEFAULT_gc - PA0/PA1 = crystal */)
+#define HWSERIAL0_MUX                   (0x00 /* PORTMUX_USART0_DEFAULT_gc - PA0/PA1 = TX/RX LEDs */)
 #define HWSERIAL0_MUX_PINSWAP_1         (0x01 /* PORTMUX_USART0_ALT1_gc - PA4..PA7 */)
 #define HWSERIAL0_MUX_PINSWAP_2         (0x02 /* PORTMUX_USART0_ALT2_gc - PA2/PA3 (= I2C) */)
 #define HWSERIAL0_MUX_PINSWAP_3         (0x03 /* PORTMUX_USART0_ALT3_gc - PD4..PD7 (= SPI/AREF) */)
 #define HWSERIAL0_MUX_PINSWAP_NONE      (0x05)
-#define HWSERIAL0_MUX_DEFAULT          (1)   /* Tsurugi default: USART0 ALT1 (PA4/PA5). DEFAULT(PA0/PA1) is the crystal. */
+#define HWSERIAL0_MUX_DEFAULT          (1)   /* Tsurugi default: USART0 ALT1 (PA4/PA5). DEFAULT(PA0/PA1) drives the LEDs. */
 #define PIN_HWSERIAL0_TX                (PIN_PA0)
 #define PIN_HWSERIAL0_RX                (PIN_PA1)
 #define PIN_HWSERIAL0_XCK               (PIN_PA2)
@@ -473,15 +480,15 @@ static const uint8_t A20  = PIN_A20;
     PIN2_bp,   // 18 PA2  A4
     PIN3_bp,   // 19 PA3  A5
     PIN7_bp,   // 20 PD7  D20/AREF
-    #if ((CLOCK_SOURCE & 0x03) == 0) // internal clock -> PA0 is a usable GPIO
-      PIN0_bp, // 21 PA0
-    #else                            // external crystal/clock -> PA0 = XTALHF1
+    #if ((CLOCK_SOURCE & 0x03) == 0) // Tsurugi: always true (internal OSCHF, fixed)
+      PIN0_bp, // 21 PA0  TX LED
+    #else                            // kept only as a safety net for exotic rebuilds
       NOT_A_PIN,
     #endif
-    #if ((CLOCK_SOURCE & 0x03) == 1) // external crystal also takes PA1
+    #if ((CLOCK_SOURCE & 0x03) == 1)
       NOT_A_PIN,
     #else
-      PIN1_bp, // 22 PA1
+      PIN1_bp, // 22 PA1  RX LED
     #endif
     PIN6_bp,   // 23 PF6 RESET
     PIN7_bp    // 24 PF7 UPDI
@@ -510,14 +517,14 @@ static const uint8_t A20  = PIN_A20;
     PIN3_bm,   // 19 PA3  A5
     PIN7_bm,   // 20 PD7  D20/AREF
     #if ((CLOCK_SOURCE & 0x03) == 0)
-      PIN0_bm, // 21 PA0
+      PIN0_bm, // 21 PA0  TX LED
     #else
       NOT_A_PIN,
     #endif
     #if ((CLOCK_SOURCE & 0x03) == 1)
       NOT_A_PIN,
     #else
-      PIN1_bm, // 22 PA1
+      PIN1_bm, // 22 PA1  RX LED
     #endif
     PIN6_bm,   // 23 PF6 RESET
     PIN7_bm    // 24 PF7 UPDI

@@ -18,7 +18,7 @@ Uno R3 が別チップ（USB-シリアル変換）を必要としたのに対し
 | MCU | AVR64DU32（32 ピン） |
 | フォームファクタ | Uno R3 互換 |
 | USB | USB-C（USB 2.0 Full-Speed、マイコン内蔵） |
-| クロック | 24 MHz 水晶 |
+| クロック | 24 MHz 内蔵発振（OSCHF、水晶レス） |
 | 電源 | USB 5V / DC ジャック（最大 24V、同期バックで 5V 生成）|
 | 書き込み | USB CDC ブートローダ（STK500v1） |
 
@@ -117,12 +117,12 @@ Arduino Uno R3 と同じ番号付け（D0–D13、A0–A5）です。A0–A5 は
 | D0 | PA5 | A6 | AIN25 | **RX**（Serial1 / USART0 ALT1） |
 | D1 | PA4 | A7 | AIN24 | **TX**（Serial1 / USART0 ALT1） |
 | D2 | PA7 | A8 | AIN27 | USART0 XDIR / AC0 OUT / EVOUTA / CLKOUT |
-| D3 | PA6 | A9 | AIN26 | ~PWM(**TCB1 + CCL LUT0**) / USART0 XCK / tone() と共用 |
-| D4 | PF4 | A10 | AIN20 | 汎用 I/O（PWM なし。TCB0 は millis） |
+| D3 | PA6 | A9 | AIN26 | ~PWM(**TCB1 + CCL LUT0**・既定の出口) / USART0 XCK / tone() と共用 |
+| D4 | PC3 | A10 | AIN31 | ~PWM(**TCB1 + CCL LUT1**・択一) / VDD 駆動を実測確認 |
 | D5 | PD0 | A11 | AIN0 | ~PWM(TCA0 WO0) / CCL |
 | D6 | PD1 | A12 | AIN1 | ~PWM(TCA0 WO1) / CCL |
-| D7 | PC3 | A13 | AIN31 | 汎用 I/O（実測で VDD 駆動を確認） |
-| D8 | PF5 | A14 | AIN21 | 汎用 I/O（TCB1 WO 駐機位置 ※D3 PWM の注記参照） |
+| D7 | PF4 | A13 | AIN20 | 汎用 I/O（PWM なし。TCB0 は millis） |
+| D8 | PF5 | A14 | AIN21 | ~PWM(**TCB1 WO 直結**・択一) |
 | D9 | PD2 | A15 | AIN2 | ~PWM(TCA0 WO2) / CCL / AC0 AINP0 / EVOUTD |
 | D10 | PD3 | A16 | AIN3 | ~PWM(TCA0 WO3) / CCL / AC0 AINN0 / **SS** |
 | D11 | PD4 | A17 | AIN4 | ~PWM(TCA0 WO4) / SPI **MOSI** |
@@ -134,8 +134,19 @@ Arduino Uno R3 と同じ番号付け（D0–D13、A0–A5）です。A0–A5 は
 | D17 / A3 | PF3 | A3 | AIN19 | アナログ A3 / CCL |
 | D18 / A4 | PA2 | A4 | AIN22 | アナログ A4 / **SDA**（I2C） |
 | D19 / A5 | PA3 | A5 | AIN23 | アナログ A5 / **SCL**（I2C） |
+| **D20 / AREF** | PD7 | A20 | AIN7 | **AREF（VREFA）と GPIO の兼用** / SPI0 SS(ALT) / Serial2 RX |
 
-> 各デジタルピンは ADC チャネルを持つため、A6–A19 としても参照できます。
+> 各デジタルピンは ADC チャネルを持つため、A6–A20 としても参照できます。
+>
+> **D3 / D4 / D8 の PWM は択一**です。1 本の TCB1 波形を CCL または WO ピンで
+> 出し分ける構造のため、最後に `analogWrite()` したピンが出口になります
+> （既定は D3）。3 本同時に異なる PWM は出せません。周波数・デューティは
+> 3 ピンで共通です。
+>
+> **D20（AREF）**は外部基準電圧を使わないときは通常の GPIO として使えます。
+> シールドが AREF に基準電圧を供給している間は D20 を出力にしないでください
+> （逆も同様）。この兼用はモダン AVR 世代の構造的特徴で、クラシック AVR の
+> Uno R3 にはない機能です。
 
 ---
 
@@ -148,9 +159,10 @@ variant 側でピン割り当てが確定済みのため、スケッチで `swap
 | オブジェクト | 実体 | ピン | 備考 |
 |--------------|------|------|------|
 | `Serial` | USB CDC | USB-C | シリアルモニタ（仮想 COM）。日常の `Serial.print()` は Uno と同じ感覚で使えます |
-| `Serial1` | USART0（ALT1 固定） | D0(RX) / D1(TX) | Pro Micro 互換ハードウェア UART。XCK(D7)/XDIR(D8) 付きのフル機能位置で、RS-485 の方向制御や USART-SPI ホストモードにも対応 |
+| `Serial1` | USART0（ALT1 固定） | D0(RX) / D1(TX) | Uno R3 互換ハードウェア UART。RS-485 の方向制御や USART-SPI ホストモードにも対応 |
+| `Serial2` | USART1（ALT2 固定） | D20/AREF(RX) / D13(TX) | 2 本目のハードウェア UART。**D13(SCK)・AREF と共用**のため、SPI 使用中や外部基準電圧の使用中は開かないこと |
 
-> 本家 Pro Micro と同じく、D0/D1 のハードウェア UART が `Serial1` です。
+> 本家 Uno R4 と同じく、D0/D1 のハードウェア UART が `Serial1` です。
 > `Serial0` は DxCore 内部での USART0 の名称で、`Serial1` と同一オブジェクトを指します。
 
 ### SPI
@@ -193,8 +205,11 @@ Uno R3 と同じ A4/A5 に配置されています。
 
 ## クロック
 
-Tsurugi は **外付けの水晶を搭載**した設計で、システムクロックは **24 MHz 固定**です。
-USB 用の 48 MHz（CLK_USB）は内蔵 PLL48M が生成し USB の SOF に同期して自動調整されます。
+Tsurugi は**水晶レス**設計で、システムクロックは**内蔵 OSCHF の 24 MHz 固定**です
+（Uno R4 と同じ方針。IDE のクロック選択メニューはありません）。
+USB 用の 48 MHz（CLK_USB）は内蔵 PLL48M が生成し USB の SOF に同期して自動調整
+されるため、USB 通信の安定性は水晶の有無と無関係です。UART のボーレート精度は
+内蔵発振の精度（±3% 程度、SOF 同調時はさらに改善）に依存します。
 
 ### クロック出力（CLKOUT）
 
@@ -210,7 +225,7 @@ Tsurugi は **2 系統の電源入力**を持ち、いずれからでも 5V を�
 
 - **USB-C（5V）:** 理想ダイオードで逆流保護し、ホストを破損させずに 5V を供給します。
 - **DC ジャック（最大 24V）:** φ5.5/2.1mm の DC ジャック（J10）から入力し、ショットキーで逆接続保護後、**同期バックコンバータ**で 5Vを生成します。
-- EN 分圧（100k/15k）により起動電圧は約 9.2V です。入力側 TVS で過電圧から保護します。
+- EN 分圧（100 kΩ/100 kΩ）により起動保証電圧は約 5.0 V です（推奨入力は 7 V 以上）。入力側 TVS で過電圧から保護します。
 - **3.3V（シールドピン用）:** 基板上の LDO。
 - **VUSB（USB トランシーバ 3.3V）:** AVR DU の**内蔵 USB レギュレータ**が VDD（5V）から生成します（電源構成 5b。boards.txt が `-DUSB_VREG_INTERNAL` を指定）。シールドピン用 3.3V LDO とは独立です。
 
@@ -222,8 +237,10 @@ Tsurugi は **2 系統の電源入力**を持ち、いずれからでも 5V を�
 
 | 部品 | 接続 | 用途 |
 |------|------|------|
-| 電源 LED | 電源ライン（D3/黄緑） | 通電表示 |
-| LED_BUILTIN | D13（PD6）→ MOSFET（D4/橙） | オンボード LED（Uno R3 慣例） |
+| 電源 LED | 電源ライン | 通電表示 |
+| LED_BUILTIN | D13（PD6）→ MOSFET バッファ | オンボード LED（Uno R3 慣例） |
+| TX LED | PA0（`PIN_LED_TX`、アクティブ LOW） | USB-CDC 送信アクティビティ（Pro Micro 慣例） |
+| RX LED | PA1（`PIN_LED_RX`、アクティブ LOW） | USB-CDC 受信アクティビティ（Pro Micro 慣例） |
 | リセット | RESET（PF6） | タクトスイッチ |
 
 `LED_BUILTIN` は **D13（PD6）** です。D13 は SPI SCK と共用のため、Uno R3 と同様に SPI 使用中は LED が SCK のトラフィックで点滅します。

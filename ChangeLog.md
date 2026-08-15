@@ -4,6 +4,25 @@ WazamonoCore の変更履歴です。WazamonoCore は [DxCore](https://github.co
 
 ---
 
+## v0.0.6 — Tsurugi ピンマップ rev.3（水晶レス・Serial2・択一 PWM）
+
+Tsurugi のハードウェア rev.C に対応する変更です。Tachi / Kunai に変更はありません。
+
+### Tsurugi（破壊的変更を含む）
+
+- ピンマップ rev.3: **D4=PC3（旧 D7）/ D7=PF4（旧 D4）を入れ替え**。D4 が CCL LUT1-OUT の既定位置になります。A10/A13 は D 番号に追従します。
+- **AREF（PD7）を D20/A20 として公開**: 外部基準電圧を使わないときは GPIO / SPI0 ハードウェア SS(ALT4) / Serial2 RX として使用可能（モダン AVR の構造的特徴。Uno R3 では不可能）。
+- **Serial2 追加**: USART1 ALT2 固定（TX=D13/PD6、RX=D20/PD7）。D13(SCK)・AREF と共用のため、SPI 使用中・外部基準使用中の併用は不可。
+- **択一式 TCB1 PWM**: `analogWrite()` の出口を D3（LUT0 ALT）/ D4（LUT1 既定）/ D8（TCB1 WO 直結）から選択。最後に書いたピンが出口を取得（既定 D3）。コアに `WAZAMONO_TCB1_PWMMUX` 機構を追加（Tachi/Kunai の単一経路 `WAZAMONO_TCB1_LUTPWM_*` は無変更）。
+- **水晶レス化**: boards.txt からクロック選択メニューを削除し、内蔵 OSCHF 24 MHz 固定に（Uno R4 と同方針）。USB の 48 MHz は従来どおり PLL48M + SOF 自動同調。
+- **USB-CDC TX/RX LED**: 水晶撤去で空いた PA0（TX）/ PA1（RX）をアクティビティ LED として駆動（アクティブ LOW、100ms ワンショット、Pro Micro 慣例）。`PIN_LED_TX` / `PIN_LED_RX` / `LED_BUILTIN_TX` / `LED_BUILTIN_RX` を定義。
+
+### ドキュメント
+
+- WazamonoTsurugi.md をピンマップ rev.3 へ更新（D4/D7、D20/AREF、Serial2、択一 PWM、クロック節、LED 表、電源節の EN 分圧値 100k/100k・起動約 5.0 V への修正）。
+
+---
+
 ## v0.0.5 — ピンマップ rev.4（Tachi を AVR64DU32 へ戻す）
 
 Tachi のハードウェア rev.4 に対応する変更です。**Tachi は burn-bootloader のやり直しが必要です**（MCU が avr64du28 → avr64du32 へ戻るため）。Tsurugi / Kunai に変更はありません。

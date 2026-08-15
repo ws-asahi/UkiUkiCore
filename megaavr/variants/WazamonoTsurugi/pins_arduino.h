@@ -183,9 +183,12 @@
 #if defined(MILLIS_USE_TIMERB1)
   #define digitalPinHasPWMTCB(p) (0)                   /* TCB1 is millis; no TCB PWM */
 #elif defined(MILLIS_USE_TIMERB0)
-  #define digitalPinHasPWMTCB(p) ((p) == PIN_PA6)      /* TCB0=millis -> TCB1 free -> D3 PWM (via LUT0) */
+  /* TCB0 = millis -> TCB1 free. ONE waveform, THREE selectable outlets:
+   * D3 (LUT0 alt), D4 (LUT1 default), D8 (TCB1 WO, ALT1). Exclusive - the
+   * last analogWrite() among the three owns the route; default outlet D3. */
+  #define digitalPinHasPWMTCB(p) ((p) == PIN_PA6 || (p) == PIN_PC3 || (p) == PIN_PF5)
 #else
-  #define digitalPinHasPWMTCB(p) ((p) == PIN_PA6)
+  #define digitalPinHasPWMTCB(p) ((p) == PIN_PA6 || (p) == PIN_PC3 || (p) == PIN_PF5)
 #endif
 #define digitalPinHasPWMTCA(p) ( \
     (p) == PIN_PD0 || (p) == PIN_PD1 || (p) == PIN_PD2 || \
@@ -214,10 +217,14 @@
  * CCMPEN stays 0: the CCL taps the internal WO signal, which was measured on
  * silicon to run regardless of that bit (see wazamono_lutpwm.h). D8 (= PF5,
  * TCB1's parked WO position) therefore stays a plain GPIO while D3 PWM runs. */
-#define WAZAMONO_TCB1_LUTPWM_PIN        (PIN_PA6)   /* D3 */
-#define WAZAMONO_TCB1_LUTPWM_LUT        (0)         /* LUT0 */
-#define WAZAMONO_TCB1_LUTPWM_LUT_ALT    (1)         /* CCLROUTEA: LUT0-OUT alt = PA6 */
-#define WAZAMONO_TCB1_LUTPWM_CCMPEN     (0)         /* verified on silicon; leave at 0 */
+#define WAZAMONO_TCB1_PWMMUX            (1)         /* exclusive D3/D4/D8 routing (default D3) */
+#define WAZAMONO_TCB1_PWM_LUT0_PIN      (PIN_PA6)   /* D3: LUT0-OUT, alternate position */
+#define WAZAMONO_TCB1_PWM_LUT0          (0)
+#define WAZAMONO_TCB1_PWM_LUT0_ALT      (1)
+#define WAZAMONO_TCB1_PWM_LUT1_PIN      (PIN_PC3)   /* D4: LUT1-OUT, default position */
+#define WAZAMONO_TCB1_PWM_LUT1          (1)
+#define WAZAMONO_TCB1_PWM_LUT1_ALT      (0)
+#define WAZAMONO_TCB1_PWM_WO_PIN        (PIN_PF5)   /* D8: TCB1 WO itself (TCB1_PINS = ALT1), outlet = CCMPEN */
 
 #define digitalPinHasPWM(p)             (digitalPinHasPWMTCB(p) || digitalPinHasPWMTCA(p))
 
@@ -523,12 +530,12 @@ static const uint8_t A20  = PIN_A20;
     NOT_ON_TIMER, //  0 PA5  D0
     NOT_ON_TIMER, //  1 PA4  D1
     NOT_ON_TIMER, //  2 PA7  D2
-    TIMERB1,      //  3 PA6  D3  (TCB1 PWM delivered via CCL LUT0)
-    NOT_ON_TIMER, //  4 PC3  D4
+    TIMERB1,      //  3 PA6  D3  (TCB1 PWM via CCL LUT0 - default outlet)
+    TIMERB1,      //  4 PC3  D4  (TCB1 PWM via CCL LUT1 - exclusive with D3/D8)
     NOT_ON_TIMER, //  5 PD0  D5  (TCA0 WO0, dynamic)
     NOT_ON_TIMER, //  6 PD1  D6  (TCA0 WO1, dynamic)
     NOT_ON_TIMER, //  7 PF4  D7  (no PWM: TCB0 = millis)
-    NOT_ON_TIMER, //  8 PF5  D8  (TCB1 WO parked here; not a PWM pin)
+    TIMERB1,      //  8 PF5  D8  (TCB1 WO direct - exclusive with D3/D4)
     NOT_ON_TIMER, //  9 PD2  D9  (TCA0 WO2, dynamic)
     NOT_ON_TIMER, // 10 PD3  D10 (TCA0 WO3, dynamic)
     NOT_ON_TIMER, // 11 PD4  D11 (TCA0 WO4, dynamic)

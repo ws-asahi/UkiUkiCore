@@ -91,4 +91,53 @@
   #endif
 #endif
 
+/* =====================================================================
+ * Multi-route variant (WAZAMONO_TCB1_PWMMUX): ONE TCB1 waveform, THREE
+ * selectable outlets, exclusively routed (used by Wazamono Tsurugi):
+ *   - a LUT-OUT pin "A"    (WAZAMONO_TCB1_PWM_LUT0_PIN / _LUT0 / _LUT0_ALT)
+ *   - a LUT-OUT pin "B"    (WAZAMONO_TCB1_PWM_LUT1_PIN / _LUT1 / _LUT1_ALT)
+ *   - TCB1's own WO pin    (WAZAMONO_TCB1_PWM_WO_PIN; PORTMUX position is
+ *                           set by TCB1_PINS as usual; outlet = CCMPEN)
+ * analogWrite() on any of the three pins claims the route (last caller
+ * wins); the previously active outlet is released first, so at most one
+ * pin ever carries the waveform. All three pins share TCB1's frequency
+ * and duty. Foreign LUT configurations are never clobbered: engaging a
+ * LUT outlet fails (returns 0 -> caller falls back to digital output)
+ * if the LUT is enabled with a configuration other than ours.
+ * The single-route block above and this block are mutually exclusive
+ * per variant. */
+#if defined(WAZAMONO_TCB1_PWMMUX) && defined(TCB1) && !defined(MILLIS_USE_TIMERB1)
+  #if defined(WAZAMONO_TCB1_LUTPWM_ENABLED)
+    #error "WAZAMONO_TCB1_PWMMUX and WAZAMONO_TCB1_LUTPWM_PIN are mutually exclusive."
+  #endif
+  #if !defined(WAZAMONO_TCB1_PWM_LUT0_PIN) || !defined(WAZAMONO_TCB1_PWM_LUT1_PIN) || !defined(WAZAMONO_TCB1_PWM_WO_PIN)
+    #error "WAZAMONO_TCB1_PWMMUX requires _LUT0_PIN, _LUT1_PIN and _WO_PIN."
+  #endif
+  #define WAZAMONO_TCB1_PWMMUX_ENABLED 1
+  #define WAZAMONO_TCB1_PWM_IS_ROUTED_PIN(p) \
+      ((p) == WAZAMONO_TCB1_PWM_LUT0_PIN || \
+       (p) == WAZAMONO_TCB1_PWM_LUT1_PIN || \
+       (p) == WAZAMONO_TCB1_PWM_WO_PIN)
+
+  #ifdef __cplusplus
+  extern "C" {
+  #endif
+
+  /* Claim the route for `pin` (one of the three outlets). Releases whichever
+   * outlet was active before. Returns 1 on success, 0 when a needed LUT is
+   * owned by someone else (caller falls back to plain digital output). */
+  uint8_t wazamono_tcb1_pwm_engage(uint8_t pin);
+
+  /* Release the route if - and only if - `pin` is its current outlet
+   * (turnOffPWM / digitalWrite on that pin). */
+  void wazamono_tcb1_pwm_release(uint8_t pin);
+
+  /* The pin currently holding the route, or NOT_A_PIN when none does. */
+  uint8_t wazamono_tcb1_pwm_active_pin(void);
+
+  #ifdef __cplusplus
+  }
+  #endif
+#endif
+
 #endif /* WAZAMONO_LUTPWM_H */

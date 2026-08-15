@@ -79,3 +79,104 @@ void wazamono_tcb1_lutpwm_disengage(void) {
 }
 
 #endif /* WAZAMONO_TCB1_LUTPWM_ENABLED */
+
+#if defined(WAZAMONO_TCB1_PWMMUX_ENABLED)
+
+/* Same LUT configuration bytes as the single-route block above (and the same
+ * ownership-signature idea). INSEL1 = TCB selects TCB1's WO for input 1 on
+ * every LUT (DS40002548A 30.2.2.1: the TCB input source of CCL input n is
+ * TCBn - input 1 = TCB1 - so the byte is identical for LUT0 and LUT1; both
+ * routes were verified on silicon at 44% duty, CCMPEN = 0). */
+#define _PWMMUX_CFG_CTRLA  (CCL_OUTEN_bm | CCL_ENABLE_bm)
+#define _PWMMUX_CFG_CTRLB  (0x0A << 4)   /* INSEL1 = TCB -> TCB1 WO */
+#define _PWMMUX_CFG_CTRLC  (0x00)
+#define _PWMMUX_CFG_TRUTH  (0xCC)        /* OUT follows IN1 */
+
+static volatile uint8_t s_pwmmux_active = NOT_A_PIN;
+
+static volatile uint8_t *_pwmmux_lut_base(uint8_t lut) {
+  return (volatile uint8_t *)(&CCL.LUT0CTRLA) + ((uint8_t)(lut) << 2);
+}
+
+static uint8_t _pwmmux_lut_is_ours(uint8_t lut, uint8_t alt) {
+  volatile uint8_t *b = _pwmmux_lut_base(lut);
+  if (b[0] != _PWMMUX_CFG_CTRLA) return 0;
+  if (b[1] != _PWMMUX_CFG_CTRLB) return 0;
+  if (b[2] != _PWMMUX_CFG_CTRLC) return 0;
+  if (b[3] != _PWMMUX_CFG_TRUTH) return 0;
+  uint8_t route = (PORTMUX.CCLROUTEA & (1 << lut)) ? 1 : 0;
+  return (route == alt) ? 1 : 0;
+}
+
+static uint8_t _pwmmux_lut_engage(uint8_t lut, uint8_t alt) {
+  volatile uint8_t *b = _pwmmux_lut_base(lut);
+  if (b[0] & CCL_ENABLE_bm) {
+    return _pwmmux_lut_is_ours(lut, alt);  /* ours: done; foreign: refuse */
+  }
+  if (alt) PORTMUX.CCLROUTEA |=  (uint8_t)(1 << lut);
+  else     PORTMUX.CCLROUTEA &= (uint8_t)~(1 << lut);
+  b[1] = _PWMMUX_CFG_CTRLB;
+  b[2] = _PWMMUX_CFG_CTRLC;
+  b[3] = _PWMMUX_CFG_TRUTH;
+  b[0] = _PWMMUX_CFG_CTRLA;
+  CCL.CTRLA |= CCL_ENABLE_bm;   /* shared enable: set, never cleared here */
+  return 1;
+}
+
+static void _pwmmux_lut_disengage(uint8_t lut, uint8_t alt) {
+  if (_pwmmux_lut_is_ours(lut, alt)) {
+    _pwmmux_lut_base(lut)[0] = 0;   /* disable + drop OUTEN; pin -> PORT */
+  }
+}
+
+/* Release every outlet except `keep_pin` (NOT_A_PIN = release all). */
+static void _pwmmux_release_others(uint8_t keep_pin) {
+  if (keep_pin != WAZAMONO_TCB1_PWM_LUT0_PIN) {
+    _pwmmux_lut_disengage(WAZAMONO_TCB1_PWM_LUT0, WAZAMONO_TCB1_PWM_LUT0_ALT);
+  }
+  if (keep_pin != WAZAMONO_TCB1_PWM_LUT1_PIN) {
+    _pwmmux_lut_disengage(WAZAMONO_TCB1_PWM_LUT1, WAZAMONO_TCB1_PWM_LUT1_ALT);
+  }
+  if (keep_pin != WAZAMONO_TCB1_PWM_WO_PIN) {
+    TCB1.CTRLB &= (uint8_t)~TCB_CCMPEN_bm;   /* WO outlet off */
+  }
+}
+
+uint8_t wazamono_tcb1_pwm_engage(uint8_t pin) {
+  uint8_t okflag = 0;
+  if (pin == WAZAMONO_TCB1_PWM_LUT0_PIN) {
+    okflag = _pwmmux_lut_engage(WAZAMONO_TCB1_PWM_LUT0, WAZAMONO_TCB1_PWM_LUT0_ALT);
+  } else if (pin == WAZAMONO_TCB1_PWM_LUT1_PIN) {
+    okflag = _pwmmux_lut_engage(WAZAMONO_TCB1_PWM_LUT1, WAZAMONO_TCB1_PWM_LUT1_ALT);
+  } else if (pin == WAZAMONO_TCB1_PWM_WO_PIN) {
+    /* Outlet = TCB1's own WO pin. The PORTMUX position was parked by the
+     * core's timer init (TCB1_PINS); CCMPEN opens the outlet. The caller
+     * (analogWrite) has already verified CNTMODE == PWM8. */
+    TCB1.CTRLB |= TCB_CCMPEN_bm;
+    okflag = 1;
+  }
+  if (okflag) {
+    _pwmmux_release_others(pin);   /* exclusive: last caller wins */
+    s_pwmmux_active = pin;
+  }
+  return okflag;
+}
+
+void wazamono_tcb1_pwm_release(uint8_t pin) {
+  if (pin == WAZAMONO_TCB1_PWM_LUT0_PIN) {
+    _pwmmux_lut_disengage(WAZAMONO_TCB1_PWM_LUT0, WAZAMONO_TCB1_PWM_LUT0_ALT);
+  } else if (pin == WAZAMONO_TCB1_PWM_LUT1_PIN) {
+    _pwmmux_lut_disengage(WAZAMONO_TCB1_PWM_LUT1, WAZAMONO_TCB1_PWM_LUT1_ALT);
+  } else if (pin == WAZAMONO_TCB1_PWM_WO_PIN) {
+    TCB1.CTRLB &= (uint8_t)~TCB_CCMPEN_bm;
+  } else {
+    return;
+  }
+  if (s_pwmmux_active == pin) s_pwmmux_active = NOT_A_PIN;
+}
+
+uint8_t wazamono_tcb1_pwm_active_pin(void) {
+  return s_pwmmux_active;
+}
+
+#endif /* WAZAMONO_TCB1_PWMMUX_ENABLED */

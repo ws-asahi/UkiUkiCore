@@ -195,7 +195,15 @@ void turnOffPWM(uint8_t pin) {
     #endif
     if ((digital_pin_timer & 0xF0) == 0x10 ) {
       /* its on a TCB */
-      #if defined(WAZAMONO_TCB1_LUTPWM_ENABLED)
+      #if defined(WAZAMONO_TCB1_PWMMUX_ENABLED)
+        if (WAZAMONO_TCB1_PWM_IS_ROUTED_PIN(pin)) {
+          /* Wazamono multi-route: release only THIS pin's outlet. Clearing
+           * CCMPEN unconditionally (below) would kill an active WO-pin route
+           * when a LUT-routed sibling is merely digitalWrite()n. */
+          wazamono_tcb1_pwm_release(pin);
+          return;
+        }
+      #elif defined(WAZAMONO_TCB1_LUTPWM_ENABLED)
         if (pin == WAZAMONO_TCB1_LUTPWM_PIN) {
           /* Wazamono: this pin is driven from TCB1 through a CCL LUT, not from
            * the TCB's own WO pin - release the LUT (if it is still ours). */
@@ -725,7 +733,9 @@ void analogWrite(uint8_t pin, int val) {
        * this pin until the LUT is free again. The TCB1 side needs no extra
        * check: tone() or user reconfiguration leaves PWM8 mode, which the
        * CNTMODE test above already catches. */
-      #if defined(WAZAMONO_TCB1_LUTPWM_ENABLED)
+      #if defined(WAZAMONO_TCB1_PWMMUX_ENABLED)
+          && (!WAZAMONO_TCB1_PWM_IS_ROUTED_PIN(pin) || wazamono_tcb1_pwm_engage(pin))
+      #elif defined(WAZAMONO_TCB1_LUTPWM_ENABLED)
           && ((pin != WAZAMONO_TCB1_LUTPWM_PIN) || wazamono_tcb1_lutpwm_engage())
       #endif
          ) {
@@ -743,7 +753,12 @@ void analogWrite(uint8_t pin, int val) {
          * pin through the CCL, and CCMPEN would additionally drive TCB1's own
          * (parked) WO pin regardless of its direction - so skip it unless the
          * variant requests it (WAZAMONO_TCB1_LUTPWM_CCMPEN, see header). */
-        #if defined(WAZAMONO_TCB1_LUTPWM_ENABLED) && (WAZAMONO_TCB1_LUTPWM_CCMPEN == 0)
+        #if defined(WAZAMONO_TCB1_PWMMUX_ENABLED)
+          /* Multi-route: engage(pin) already opened the right outlet (CCMPEN
+           * for the WO pin, a LUT for the others); setting CCMPEN here for a
+           * LUT-routed pin would additionally drive the parked WO pin. */
+          if (!WAZAMONO_TCB1_PWM_IS_ROUTED_PIN(pin))
+        #elif defined(WAZAMONO_TCB1_LUTPWM_ENABLED) && (WAZAMONO_TCB1_LUTPWM_CCMPEN == 0)
           if (pin != WAZAMONO_TCB1_LUTPWM_PIN)
         #endif
         {

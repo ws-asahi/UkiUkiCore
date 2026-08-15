@@ -15,7 +15,7 @@ Tsurugi のハードウェア rev.C に対応する変更です。Tachi / Kunai 
 - **Serial2 追加**: USART1 ALT2 固定（TX=D13/PD6、RX=D20/PD7）。D13(SCK)・AREF と共用のため、SPI 使用中・外部基準使用中の併用は不可。
 - **択一式 TCB1 PWM**: `analogWrite()` の出口を D3（LUT0 ALT）/ D4（LUT1 既定）/ D8（TCB1 WO 直結）から選択。最後に書いたピンが出口を取得（既定 D3）。コアに `WAZAMONO_TCB1_PWMMUX` 機構を追加（Tachi/Kunai の単一経路 `WAZAMONO_TCB1_LUTPWM_*` は無変更）。
 - **水晶レス化**: boards.txt からクロック選択メニューを削除し、内蔵 OSCHF 24 MHz 固定に（Uno R4 と同方針）。USB の 48 MHz は従来どおり PLL48M + SOF 自動同調。
-- **USB-CDC TX/RX LED**: 水晶撤去で空いた PA0（TX）/ PA1（RX）をアクティビティ LED として駆動（アクティブ LOW、100ms ワンショット、Pro Micro 慣例）。`PIN_LED_TX` / `PIN_LED_RX` / `LED_BUILTIN_TX` / `LED_BUILTIN_RX` を定義。
+- **USB-CDC TX/RX LED**: 水晶撤去で空いた PA0（TX）/ PA1（RX）をアクティビティ LED として駆動（アクティブ LOW、100ms ワンショット、Pro Micro 慣例）。**D30（TX）/ D31（RX）**として `digitalWrite()` で直接制御可能（D21–D29 は欠番の no-op）。`PIN_LED_TX` / `PIN_LED_RX` / `LED_BUILTIN_TX` / `LED_BUILTIN_RX` に加え、Leonardo 互換の `TXLED1/TXLED0/RXLED1/RXLED0` マクロも定義。
 
 ### ドキュメント
 

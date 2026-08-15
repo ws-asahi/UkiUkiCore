@@ -239,8 +239,10 @@ Tsurugi は **2 系統の電源入力**を持ち、いずれからでも 5V を�
 |------|------|------|
 | 電源 LED | 電源ライン | 通電表示 |
 | LED_BUILTIN | D13（PD6）→ MOSFET バッファ | オンボード LED（Uno R3 慣例） |
-| TX LED | PA0（`PIN_LED_TX`、アクティブ LOW） | USB-CDC 送信アクティビティ（Pro Micro 慣例） |
-| RX LED | PA1（`PIN_LED_RX`、アクティブ LOW） | USB-CDC 受信アクティビティ（Pro Micro 慣例） |
+| TX LED | **D30**（PA0、`PIN_LED_TX` / `LED_BUILTIN_TX`、アクティブ LOW） | USB-CDC 送信アクティビティ（Pro Micro 慣例） |
+| RX LED | **D31**（PA1、`PIN_LED_RX` / `LED_BUILTIN_RX`、アクティブ LOW） | USB-CDC 受信アクティビティ（Pro Micro 慣例） |
+
+TX/RX LED は Pro Micro と同様に **`digitalWrite(D30, LOW)` / `digitalWrite(D31, LOW)` で点灯**できます（アクティブ LOW）。Leonardo 系スケッチ互換の `TXLED1`/`TXLED0`/`RXLED1`/`RXLED0` マクロ（1=点灯、0=消灯）も定義済みです。USB-CDC の通信中は約 100ms のアクティビティパルスが variant 側から上書きされる点も 32U4 コアと同じ挙動です。D21–D29 は欠番（操作しても no-op）です。
 | リセット | RESET（PF6） | タクトスイッチ |
 
 `LED_BUILTIN` は **D13（PD6）** です。D13 は SPI SCK と共用のため、Uno R3 と同様に SPI 使用中は LED が SCK のトラフィックで点滅します。

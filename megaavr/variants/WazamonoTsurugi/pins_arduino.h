@@ -38,10 +38,13 @@
  *   D20  PD7   AREF | GPIO | SPI0 SS(ALT4) | Serial2 RX      A20, AIN7
  *        (usable as plain GPIO whenever no external reference is applied
  *         to the AREF header pin - a modern-AVR capability the Uno R3 lacks)
- *        PA0   TX activity LED (active-LOW)         index 21  (PIN_LED_TX)
- *        PA1   RX activity LED (active-LOW)         index 22  (PIN_LED_RX)
- *        PF6   RESET                                index 23
- *        PF7   UPDI                                 index 24  (== PIN_PF7, highest)
+ *   D30  PA0   TX activity LED (active-LOW)         (PIN_LED_TX / LED_BUILTIN_TX)
+ *   D31  PA1   RX activity LED (active-LOW)         (PIN_LED_RX / LED_BUILTIN_RX)
+ *        PF6   RESET                                index 32
+ *        PF7   UPDI                                 index 33  (== PIN_PF7, highest)
+ *        (indices 21-29 are hidden gaps - NOT_A_PORT no-ops - so that the
+ *         TX/RX LEDs land on the Pro Micro-style numbers D30/D31 while PF7
+ *         stays the highest index, which is what sizes NUM_DIGITAL_PINS)
  *
  *  ===== Peripheral routing (set by this variant + boards.txt) =====
  *   TCA0  -> PORTD (WO0..WO5 = PD0,PD1,PD2,PD3,PD4,PD5 = D6,D5,D9,D10,D11,D12)
@@ -117,13 +120,13 @@
 #define PIN_PA2 (18)  // D18 A4 / SDA
 #define PIN_PA3 (19)  // D19 A5 / SCL
 #define PIN_PD7 (20)  // D20/A20 = AREF (VREFA) | GPIO | SPI0 SS(ALT4) | Serial2 RX
-#define PIN_PA0 (21)  // TX activity LED (active-LOW; USB-CDC traffic, variant-driven)
-#define PIN_PA1 (22)  // RX activity LED (active-LOW; USB-CDC traffic, variant-driven)
-#define PIN_PF6 (23)  // RESET
-#define PIN_PF7 (24)  // UPDI  (highest index -> sets NUM_DIGITAL_PINS = 25)
+#define PIN_PA0 (30)  // D30 TX activity LED (active-LOW; USB-CDC traffic, variant-driven)
+#define PIN_PA1 (31)  // D31 RX activity LED (active-LOW; USB-CDC traffic, variant-driven)
+#define PIN_PF6 (32)  // RESET
+#define PIN_PF7 (33)  // UPDI  (highest index -> sets NUM_DIGITAL_PINS = 34)
 
 /* ---- Counts ---- */
-#define PINS_COUNT                     (25)  // length of the pin tables (incl. reserved)
+#define PINS_COUNT                     (34)  // length of the pin tables (incl. hidden gaps 21-29)
 #define NUM_ANALOG_INPUTS              (31)  // highest ADC channel in use is AIN31 (PC3)
 // NUM_DIGITAL_PINS / NUM_TOTAL_PINS  -> auto = PIN_PF7 + 1 = 25
 // NUM_INTERNALLY_USED_PINS           -> auto = 0 (no crystal; PA0/PA1 = TX/RX LEDs, still writable GPIO)
@@ -134,10 +137,17 @@
 /* USB-CDC activity LEDs (Pro Micro convention, both active-LOW, 3.3 V rail).
  * Driven from the CDC hooks in wazamono_tsurugi_init.cpp; sketches may also
  * digitalWrite() them - they just fight the ~100 ms activity pulses. */
-#define PIN_LED_TX                     (PIN_PA0)
-#define PIN_LED_RX                     (PIN_PA1)
+#define PIN_LED_TX                     (PIN_PA0)   /* D30 */
+#define PIN_LED_RX                     (PIN_PA1)   /* D31 */
 #define LED_BUILTIN_TX                 PIN_LED_TX
 #define LED_BUILTIN_RX                 PIN_LED_RX
+/* 32U4-core compatible LED macros (Leonardo/Micro sketches): the "1" form
+ * turns the LED ON, the "0" form OFF. Both LEDs are active-LOW, so ON = OUTCLR.
+ * digitalWrite(D30/D31, LOW) lights the LED the same way. */
+#define TXLED1                         (PORTA.OUTCLR = PIN0_bm)   /* TX LED ON  */
+#define TXLED0                         (PORTA.OUTSET = PIN0_bm)   /* TX LED OFF */
+#define RXLED1                         (PORTA.OUTCLR = PIN1_bm)   /* RX LED ON  */
+#define RXLED0                         (PORTA.OUTSET = PIN1_bm)   /* RX LED OFF */
 
 /* ---- Event output pins: FIXED by the board's pin-configuration table ----
  * One pin per event output, no alternatives. Libraries (CustomLogic, and the
@@ -361,6 +371,8 @@
 #undef D18
 #undef D19
 #undef D20
+#undef D30
+#undef D31
 static const uint8_t D0  = PIN_PA5;  // RX
 static const uint8_t D1  = PIN_PA4;  // TX
 static const uint8_t D2  = PIN_PA7;
@@ -382,6 +394,8 @@ static const uint8_t D17 = PIN_PF3;  // A3
 static const uint8_t D18 = PIN_PA2;  // A4 / SDA
 static const uint8_t D19 = PIN_PA3;  // A5 / SCL
 static const uint8_t D20 = PIN_PD7;  // AREF (VREFA | GPIO | SPI0 SS | Serial2 RX)
+static const uint8_t D30 = PIN_PA0;  // TX LED (active-LOW; Pro Micro numbering)
+static const uint8_t D31 = PIN_PA1;  // RX LED (active-LOW; Pro Micro numbering)
 
 static const uint8_t A0   = PIN_A0;
 static const uint8_t A1   = PIN_A1;
@@ -452,10 +466,19 @@ static const uint8_t A20  = PIN_A20;
     PA,         // 18 PA2  A4 / SDA
     PA,         // 19 PA3  A5 / SCL
     PD,         // 20 PD7  AREF (VREFA)
-    PA,         // 21 PA0  XTALHF1
-    PA,         // 22 PA1  XTALHF2
-    PF,         // 23 PF6  RESET
-    PF          // 24 PF7  UPDI
+    NOT_A_PORT, // 21 (hidden gap)
+    NOT_A_PORT, // 22 (hidden gap)
+    NOT_A_PORT, // 23 (hidden gap)
+    NOT_A_PORT, // 24 (hidden gap)
+    NOT_A_PORT, // 25 (hidden gap)
+    NOT_A_PORT, // 26 (hidden gap)
+    NOT_A_PORT, // 27 (hidden gap)
+    NOT_A_PORT, // 28 (hidden gap)
+    NOT_A_PORT, // 29 (hidden gap)
+    PA,         // 30 PA0  D30 TX LED
+    PA,         // 31 PA1  D31 RX LED
+    PF,         // 32 PF6  RESET
+    PF          // 33 PF7  UPDI
   };
 
   const uint8_t digital_pin_to_bit_position[] = {
@@ -480,18 +503,19 @@ static const uint8_t A20  = PIN_A20;
     PIN2_bp,   // 18 PA2  A4
     PIN3_bp,   // 19 PA3  A5
     PIN7_bp,   // 20 PD7  D20/AREF
-    #if ((CLOCK_SOURCE & 0x03) == 0) // Tsurugi: always true (internal OSCHF, fixed)
-      PIN0_bp, // 21 PA0  TX LED
-    #else                            // kept only as a safety net for exotic rebuilds
-      NOT_A_PIN,
-    #endif
-    #if ((CLOCK_SOURCE & 0x03) == 1)
-      NOT_A_PIN,
-    #else
-      PIN1_bp, // 22 PA1  RX LED
-    #endif
-    PIN6_bp,   // 23 PF6 RESET
-    PIN7_bp    // 24 PF7 UPDI
+    NOT_A_PIN, // 21 (hidden gap)
+    NOT_A_PIN, // 22 (hidden gap)
+    NOT_A_PIN, // 23 (hidden gap)
+    NOT_A_PIN, // 24 (hidden gap)
+    NOT_A_PIN, // 25 (hidden gap)
+    NOT_A_PIN, // 26 (hidden gap)
+    NOT_A_PIN, // 27 (hidden gap)
+    NOT_A_PIN, // 28 (hidden gap)
+    NOT_A_PIN, // 29 (hidden gap)
+    PIN0_bp,   // 30 PA0  D30 TX LED
+    PIN1_bp,   // 31 PA1  D31 RX LED
+    PIN6_bp,   // 32 PF6 RESET
+    PIN7_bp    // 33 PF7 UPDI
   };
 
   const uint8_t digital_pin_to_bit_mask[] = {
@@ -516,18 +540,19 @@ static const uint8_t A20  = PIN_A20;
     PIN2_bm,   // 18 PA2  A4
     PIN3_bm,   // 19 PA3  A5
     PIN7_bm,   // 20 PD7  D20/AREF
-    #if ((CLOCK_SOURCE & 0x03) == 0)
-      PIN0_bm, // 21 PA0  TX LED
-    #else
-      NOT_A_PIN,
-    #endif
-    #if ((CLOCK_SOURCE & 0x03) == 1)
-      NOT_A_PIN,
-    #else
-      PIN1_bm, // 22 PA1  RX LED
-    #endif
-    PIN6_bm,   // 23 PF6 RESET
-    PIN7_bm    // 24 PF7 UPDI
+    NOT_A_PIN, // 21 (hidden gap)
+    NOT_A_PIN, // 22 (hidden gap)
+    NOT_A_PIN, // 23 (hidden gap)
+    NOT_A_PIN, // 24 (hidden gap)
+    NOT_A_PIN, // 25 (hidden gap)
+    NOT_A_PIN, // 26 (hidden gap)
+    NOT_A_PIN, // 27 (hidden gap)
+    NOT_A_PIN, // 28 (hidden gap)
+    NOT_A_PIN, // 29 (hidden gap)
+    PIN0_bm,   // 30 PA0  D30 TX LED
+    PIN1_bm,   // 31 PA1  D31 RX LED
+    PIN6_bm,   // 32 PF6 RESET
+    PIN7_bm    // 33 PF7 UPDI
   };
 
   /* TCA0 PWM is resolved dynamically from PORTMUX, so TCA0 pins are NOT_ON_TIMER
@@ -555,10 +580,19 @@ static const uint8_t A20  = PIN_A20;
     NOT_ON_TIMER, // 18 PA2  A4
     NOT_ON_TIMER, // 19 PA3  A5
     NOT_ON_TIMER, // 20 PD7  D20/AREF
-    NOT_ON_TIMER, // 21 PA0
-    NOT_ON_TIMER, // 22 PA1
-    NOT_ON_TIMER, // 23 PF6 RESET
-    NOT_ON_TIMER  // 24 PF7 UPDI
+    NOT_ON_TIMER, // 21 (hidden gap)
+    NOT_ON_TIMER, // 22 (hidden gap)
+    NOT_ON_TIMER, // 23 (hidden gap)
+    NOT_ON_TIMER, // 24 (hidden gap)
+    NOT_ON_TIMER, // 25 (hidden gap)
+    NOT_ON_TIMER, // 26 (hidden gap)
+    NOT_ON_TIMER, // 27 (hidden gap)
+    NOT_ON_TIMER, // 28 (hidden gap)
+    NOT_ON_TIMER, // 29 (hidden gap)
+    NOT_ON_TIMER, // 30 PA0  D30 TX LED
+    NOT_ON_TIMER, // 31 PA1  D31 RX LED
+    NOT_ON_TIMER, // 32 PF6 RESET
+    NOT_ON_TIMER  // 33 PF7 UPDI
   };
 #endif
 

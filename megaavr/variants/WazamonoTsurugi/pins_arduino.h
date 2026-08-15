@@ -18,10 +18,10 @@
  *   D1   PA4   TX  (Serial0 / USART0 TX, ALT1)              A7,  AIN24
  *   D2   PA7   (USART0 XDIR | AC0 OUT | EVOUTA | CLKOUT)    A8,  AIN27
  *   D3   PA6   ~PWM(TCB1 via CCL LUT0) | USART0 XCK         A9,  AIN26
- *   D4   PF4   (general I/O; no PWM - TCB0 is millis)       A10, AIN20
+ *   D4   PC3   ~PWM(TCB1 via CCL LUT1) (VDD-driven, confirmed) A10, AIN31
  *   D5   PD0   ~PWM(TCA0 WO0) | CCL                         A11, AIN0
  *   D6   PD1   ~PWM(TCA0 WO1) | CCL                         A12, AIN1
- *   D7   PC3   (general I/O; VDD-driven, confirmed) | LUT1-OUT  A13, AIN31
+ *   D7   PF4   (general I/O; no PWM - TCB0 is millis)          A13, AIN20
  *   D8   PF5   (general I/O; see D3 PWM note below)         A14, AIN21
  *   D9   PD2   ~PWM(TCA0 WO2) | CCL | AC0 AINP0 | EVOUTD    A15, AIN2
  *   D10  PD3   ~PWM(TCA0 WO3) | CCL | AC0 AINN0 | (SS)      A16, AIN3
@@ -34,8 +34,10 @@
  *   D17  PF3   A3 | CCL                                     A3,  AIN19
  *   D18  PA2   A4 | SDA (I2C)                               A4,  AIN22
  *   D19  PA3   A5 | SCL (I2C)                               A5,  AIN23
- *   --- not exposed as a numbered Dn (appended so the arrays are complete) ---
- *        PD7   AREF (VREFA, external analog reference)      index 20
+ *   --- appended pins (beyond the Uno R3 header numbering) ---
+ *   D20  PD7   AREF | GPIO | SPI0 SS(ALT4) | Serial2 RX      A20, AIN7
+ *        (usable as plain GPIO whenever no external reference is applied
+ *         to the AREF header pin - a modern-AVR capability the Uno R3 lacks)
  *        PA0   XTALHF1 (24 MHz crystal)             index 21  (NOT_A_PIN)
  *        PA1   XTALHF2 (24 MHz crystal)             index 22  (NOT_A_PIN)
  *        PF6   RESET                                index 23
@@ -98,10 +100,10 @@
 #define PIN_PA4 (1)   // D1  TX  (USART0 TX, ALT1)
 #define PIN_PA7 (2)   // D2  (USART0 XDIR / AC0 OUT / EVOUTA / CLKOUT)
 #define PIN_PA6 (3)   // D3  ~PWM(TCB1 via CCL LUT0) / USART0 XCK
-#define PIN_PF4 (4)   // D4  general I/O (no PWM: TCB0 = millis)
+#define PIN_PC3 (4)   // D4  ~PWM(TCB1 via CCL LUT1); VDD-driven output (confirmed by measurement)
 #define PIN_PD0 (5)   // D5  TCA0 WO0
 #define PIN_PD1 (6)   // D6  TCA0 WO1
-#define PIN_PC3 (7)   // D7  general I/O (VDD-driven output, confirmed by measurement)
+#define PIN_PF4 (7)   // D7  general I/O (no PWM: TCB0 = millis)
 #define PIN_PF5 (8)   // D8  general I/O (TCB1 WO parking position - see D3 PWM note)
 #define PIN_PD2 (9)   // D9  TCA0 WO2
 #define PIN_PD3 (10)  // D10 TCA0 WO3 / SS (Uno convention, SSD=1)
@@ -114,7 +116,7 @@
 #define PIN_PF3 (17)  // D17 A3
 #define PIN_PA2 (18)  // D18 A4 / SDA
 #define PIN_PA3 (19)  // D19 A5 / SCL
-#define PIN_PD7 (20)  // AREF (VREFA, external analog reference); no Dn alias
+#define PIN_PD7 (20)  // D20/A20 = AREF (VREFA) | GPIO | SPI0 SS(ALT4) | Serial2 RX
 #define PIN_PA0 (21)  // XTALHF1 (crystal)
 #define PIN_PA1 (22)  // XTALHF2 (crystal)
 #define PIN_PF6 (23)  // RESET
@@ -151,7 +153,7 @@
 /* ---- Explicit maps (NONCANONICAL numbering: arithmetic shortcuts cannot be used) ---- */
 #define digitalPinToAnalogInput(p)  ( \
     (p) == PIN_PD0 ?  0 : (p) == PIN_PD1 ?  1 : (p) == PIN_PD2 ?  2 : (p) == PIN_PD3 ?  3 : \
-    (p) == PIN_PD4 ?  4 : (p) == PIN_PD5 ?  5 : (p) == PIN_PD6 ?  6 : \
+    (p) == PIN_PD4 ?  4 : (p) == PIN_PD5 ?  5 : (p) == PIN_PD6 ?  6 : (p) == PIN_PD7 ?  7 : \
     (p) == PIN_PF0 ? 16 : (p) == PIN_PF1 ? 17 : (p) == PIN_PF2 ? 18 : (p) == PIN_PF3 ? 19 : \
     (p) == PIN_PF4 ? 20 : (p) == PIN_PF5 ? 21 : \
     (p) == PIN_PA2 ? 22 : (p) == PIN_PA3 ? 23 : (p) == PIN_PA4 ? 24 : (p) == PIN_PA5 ? 25 : \
@@ -159,7 +161,7 @@
 
 #define analogChannelToDigitalPin(p)  ( \
     (p) ==  0 ? PIN_PD0 : (p) ==  1 ? PIN_PD1 : (p) ==  2 ? PIN_PD2 : (p) ==  3 ? PIN_PD3 : \
-    (p) ==  4 ? PIN_PD4 : (p) ==  5 ? PIN_PD5 : (p) ==  6 ? PIN_PD6 : \
+    (p) ==  4 ? PIN_PD4 : (p) ==  5 ? PIN_PD5 : (p) ==  6 ? PIN_PD6 : (p) ==  7 ? PIN_PD7 : \
     (p) == 16 ? PIN_PF0 : (p) == 17 ? PIN_PF1 : (p) == 18 ? PIN_PF2 : (p) == 19 ? PIN_PF3 : \
     (p) == 20 ? PIN_PF4 : (p) == 21 ? PIN_PF5 : \
     (p) == 22 ? PIN_PA2 : (p) == 23 ? PIN_PA3 : (p) == 24 ? PIN_PA4 : (p) == 25 ? PIN_PA5 : \
@@ -306,16 +308,17 @@
 #define PIN_A7   (PIN_PA4)   // D1
 #define PIN_A8   (PIN_PA7)   // D2
 #define PIN_A9   (PIN_PA6)   // D3
-#define PIN_A10  (PIN_PF4)   // D4
+#define PIN_A10  (PIN_PC3)   // D4
 #define PIN_A11  (PIN_PD0)   // D5
 #define PIN_A12  (PIN_PD1)   // D6
-#define PIN_A13  (PIN_PC3)   // D7
+#define PIN_A13  (PIN_PF4)   // D7
 #define PIN_A14  (PIN_PF5)   // D8
 #define PIN_A15  (PIN_PD2)   // D9
 #define PIN_A16  (PIN_PD3)   // D10
 #define PIN_A17  (PIN_PD4)   // D11
 #define PIN_A18  (PIN_PD5)   // D12
 #define PIN_A19  (PIN_PD6)   // D13
+#define PIN_A20  (PIN_PD7)   // D20 / AREF
 
 /* --- Uno R4 style number-prefixed digital pin aliases (header pins D0..D19) ---
  * D-number == Arduino digital pin number. Internal-only pins (PD7 AREF, PA0/PA1
@@ -340,14 +343,15 @@
 #undef D17
 #undef D18
 #undef D19
+#undef D20
 static const uint8_t D0  = PIN_PA5;  // RX
 static const uint8_t D1  = PIN_PA4;  // TX
 static const uint8_t D2  = PIN_PA7;
 static const uint8_t D3  = PIN_PA6;  // ~PWM(TCB1 via CCL LUT0)
-static const uint8_t D4  = PIN_PF4;
+static const uint8_t D4  = PIN_PC3;  // ~PWM(TCB1 via CCL LUT1)
 static const uint8_t D5  = PIN_PD0;
 static const uint8_t D6  = PIN_PD1;
-static const uint8_t D7  = PIN_PC3;
+static const uint8_t D7  = PIN_PF4;
 static const uint8_t D8  = PIN_PF5;
 static const uint8_t D9  = PIN_PD2;
 static const uint8_t D10 = PIN_PD3;  // SS (Uno convention)
@@ -360,6 +364,7 @@ static const uint8_t D16 = PIN_PF2;  // A2
 static const uint8_t D17 = PIN_PF3;  // A3
 static const uint8_t D18 = PIN_PA2;  // A4 / SDA
 static const uint8_t D19 = PIN_PA3;  // A5 / SCL
+static const uint8_t D20 = PIN_PD7;  // AREF (VREFA | GPIO | SPI0 SS | Serial2 RX)
 
 static const uint8_t A0   = PIN_A0;
 static const uint8_t A1   = PIN_A1;
@@ -381,6 +386,7 @@ static const uint8_t A16  = PIN_A16;
 static const uint8_t A17  = PIN_A17;
 static const uint8_t A18  = PIN_A18;
 static const uint8_t A19  = PIN_A19;
+static const uint8_t A20  = PIN_A20;
 
 /* Direct ADC channel identifiers (ADC_CH() sets the 0x80 "this is a channel" flag). */
 #define AIN0   ADC_CH(0)
@@ -390,6 +396,7 @@ static const uint8_t A19  = PIN_A19;
 #define AIN4   ADC_CH(4)
 #define AIN5   ADC_CH(5)
 #define AIN6   ADC_CH(6)
+#define AIN7   ADC_CH(7)
 #define AIN16  ADC_CH(16)
 #define AIN17  ADC_CH(17)
 #define AIN18  ADC_CH(18)
@@ -411,10 +418,10 @@ static const uint8_t A19  = PIN_A19;
     PA,         //  1 PA4  D1  TX/USART0 TX
     PA,         //  2 PA7  D2  USART0 XDIR / AC0 OUT / EVOUTA
     PA,         //  3 PA6  D3  TCB1 PWM via CCL LUT0
-    PF,         //  4 PF4  D4
+    PC,         //  4 PC3  D4  TCB1 PWM via CCL LUT1
     PD,         //  5 PD0  D5  TCA0 WO0
     PD,         //  6 PD1  D6  TCA0 WO1
-    PC,         //  7 PC3  D7
+    PF,         //  7 PF4  D7
     PF,         //  8 PF5  D8
     PD,         //  9 PD2  D9  TCA0 WO2
     PD,         // 10 PD3  D10 TCA0 WO3 / SS
@@ -439,10 +446,10 @@ static const uint8_t A19  = PIN_A19;
     PIN4_bp,   //  1 PA4  D1
     PIN7_bp,   //  2 PA7  D2
     PIN6_bp,   //  3 PA6  D3
-    PIN4_bp,   //  4 PF4  D4
+    PIN3_bp,   //  4 PC3  D4
     PIN0_bp,   //  5 PD0  D5
     PIN1_bp,   //  6 PD1  D6
-    PIN3_bp,   //  7 PC3  D7
+    PIN4_bp,   //  7 PF4  D7
     PIN5_bp,   //  8 PF5  D8
     PIN2_bp,   //  9 PD2  D9
     PIN3_bp,   // 10 PD3  D10
@@ -455,7 +462,7 @@ static const uint8_t A19  = PIN_A19;
     PIN3_bp,   // 17 PF3  A3
     PIN2_bp,   // 18 PA2  A4
     PIN3_bp,   // 19 PA3  A5
-    PIN7_bp,   // 20 PD7  AREF
+    PIN7_bp,   // 20 PD7  D20/AREF
     #if ((CLOCK_SOURCE & 0x03) == 0) // internal clock -> PA0 is a usable GPIO
       PIN0_bp, // 21 PA0
     #else                            // external crystal/clock -> PA0 = XTALHF1
@@ -475,10 +482,10 @@ static const uint8_t A19  = PIN_A19;
     PIN4_bm,   //  1 PA4  D1
     PIN7_bm,   //  2 PA7  D2
     PIN6_bm,   //  3 PA6  D3
-    PIN4_bm,   //  4 PF4  D4
+    PIN3_bm,   //  4 PC3  D4
     PIN0_bm,   //  5 PD0  D5
     PIN1_bm,   //  6 PD1  D6
-    PIN3_bm,   //  7 PC3  D7
+    PIN4_bm,   //  7 PF4  D7
     PIN5_bm,   //  8 PF5  D8
     PIN2_bm,   //  9 PD2  D9
     PIN3_bm,   // 10 PD3  D10
@@ -491,7 +498,7 @@ static const uint8_t A19  = PIN_A19;
     PIN3_bm,   // 17 PF3  A3
     PIN2_bm,   // 18 PA2  A4
     PIN3_bm,   // 19 PA3  A5
-    PIN7_bm,   // 20 PD7  AREF
+    PIN7_bm,   // 20 PD7  D20/AREF
     #if ((CLOCK_SOURCE & 0x03) == 0)
       PIN0_bm, // 21 PA0
     #else
@@ -514,10 +521,10 @@ static const uint8_t A19  = PIN_A19;
     NOT_ON_TIMER, //  1 PA4  D1
     NOT_ON_TIMER, //  2 PA7  D2
     TIMERB1,      //  3 PA6  D3  (TCB1 PWM delivered via CCL LUT0)
-    NOT_ON_TIMER, //  4 PF4  D4  (no PWM: TCB0 = millis)
+    NOT_ON_TIMER, //  4 PC3  D4
     NOT_ON_TIMER, //  5 PD0  D5  (TCA0 WO0, dynamic)
     NOT_ON_TIMER, //  6 PD1  D6  (TCA0 WO1, dynamic)
-    NOT_ON_TIMER, //  7 PC3  D7
+    NOT_ON_TIMER, //  7 PF4  D7  (no PWM: TCB0 = millis)
     NOT_ON_TIMER, //  8 PF5  D8  (TCB1 WO parked here; not a PWM pin)
     NOT_ON_TIMER, //  9 PD2  D9  (TCA0 WO2, dynamic)
     NOT_ON_TIMER, // 10 PD3  D10 (TCA0 WO3, dynamic)
@@ -530,7 +537,7 @@ static const uint8_t A19  = PIN_A19;
     NOT_ON_TIMER, // 17 PF3  A3
     NOT_ON_TIMER, // 18 PA2  A4
     NOT_ON_TIMER, // 19 PA3  A5
-    NOT_ON_TIMER, // 20 PD7  AREF
+    NOT_ON_TIMER, // 20 PD7  D20/AREF
     NOT_ON_TIMER, // 21 PA0
     NOT_ON_TIMER, // 22 PA1
     NOT_ON_TIMER, // 23 PF6 RESET
@@ -589,6 +596,10 @@ static const uint8_t A19  = PIN_A19;
 #endif
 
 /* ---- analogReference(EXTERNAL) is available: PD7 (VREFA) is wired to the
- * AREF header pin (index 20; no Dn alias), exactly like the Uno R3. ---- */
+ * AREF header pin, exactly like the Uno R3 - but unlike the Uno R3 the pin
+ * doubles as GPIO D20/A20 (and SPI0 hardware SS / Serial2 RX) whenever no
+ * external reference is in use. Do not drive D20 as an output while a shield
+ * feeds a reference into AREF, and do not select EXTERNAL while D20 is an
+ * output. ---- */
 
 #endif

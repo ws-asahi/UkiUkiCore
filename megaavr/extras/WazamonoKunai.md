@@ -112,25 +112,36 @@ ATmega と比べて EEPROM は小さくなりましたが（256 B）、代わり
 
 ## ピンマッピング
 
-XIAO と同じパッド配置（D0–D10）に加え、オンボード LED を XIAO と同じ番号 **D11（TX）/D12（RX）** に割り当てています。各パッドは `A#` のアナログ別名も持ちます（ADC 入力のない D6/D7 を除く）。D13/D14 は欠番です（XIAO のユーザー LED「13」への書き込みは何も起こさない no-op になります）。
+Seeeduino XIAO と同じ番号付けです。
+ただし PWM は一部の GPIO のみ使用可能で、D6 / D7 は ADC を持ちません。
 
-| D# | MCU | アナログ別名 | ADC ch | 主な機能 |
+| ピン名 | MCU | ピン別名 | ADC ch | 主な機能 |
 |----|-----|--------------|--------|----------|
-| D0 | PC3 | **A0** | AIN31 | **~PWM（TCB1 + CCL LUT1）** |
-| D1 | PA7 | **A1** | AIN27 | SPI **SS** / AC0 出力 / EVOUTA / CLKOUT |
-| D2 | PD6 | **A2** | AIN6 | **Serial2 TX**（USART1 ALT2）/ CCL LUT2-OUT |
-| D3 | PD7 | **A3** | AIN7 | **Serial2 RX**（USART1 ALT2）/ EVOUTD |
-| D4 | PA2 | **A4** | AIN22 | **I2C SDA** / ~PWM(TCA0 WO2) / Serial1 XCK / CCL LUT0-IN2 |
-| D5 | PA3 | **A5** | AIN23 | **I2C SCL** / ~PWM(TCA0 WO3) / Serial1 XDIR / CCL LUT0-OUT |
-| D6 | PA0 | — | — | **Serial1 TX**（USART0 既定位置）/ ~PWM(TCA0 WO0) / CCL LUT0-IN0 |
-| D7 | PA1 | — | — | **Serial1 RX**（USART0 既定位置）/ ~PWM(TCA0 WO1) / CCL LUT0-IN1 |
-| D8 | PA6 | **A8** | AIN26 | SPI **SCK** |
-| D9 | PA5 | **A9** | AIN25 | SPI **MISO** / ~PWM(TCA0 WO5) |
-| D10 | PA4 | **A10** | AIN24 | SPI **MOSI** / ~PWM(TCA0 WO4) |
-| D11 | PD4 | **A11** | AIN4 | **LED_BUILTIN** / USB-CDC **TX** アクティビティ LED |
-| D12 | PD5 | **A12** | AIN5 | USB-CDC **RX** アクティビティ LED |
+| D0 | PC3 | A0 | AIN31 | ~PWM（TCB1 + LUT1）|
+| D1 | PA7 | A1 | AIN27 | **SS**（SPI）/ **OUT**（AnalogComp）/ EVOUTA / CLKOUT |
+| D2 | PD6 | A2 | AIN6 | **TX**（Serial2）/ ~PWM（TCB1 + LUT2）/ **SCK**（SPI）/ **OUT**（AnalogComp）|
+| D3 | PD7 | A3 | AIN7 | **RX**（Serial2）/ **AREF** / EVOUTD |
+| D4 | PA2 | A4 | AIN22 | **I2C SDA** / ~PWM（TCA0 WO2）/ **XCK**（Serial1）/ **CLK**（SPI1） / **IN2**（CustomLogic） |
+| D5 | PA3 | A5 | AIN23 | **I2C SCL** / ~PWM（TCA0 WO3）/ **XDIR**（Serial1）/ **OUT**（CustomLogic）/ **OUT**（AnalogComp） / EVOUTA / CLKOUT |
+| D6 | PA0 | — | — | **TX**（Serial1）/ ~PWM（TCA0 WO0）/ **IN0**（CustomLogic）|
+| D7 | PA1 | — | — | **RX**（Serial1）/ ~PWM（TCA0 WO1）/ **IN1**（CustomLogic）|
+| D8 | PA6 | A8 | AIN26 | ~PWM（TCB1 WO）/ SPI **SCK** |
+| D9 | PA5 | A9 | AIN25 | ~PWM（TCA0 WO5）/ SPI **MISO** |
+| D10 | PA4 | A10 | AIN24 | ~PWM（TCA0 WO4）/ SPI **MOSI**  |
+| D11 | PD4 | A11 | AIN4 | **LED_BUILTIN** / **LED_BUILTIN_TX**（USB-CDCと連動）|
+| D12 | PD5 | A12 | AIN5 | **LED_BUILTIN_RX**（USB-CDCと連動） |
 
-> 各デジタルピンは ADC チャネルも持ちますが D6 / D7 は仕様上アナログ入力を持ちません。
+
+> **D0 / D2 / D8 の PWM は択一**です。
+> 1 本の TCB1 波形をいずれかのピンに出し分ける構造のため、最後に `analogWrite()` したピンが出口になります（既定は D0）。
+> 3 本同時に異なる PWM は出せません。周波数・デューティは 3 ピンで共通です。
+> tone などで TCB1 を使用する時は 3 つとも PWM が無効化されます。
+>
+> **D2 / A2 は AREFとして使用できます**。
+> AREF として使用する時は他の用途には使用できません。
+>
+> D17,D30は物理ピンを持ちません。
+
 
 ---
 

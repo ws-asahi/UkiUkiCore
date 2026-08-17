@@ -25,7 +25,7 @@
   #define SPMCOMMAND "call 0x0ffa"
   #define REQUIRED_BOOTSIZE (0x08)
   #define BOOTLOADER_END    (4096)
-#elif defined(USING_OPTIBOOT)
+#elif defined(USING_USBBOOT)
   #define SPMCOMMAND "call 0x1FA"
   #define REQUIRED_BOOTSIZE (0x01)
   #define BOOTLOADER_END    (512)
@@ -96,7 +96,7 @@ uint8_t FlashClass::checkWritable() {
       return FLASHWRITE_OK;
     }
     return FLASHWRITE_BADENTRYPOINT;
-  #elif !defined(USING_OPTIBOOT)
+  #elif !defined(USING_USBBOOT)
     if (FUSE.BOOTSIZE == 0x00) {
       return FLASHWRITE_NOBOOTSIZE;
     }
@@ -120,7 +120,7 @@ uint8_t FlashClass::checkWritable() {
       // assuming the fuses are consistent with where we expect to be...
       return FLASHWRITE_OK;
     #endif // case where SPM_FROM_APP not defined handled above.
-  #else // USING_OPTIBOOT defined
+  #else // USING_USBBOOT defined
     if (FUSE.BOOTSIZE == 0x00) {
       return FLASHWRITE_NOBOOT;
     }
@@ -179,7 +179,7 @@ uint8_t FlashClass::checkWritable() {
 
 
 uint8_t FlashClass::erasePage(const uint32_t address, const uint8_t size) {
-  #if (defined(USING_OPTIBOOT) || SPM_FROM_APP==-1)
+  #if (defined(USING_USBBOOT) || SPM_FROM_APP==-1)
     if ((FUSE.BOOTSIZE != REQUIRED_BOOTSIZE)) {
   #else
     if ((FUSE.BOOTSIZE != REQUIRED_BOOTSIZE) || (FUSE.CODESIZE != SPM_FROM_APP)) {
@@ -263,7 +263,7 @@ uint8_t FlashClass::erasePage(const uint32_t address, const uint8_t size) {
 }
 
 uint8_t FlashClass::writeWord(const uint32_t address, const uint16_t data) {
-  #if (defined(USING_OPTIBOOT) || SPM_FROM_APP==-1)
+  #if (defined(USING_USBBOOT) || SPM_FROM_APP==-1)
     if ((FUSE.BOOTSIZE != REQUIRED_BOOTSIZE)) {
   #else
     if ((FUSE.BOOTSIZE != REQUIRED_BOOTSIZE) || (FUSE.CODESIZE != SPM_FROM_APP)) {
@@ -311,7 +311,7 @@ uint8_t FlashClass::writeWord(const uint32_t address, const uint16_t data) {
 
 
 uint8_t FlashClass::writeByte(const uint32_t address, const uint8_t data) {
-  #if (defined(USING_OPTIBOOT) || SPM_FROM_APP == -1)
+  #if (defined(USING_USBBOOT) || SPM_FROM_APP == -1)
     if ((FUSE.BOOTSIZE != REQUIRED_BOOTSIZE))
   #else
     if ((FUSE.BOOTSIZE != REQUIRED_BOOTSIZE) || (FUSE.CODESIZE != SPM_FROM_APP))
@@ -377,7 +377,7 @@ uint8_t FlashClass::writeWords(const uint32_t address, const uint16_t* data, uin
   if (length == 0) {
     return FLASHWRITE_0LENGTH;
   }
-  #if (defined(USING_OPTIBOOT) || SPM_FROM_APP==-1)
+  #if (defined(USING_USBBOOT) || SPM_FROM_APP==-1)
     if ((FUSE.BOOTSIZE != REQUIRED_BOOTSIZE)) {
   #else
     if ((FUSE.BOOTSIZE != REQUIRED_BOOTSIZE) || (FUSE.CODESIZE != SPM_FROM_APP)) {

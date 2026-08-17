@@ -32,7 +32,7 @@ wazamonotachi.build.core=dxcore
 wazamonotachi.build.f_cpu={build.speed}000000L
 wazamonotachi.build.text_section_start=.text=0x1000
 wazamonotachi.build.defaultswaps=
-wazamonotachi.build.extra_flags= {build.defaultswaps} -DUSING_AVRDU_CDC_BOOTLOADER -DUSING_OPTIBOOT
+wazamonotachi.build.extra_flags= {build.defaultswaps} -DUSING_AVRDU_CDC_BOOTLOADER -DUSING_USBBOOT
 # Force-link the variant init TU (variants/WazamonoTachi/wazamono_tachi_init.cpp).
 # Arduino archives variant objects into core.a, so its strong initVariant()/
 # activity-LED hooks would otherwise be dropped (core main.cpp has a weak
@@ -130,7 +130,7 @@ wazamonotsurugi.build.core=dxcore
 wazamonotsurugi.build.f_cpu={build.speed}000000L
 wazamonotsurugi.build.text_section_start=.text=0x1000
 wazamonotsurugi.build.defaultswaps=
-wazamonotsurugi.build.extra_flags= {build.defaultswaps} -DUSING_AVRDU_CDC_BOOTLOADER -DUSING_OPTIBOOT -DUSB_VREG_INTERNAL
+wazamonotsurugi.build.extra_flags= {build.defaultswaps} -DUSING_AVRDU_CDC_BOOTLOADER -DUSING_USBBOOT -DUSB_VREG_INTERNAL
 # Force-link the variant init TU (variants/WazamonoTsurugi/wazamono_tsurugi_init.cpp).
 # The core provides a weak initVariant(); the variant supplies a strong one from an
 # archive member, which the linker will not pull without this reference.
@@ -209,7 +209,7 @@ wazamonokunai.build.core=dxcore
 wazamonokunai.build.f_cpu={build.speed}000000L
 wazamonokunai.build.text_section_start=.text=0x1000
 wazamonokunai.build.defaultswaps=
-wazamonokunai.build.extra_flags= {build.defaultswaps} -DUSING_AVRDU_CDC_BOOTLOADER -DUSING_OPTIBOOT
+wazamonokunai.build.extra_flags= {build.defaultswaps} -DUSING_AVRDU_CDC_BOOTLOADER -DUSING_USBBOOT
 # Force-link the variant init TU (variants/WazamonoKunai/wazamono_kunai_init.cpp).
 # Arduino archives variant objects into core.a, so its strong initVariant() (which
 # selects TWI0 ALT3 so I2C lands on PA0/PA1 = D4/D5) would otherwise be dropped

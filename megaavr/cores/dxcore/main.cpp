@@ -137,7 +137,7 @@ int main() {
 
 
 
-#if (!defined(USING_OPTIBOOT))
+#if (!defined(USING_USBBOOT))
 
 
 
@@ -219,7 +219,7 @@ int main() {
  **************************************************************************************************/
 
 void _initThreeStuff() __attribute__ ((naked)) __attribute__((used)) __attribute__ ((section (".init3")));
-#if (!defined(USING_OPTIBOOT))
+#if (!defined(USING_USBBOOT))
   #if !defined(SPM_FROM_APP)
     // If we're not doing the SPM stuff, we need only check the flags
     void _initThreeStuff() {

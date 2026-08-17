@@ -326,7 +326,7 @@ void bl_exit_via_wdt(void) {
  * ==================================================================== */
 int main(void) {
     /* 1. Read the reset cause, hand it to the application via GPR0 (the
-     *    Optiboot/DxCore convention - the app is built with -DUSING_OPTIBOOT
+     *    Optiboot/DxCore convention - the app is built with -DUSING_USBBOOT
      *    so its own init_reset_flags() is compiled out and it relies on us
      *    to have stashed the cause here), then clear the flags so the next
      *    reset's cause is unambiguous and a stale SWRF cannot pin us in DFU. */

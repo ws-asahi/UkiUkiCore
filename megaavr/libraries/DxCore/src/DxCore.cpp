@@ -352,16 +352,16 @@ int16_t initMVIO_OPAMP(const int16_t __attribute__((unused)) voltage, const int8
     if (retval == 0x08) {
       //great, it's enabled.
       retval = (MVIO.STATUS ? MVIO_OKAY : MVIO_UNDERVOLTAGE);
-      #if !defined(MVIO_ENABLED) && defined(ASSUME_MVIO_FUSE) && defined(USING_OPTIBOOT)
+      #if !defined(MVIO_ENABLED) && defined(ASSUME_MVIO_FUSE) && defined(USING_USBBOOT)
         retval |= MVIO_MENU_SET_WRONG;
         if (debugmode) {
           dbgserial.println(F("Woah, you've told the tools menu that you're sure you set the fuse to disabled, but... you didn't"));
           dbgserial.println(F("Either change menu selection to enabled or the other disabled (which allows for mis-set fuses by checking), or burn bootloader if you want it disabled"));
           dbgserial.println(F("Some core functions relating to the MVIO pins will malfunction until you do one of those things."));
         }
-      #elif !defined(MVIO_ENABLED) && defined(USING_OPTIBOOT)
+      #elif !defined(MVIO_ENABLED) && defined(USING_USBBOOT)
         retval |= MVIO_SETTING_MISMATCH;
-      #elif !defined(MVIO_ENABLED) && !defined(USING_OPTIBOOT)
+      #elif !defined(MVIO_ENABLED) && !defined(USING_USBBOOT)
         retval |= MVIO_MENU_SET_WRONG | MVIO_IMPOSSIBLE_CFG;
         if (debugmode) {
           dbgserial.println(F("Your tools submenu is set to disable MVIO, and you are not using Optiboot, so MVIO should have been disabled"));
@@ -380,16 +380,16 @@ int16_t initMVIO_OPAMP(const int16_t __attribute__((unused)) voltage, const int8
           return retval |= MVIO_IMPOSSIBLE_CFG;
         }
       }
-      #if defined(MVIO_ENABLED) && defined(ASSUME_MVIO_FUSE) && defined(USING_OPTIBOOT)
+      #if defined(MVIO_ENABLED) && defined(ASSUME_MVIO_FUSE) && defined(USING_USBBOOT)
         retval |= MVIO_MENU_SET_WRONG;
         if (debugmode) {
           dbgserial.println(F("Woah, you've told the tools menu that you're sure you set the fuse to enabled... but you didn't. It's disabled. "));
           dbgserial.println(F("Either change menu selection to disabled, or burn bootloader if you want it enabled"));
           dbgserial.println(F("Some core functions relating to the MVIO pins will malfunction until you do one of those things."));
         }
-      #elif !defined(MVIO_ENABLED) && defined(USING_OPTIBOOT)
+      #elif !defined(MVIO_ENABLED) && defined(USING_USBBOOT)
         retval |= MVIO_SETTING_MISMATCH;
-      #elif defined(MVIO_ENABLED) && !defined(USING_OPTIBOOT)
+      #elif defined(MVIO_ENABLED) && !defined(USING_USBBOOT)
         retval |= MVIO_MENU_SET_WRONG | MVIO_IMPOSSIBLE_CFG;
         if (debugmode) {
           dbgserial.println(F("Your tools submenu is set to enable MVIO, and you're not using optiboot, so MVIO should have been enabled"));

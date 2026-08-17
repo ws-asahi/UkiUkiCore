@@ -181,16 +181,46 @@ static volatile bool g_tx_last_full = false;  /* last armed EP3 IN packet was ex
  * it sees SWRF. The earlier GPR-magic scheme could never work because
  * the reset clears the GPRs before the BL can read them.
  * ============================================================ */
-static void trigger_1200bps_reset(void) {
+/* Deferred-reset countdown, decremented once per SOF (~1 ms).
+ *   0          : no reset pending
+ *   1..TIMEOUT : reset armed; fires early when the EP0 status stage
+ *                completes (g_ctrl_state back to CTRL_IDLE), or at
+ *                countdown expiry as a fallback.
+ *
+ * WHY DEFERRED: the touch request (SET_CONTROL_LINE_STATE or
+ * SET_LINE_CODING) is a control transfer. ep0_send_zlp() only ARMS the
+ * status-stage ZLP; the host has not fetched it yet. Detaching inside
+ * the request handler therefore yanks the device off the bus with the
+ * host's control request still outstanding, and the Windows usbser
+ * driver sits on that request until its own multi-second timeout - which
+ * is exactly the "long pause after the 1200 bps touch" seen during
+ * uploads. Caterina (Leonardo) avoids this by arming a 120 ms WDT in the
+ * handler and letting USB run on, so the status stage completes on the
+ * wire before the reset. We do the same, but SOF-driven and completion-
+ * aware, so the added latency is 1-2 ms in the normal case instead of a
+ * fixed 120 ms. (A WDT is not usable here: the bootloader stays resident
+ * on RSTFR.SWRF, and a watchdog reset would set WDRF instead.) */
+#define CDC_RESET_TIMEOUT_TICKS  15u   /* ~15 ms fallback ceiling */
+static volatile uint8_t g_reset_countdown = 0;
+
+static void arm_1200bps_reset(void) {
     diag_set(AVRDU_DIAG_TRIG_ENTER);
     /* Reset-surviving breadcrumb: record that we got here and at what baud. */
     g_bc_trig++;
     g_bc_trig_baud = g_line_coding.dwDTERate;
 
+    g_reset_countdown = CDC_RESET_TIMEOUT_TICKS;
+    /* The actual detach + SWRST happens in usb_cdc_on_sof() once the
+     * status stage of THIS control transfer has gone out (or on timeout). */
+}
+
+static void perform_1200bps_reset(void) {
     /* Detach from the bus so the host sees a clean disconnect, then give
-     * it a moment before we reset and re-enumerate as the bootloader. */
+     * it a moment before we reset and re-enumerate as the bootloader.
+     * ~10 ms is ample for disconnect detection (a couple of frames);
+     * the previous 120000-iteration wait (~40 ms) was longer than needed. */
     USB0.CTRLB &= ~USB_ATTACH_bm;
-    for (volatile uint32_t i = 0; i < 120000UL; i++) { __asm__ __volatile__("nop"); }
+    for (volatile uint32_t i = 0; i < 30000UL; i++) { __asm__ __volatile__("nop"); }
 
     /* Software reset -> RSTFR.SWRF set on next boot -> bootloader stays. */
     _PROTECTED_WRITE(RSTCTRL.SWRR, RSTCTRL_SWRST_bm);
@@ -302,6 +332,20 @@ static bool tx_ring_put(uint8_t b) {
  * interrupted and an idle link emits exactly one terminating ZLP.
  * ============================================================ */
 void usb_cdc_on_sof(void) {
+    /* Deferred 1200 bps touch reset: fire as soon as the touch request's
+     * status stage has completed (control state machine back to IDLE), or
+     * after the countdown expires as a fallback. Checked before any early
+     * return below so it cannot be starved. Runs in the BUSEVENT ISR; the
+     * TRNCOMPL ISR that moves g_ctrl_state to CTRL_IDLE cannot preempt us
+     * (no nested interrupts), so the state read is consistent. Relies on
+     * SOFs still arriving, which holds in practice: the host does not
+     * suspend the bus in the milliseconds between the touch and the
+     * reset. */
+    if (g_reset_countdown) {
+        if (g_ctrl_state == CTRL_IDLE || --g_reset_countdown == 0) {
+            perform_1200bps_reset();         /* never returns */
+        }
+    }
     usb_cdc_on_led_tick();                   /* RX/TX activity LED one-shot tick (~1 ms) */
     if (g_current_configuration != 1) return;
     if (g_tx_in_flight) return;
@@ -380,7 +424,7 @@ void usb_cdc_handle_class_request(const usb_setup_t *s) {
                 && g_line_coding.dwDTERate == 1200) {
             diag_set(AVRDU_DIAG_CLS_DTR0);
             g_bc_trig_site = 1;          /* fired from SET_CONTROL_LINE_STATE */
-            trigger_1200bps_reset();
+            arm_1200bps_reset();         /* reset deferred to usb_cdc_on_sof() */
         }
         break;
     }
@@ -416,8 +460,15 @@ void usb_cdc_data_out_complete(void) {
             if ((g_control_line_state & CDC_CTRL_LINE_DTR) == 0) {
                 diag_set(AVRDU_DIAG_CLS_DTR0);
                 g_bc_trig_site = 2;      /* fired from SET_LINE_CODING completion */
-                ep0_send_zlp();              /* finish this request's status stage */
-                trigger_1200bps_reset();     /* never returns */
+                /* Do NOT arm the status-stage ZLP here: we are inside
+                 * usb_class_data_out_complete(), and when we return,
+                 * handle_ep0_out_complete() (usb_core.c) restores EP0 OUT
+                 * to its SETUP-receive configuration and arms the ZLP
+                 * itself. The old code short-circuited that (zlp + reset
+                 * that never returned), leaving EP0 OUT in the data-stage
+                 * configuration and detaching before the host could fetch
+                 * the status stage. */
+                arm_1200bps_reset();     /* reset deferred to usb_cdc_on_sof() */
             }
         }
         /* g_line_coding has been filled by the EP0 OUT stage already

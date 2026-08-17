@@ -1,6 +1,6 @@
 # Wazamono 剣(Tsurugi)
 
-**Arduino Uno R3 後継機 — AVR64DU32 / USB-C**
+**Arduino Uno R3 互換機 — AVR64DU32 / USB-C**
 
 >  
 > Wazamono Tsurugi は、Arduino Uno R3 と同じフォームファクタを USB ネイティブな AVR `AVR64DU32` で再設計したボードです。  
@@ -172,14 +172,14 @@
 
 | オブジェクト | 実体 | ピン | 備考 |
 |--------------|------|------|------|
-| `Serial` | USB CDC | USB-C | シリアルモニタ(仮想 COM)。日常の `Serial.print()` は Uno と同じ感覚で使えます |
+| `Serial` | USB CDC | USB-C | シリアルモニタ(仮想 COM) |
 | `Serial1` | USART0 | D0(RX) / D1(TX) | Uno R3 互換ハードウェア UART |
 | `Serial2` | USART1 | AREF(RX) / D13(TX) | 追加 UART |
 
 >  
 > Serial1は XCK(D3) / XDIR(D2) と併用して **RS-485 の方向制御や SPI ホストモードにも対応**。  
 >  
-> 本家 Uno R3 と同じく、D0/D1 のハードウェア UART が `Serial1` です。  
+> `Serial` は `USBSerial` の別名として定義されており USB-CDC を利用します。  
 >  
 
 ---
@@ -195,11 +195,11 @@
 | SS | AREF | なし |
 
 >  
-> ホスト側として動作する時のチップセレクトは任意の GPIO を使用してください。  
->  
-> **スレーブ（受信側）動作:** ハードウェア SS（AREF）が実ピンにあるため、付属の **SPISlave ライブラリ**（ESP8266 互換 API）で SPI スレーブとしても動作できます。  
+> **クライアント(受信側)動作:** ハードウェア SS(AREF) が実ピンにあるため、  
+> 付属の **SPISlave ライブラリ**（ESP8266 互換 API）で SPI スレーブとしても動作できます。  
 >  
 > 詳細は [libraries/SPISlave](../libraries/SPISlave/README.md) を参照。  
+>  
 >  
 
 ---
@@ -208,8 +208,8 @@
 
 | 信号 | ピン |
 |------|------|
-| SDA | A4(PA2) |
-| SCL | A5(PA3) |
+| SDA | A4 |
+| SCL | A5 |
 
 >  
 > Uno R3 と同じ A4/A5 に配置されています。**Leonardo とは異なります。**  
@@ -232,8 +232,13 @@
 
 ### アナログ入力
 
+- 10-bit ADC
 - Uno R3 ヘッダの **A0–A5**(= D14–D19)
 - 各デジタルピンも ADC チャネルを持ち、A6–A20 として参照可能
+
+> 
+> 入力チャネルは複数あっても ADC は一つしかないので多チャンネルで同時に `analogRead` を実行すると安定性が劣化します(megaAVR と同じ挙動)。
+> 
 
 ---
 

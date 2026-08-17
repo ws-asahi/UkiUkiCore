@@ -1,6 +1,6 @@
 # Wazamono 太刀(Tachi)
 
-**Pro Micro 後継機 — AVR64DU32 / USB-C**
+**Pro Micro 互換機 — AVR64DU32 / USB-C**
 
 >  
 > Wazamono Tachi は、SparkFun Pro Micro と同じフォームファクタを USB ネイティブな AVR `AVR64DU32` で再設計したボードです。  
@@ -54,6 +54,7 @@
 >  
 > Wazamono Tachi が置き換える Pro Micro は **ATmega32U4** を搭載しています。  
 > Pro Micro は USB 内蔵 AVR ですが、AVR64DU32 は新世代の **AVRxt コア**で、クロック・メモリ・周辺機能が大きく強化されています。  
+> また同一基板上で 5V と 3.3V の動作電圧切り替えが可能です。  
 >  
 
 | 項目 | Wazamono Tachi (AVR64DU32) | Pro Micro (ATmega32U4) |
@@ -165,12 +166,12 @@
 |--------------|------|------|------|
 | `Serial` | USB CDC | USB-C | シリアルモニタ(仮想 COM) |
 | `Serial1` | USART0 | D0(RX) / D1(TX) | Pro Micro 互換ハードウェア UART |
-| `Serial2` | USART1 | D18(A0) / D15(TX) | 予追加 UART |
+| `Serial2` | USART1 | D18(RX) / D15(TX) | 予追加 UART |
 
 > 
 > Serial1は XCK(D7) / XDIR(D8) と併用して **RS-485 の方向制御や SPI ホストモードにも対応**。  
-> 
-> 本家 Pro Micro と同じく、D0/D1 のハードウェア UART が `Serial1` です。  
+>  
+> `Serial` は `USBSerial` の別名として定義されており USB-CDC を利用します。  
 > 
 
 ---
@@ -185,13 +186,12 @@
 | SCK | D15 | D7 |
 | SS | A0 | なし |
 
-> 
-> チップセレクトは任意の GPIO を使用してください(SPI0 ALT4 位置。SCK/SS は `Serial2` と共用・排他利用)。  
-> 
-> **クライアント(受信側)動作:** ハードウェア SS(A0/PD7)が実ピンにあるため、付属の **SPISlave ライブラリ**（ESP8266 互換 API）で SPI スレーブとしても動作できます。  
-> 
+>  
+> **クライアント(受信側)動作:** ハードウェア SS(A0) が実ピンにあるため、  
+> 付属の **SPISlave ライブラリ**（ESP8266 互換 API）で SPI スレーブとしても動作できます。  
+>  
 > 詳細は [libraries/SPISlave](../libraries/SPISlave/README.md) を参照。  
-> 
+>  
 
 ---
 
@@ -199,8 +199,8 @@
 
 | 信号 | ピン |
 |------|------|
-| SDA | D2(PA2) |
-| SCL | D3(PA3) |
+| SDA | D2 |
+| SCL | D3 |
 
 > 
 > Pro Micro と同じ D2/D3 に配置されています。  
@@ -274,7 +274,7 @@
 
 1. ボードを USB で接続します。
 2. Arduino IDE からスケッチを書き込みます。書き込み開始時に **1200bps タッチ**が行われ、USB CDC ブートローダへ自動遷移します。
-3. 自動遷移しない場合は、**リセットパッドと GND をジャンパ線でダブルタップ**でブートローダに入れます。
+3. 自動遷移しない場合は、**リセットパッドをジャンパ線でダブルタップ**することでブートローダに入れます。
 
 初回のみ、または USB ブートローダを書き込み直す場合は、UPDI プログラマ(PICkit 4/5、Atmel-ICE、jtag2updi 等)を UPDI パッドに接続して書き込みます。
 

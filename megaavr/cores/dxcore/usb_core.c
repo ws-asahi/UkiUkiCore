@@ -49,29 +49,9 @@ uint8_t  g_ep6_in_buf[USB_EP6_SIZE]    __attribute__((aligned(2)));
 
 ctrl_state_t g_ctrl_state          = CTRL_IDLE;
 
-/* --- diagnostic snapshot (read by the test sketch over Serial1) --- */
-volatile uint8_t g_dbg_ctrl_state    = 0;
-volatile uint8_t g_dbg_ep0out_status = 0;
-volatile uint8_t g_dbg_ep0in_status  = 0;
-volatile uint8_t g_dbg_intflagsb     = 0;
-volatile uint8_t g_dbg_usbaddr       = 0;
 uint8_t          g_pending_address   = 0;
 volatile uint8_t g_current_configuration = 0;
 uint8_t          g_remote_wakeup_enabled = 0;
-
-volatile uint16_t g_reset_count          = 0;
-volatile uint16_t g_setup_count          = 0;
-volatile uint16_t g_get_desc_count       = 0;
-volatile uint16_t g_stall_count          = 0;
-volatile uint16_t g_setcfg_count         = 0;
-volatile uint16_t g_class_req_count      = 0;
-volatile uint16_t g_mpkt_count           = 0;   /* multipacket IN transfers started */
-volatile uint16_t g_ep0in_tc_count       = 0;   /* EP0 IN transaction-complete events */
-volatile uint8_t  g_last_cfg_value       = 0xFF;
-volatile uint8_t  g_last_bmRequestType   = 0;
-volatile uint8_t  g_last_bRequest        = 0;
-volatile uint16_t g_last_wValue          = 0;
-volatile uint16_t g_last_wLength         = 0;
 
 /* ============================================================
  * RMW busy wait
@@ -183,7 +163,6 @@ void ep0_start_data_in(const uint8_t *data, uint16_t len, uint16_t host_requeste
     g_ep0_in_need_zlp = (len < host_requested) && (len != 0)
                         && ((len % USB_EP0_SIZE) == 0);
 
-    if (len > USB_EP0_SIZE) g_mpkt_count++;   /* diagnostic: multi-chunk read */
 
     /* Pre-arm EP0.OUT once to ACK the status-stage ZLP that follows the data */
     rmw_wait();
@@ -240,7 +219,6 @@ void ep0_send_zlp(void) {
 }
 
 void ep0_stall(void) {
-    g_stall_count++;
     g_ep_table.EP[0].OUT.CTRL |= USB_DOSTALL_bm;
     g_ep_table.EP[0].IN.CTRL  |= USB_DOSTALL_bm;
     g_ctrl_state = CTRL_IDLE;
@@ -253,10 +231,6 @@ void ep0_stall(void) {
 static void handle_setup(void) {
     usb_setup_t *s = (usb_setup_t *)g_ep0_setup_buf;
 
-    g_last_bmRequestType = s->bmRequestType;
-    g_last_bRequest      = s->bRequest;
-    g_last_wValue        = s->wValue;
-    g_last_wLength       = s->wLength;
 
     /* Clear DOSTALL on both EP0 directions for the NEW transfer.
      * While EPSETUP=1 the HW overrides DOSTALL (datasheet 28.7.4),
@@ -348,7 +322,6 @@ static void handle_ep0_out_complete(void) {
 static void usb_service_busevent(void) {
     uint8_t flags_a = USB0.INTFLAGSA;
     if (flags_a & USB_RESET_bm) {
-        g_reset_count++;
         USB0.ADDR = 0;
         usb_ep_table_init();
         g_ctrl_state            = CTRL_IDLE;
@@ -372,7 +345,6 @@ static void usb_service_trncompl(void) {
 
     /* SETUP arrived */
     if (flags_b & USB_SETUP_bm) {
-        g_setup_count++;
         handle_setup();
         USB0.INTFLAGSB = USB_SETUP_bm;
     }
@@ -382,7 +354,6 @@ static void usb_service_trncompl(void) {
         if (g_ep_table.EP[0].IN.STATUS & USB_TRNCOMPL_bm) {
             rmw_wait();
             USB0.STATUS[0].INCLR = USB_TRNCOMPL_bm;
-            g_ep0in_tc_count++;
             handle_ep0_in_complete();
         }
         if (g_ep_table.EP[0].OUT.STATUS & USB_TRNCOMPL_bm) {
@@ -421,11 +392,6 @@ static void usb_service_trncompl(void) {
     }
 
     /* diagnostic snapshot of EP0 / control state for the test sketch */
-    g_dbg_ctrl_state    = (uint8_t)g_ctrl_state;
-    g_dbg_ep0out_status = g_ep_table.EP[0].OUT.STATUS;
-    g_dbg_ep0in_status  = g_ep_table.EP[0].IN.STATUS;
-    g_dbg_intflagsb     = USB0.INTFLAGSB;
-    g_dbg_usbaddr       = USB0.ADDR;
 }
 
 /* The USB stack is interrupt-driven; the application no longer needs to call

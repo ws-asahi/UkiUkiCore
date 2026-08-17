@@ -25,29 +25,12 @@ extern "C" {
 bool usbCdcReady(void);
 bool usbCdcTxIdle(void);   /* TX ring empty AND no packet in flight */
 
-/* diagnostic: total raw bytes received on the CDC bulk-OUT endpoint */
-extern volatile uint16_t g_cdc_rx_total;
-extern volatile uint16_t g_cdc_tx_starts;
-extern volatile uint16_t g_cdc_tx_pkts;
 uint8_t usbCdcLineState(void);
 bool    usbCdcTxInFlight(void);
 
 /* Diagnostic: current host-requested line coding baud (dwDTERate). Useful
  * for confirming the 1200 bps touch path from a user sketch via Serial1. */
 uint32_t usbCdcLineCodingBaud(void);
-
-/* Reset-surviving breadcrumb (diagnostic). Call usbCdcDiagBreadcrumbInit()
- * once from setup(); then read the counters to see how far the last 1200bps
- * touch got even though the chip has since bounced back into the app:
- *   Saw1200   - SET_LINE_CODING(1200) reached the native CDC at least once
- *   TrigCount - trigger_1200bps_reset() was entered (the reset was requested)
- *   TrigBaud  - g_line_coding.dwDTERate captured at the last trigger
- *   TrigSite  - 1 = SET_CONTROL_LINE_STATE path, 2 = SET_LINE_CODING path */
-void     usbCdcDiagBreadcrumbInit(void);
-uint16_t usbCdcDiagSaw1200(void);
-uint16_t usbCdcDiagTrigCount(void);
-uint32_t usbCdcDiagTrigBaud(void);
-uint8_t  usbCdcDiagTrigSite(void);
 
 /* True when EP3 IN is ready to accept a fresh buffer */
 bool usbCdcTxReady(void);

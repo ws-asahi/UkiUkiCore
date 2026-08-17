@@ -30,6 +30,11 @@ uint16_t       usbcore_acc_len(void);
  * Fixes up wTotalLength and bNumInterfaces in the accumulator header.     */
 void usbcore_build_config_descriptor(void);
 
+/* Hook used by the builder to append plugged modules' interface
+ * descriptors. Weak no-op in USBCore_DU.cpp (CDC only); strong override
+ * in USBCore_DU_dyn.cpp iterates PluggableUSB().getInterface().          */
+void usbcore_plugged_get_interfaces(uint8_t *ifCount);
+
 /* --- PluggableUSB dispatch hooks (called from usb_standard.c) ----------- *
  * `try_setup`        - non-CDC class / vendor requests
  * `try_get_descriptor` - non-standard descriptor types (HID report, etc.) *

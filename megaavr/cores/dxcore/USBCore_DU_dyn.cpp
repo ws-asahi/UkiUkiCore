@@ -36,7 +36,11 @@ extern "C" {
 #include "api/PluggableUSB.h"
 
 /* Constants shared with USBCore_DU.cpp (kept in lockstep). */
-#define USBCORE_NUM_EP        8                 /* EP0..EP7 (logical max)    */
+#define USBCORE_NUM_EP        USB_NUM_EP        /* EP0..EP{N-1}; follows the
+                                                 * USB_EP_SLOTS knob (8/16) in
+                                                 * usb_descriptors.h, so the
+                                                 * bridge and CTRLA.MAXEP can
+                                                 * never disagree.           */
 #define USBCORE_DYN_EP_BASE   4                 /* first plugged EP          */
 #define USBCORE_DYN_EP_COUNT  (USBCORE_NUM_EP - USBCORE_DYN_EP_BASE)
 #define USBCORE_CDC_LAST_EP   3                 /* CDC owns EP1..EP3       */
@@ -77,7 +81,7 @@ PluggableUSB_::PluggableUSB_() :
     lastIf(USBCORE_CDC_NUM_IF),
     lastEp(USBCORE_CDC_LAST_EP + 1),
     rootNode(NULL),
-    totalEP(USBCORE_NUM_EP - 1)   /* highest EP number usable = 7 */
+    totalEP(USBCORE_NUM_EP - 1)   /* highest usable EP number (7 or 15) */
 {
 }
 

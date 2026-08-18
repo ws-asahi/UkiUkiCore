@@ -41,7 +41,11 @@ extern "C" {
 /* ============================================================
  *  Constants
  * ============================================================ */
-#define USBCORE_NUM_EP        8                 /* EP0..EP7 (logical max)    */
+#define USBCORE_NUM_EP        USB_NUM_EP        /* EP0..EP{N-1}; follows the
+                                                 * USB_EP_SLOTS knob (8/16) in
+                                                 * usb_descriptors.h, so the
+                                                 * bridge and CTRLA.MAXEP can
+                                                 * never disagree.           */
 #define USBCORE_DYN_EP_BASE   4                 /* first plugged EP          */
 #define USBCORE_DYN_EP_COUNT  (USBCORE_NUM_EP - USBCORE_DYN_EP_BASE)
 #define USBCORE_CDC_LAST_EP   3                 /* CDC owns EP1..EP3       */

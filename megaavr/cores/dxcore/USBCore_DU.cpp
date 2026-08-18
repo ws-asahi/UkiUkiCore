@@ -50,86 +50,7 @@ extern "C" {
 #define USBCORE_DYN_EP_COUNT  (USBCORE_NUM_EP - USBCORE_DYN_EP_BASE)
 #define USBCORE_CDC_LAST_EP   3                 /* CDC owns EP1..EP3       */
 #define USBCORE_CDC_NUM_IF    2                 /* CDC owns IF0..IF1       */
-#define USBCORE_ACC_SIZE      192       /* CDC IAD+CDC*2+HID ~= 100 B, with headroom */
 #define USBCORE_DYN_EP_BUF    USB_EP_SIZE       /* per-dynamic-EP staging  */
-
-/* ============================================================
- *  Accumulator buffer for USB_SendControl
- * ============================================================ */
-static uint8_t   s_acc[USBCORE_ACC_SIZE];
-static uint16_t  s_acc_pos = 0;
-
-void usbcore_acc_reset(void)      { s_acc_pos = 0; }
-const uint8_t *usbcore_acc_buf(void) { return s_acc; }
-uint16_t       usbcore_acc_len(void) { return s_acc_pos; }
-
-/* Stage `n` bytes from a PROGMEM source into s_acc at the current write
- * position.  Used by usb_standard.c (which is C, hence cannot call the
- * C++ USB_SendControl directly) to ship device/string descriptors that
- * now live in flash.  Truncates silently if s_acc would overflow.       */
-void usbcore_acc_load_P(const uint8_t *src_pgm, uint16_t n) {
-    uint16_t room = USBCORE_ACC_SIZE - s_acc_pos;
-    if (room == 0) return;
-    if (n > room) n = room;
-    memcpy_P(&s_acc[s_acc_pos], src_pgm, n);
-    s_acc_pos += n;
-}
-
-/* ============================================================
- *  USBAPI - control transfers
- * ============================================================ */
-int USB_SendControl(uint8_t flags, const void* d, int len) {
-    if (len <= 0) return 0;
-    int room = USBCORE_ACC_SIZE - s_acc_pos;
-    if (room <= 0) return -1;
-    int n = (len > room) ? room : len;
-    if (flags & TRANSFER_PGM) {
-        memcpy_P(&s_acc[s_acc_pos], d, n);
-    } else {
-        memcpy(&s_acc[s_acc_pos], d, n);
-    }
-    s_acc_pos += n;
-    return n;
-}
-
-/* ============================================================
- *  Dynamic config descriptor builder  -  emits into accumulator
- * ============================================================ */
-/* Emit the 66-byte CDC block (IAD + IF0 + IF1 + 3 EPs) by slicing it out
- * of the existing g_config_descriptor (bytes 9..74). Sharing the single
- * source of truth means we cannot drift between the static and dynamic
- * representations of CDC. */
-static void emit_cdc_interfaces(uint8_t *ifCount) {
-    USB_SendControl(TRANSFER_PGM, &g_config_descriptor[9], 66);
-    *ifCount += 2;
-}
-
-void usbcore_build_config_descriptor(void) {
-    s_acc_pos = 0;
-
-    /* Skeleton CONFIGURATION header (wTotalLength + bNumInterfaces patched later) */
-    static const uint8_t cfg_hdr[9] PROGMEM = {
-        9,            /* bLength                                */
-        0x02,         /* bDescriptorType = CONFIGURATION        */
-        0, 0,         /* wTotalLength    (patched below)        */
-        0,            /* bNumInterfaces  (patched below)        */
-        1,            /* bConfigurationValue                    */
-        0,            /* iConfiguration                         */
-        0xA0,         /* bmAttributes: bus-powered, rem.wakeup  */
-        50            /* bMaxPower = 100 mA                     */
-    };
-    USB_SendControl(TRANSFER_PGM, cfg_hdr, sizeof(cfg_hdr));
-
-    uint8_t ifCount = 0;
-    emit_cdc_interfaces(&ifCount);
-    usbcore_plugged_get_interfaces(&ifCount);   /* weak no-op unless a module is plugged */
-
-    /* Patch wTotalLength and bNumInterfaces. */
-    s_acc[2] = (uint8_t)(s_acc_pos & 0xFF);
-    s_acc[3] = (uint8_t)((s_acc_pos >> 8) & 0xFF);
-    s_acc[4] = ifCount;
-}
-
 
 /* ============================================================
  *  Weak defaults for the PluggableUSB bridge
@@ -147,12 +68,26 @@ __attribute__((weak)) void usbcore_plugged_get_interfaces(uint8_t *ifCount) {
     (void)ifCount;                      /* no plugged modules: CDC only */
 }
 
-__attribute__((weak)) bool usbcore_try_plugged_setup(const usb_setup_t *s) {
-    (void)s; return false;              /* -> usb_standard.c STALLs */
+__attribute__((weak)) bool usbcore_try_plugged_setup(const usb_setup_t *s,
+                                                     usbcore_desc_src_t *out) {
+    (void)s; (void)out; return false;   /* -> usb_standard.c STALLs */
 }
 
-__attribute__((weak)) bool usbcore_try_plugged_get_descriptor(const usb_setup_t *s) {
-    (void)s; return false;              /* -> usb_standard.c STALLs */
+__attribute__((weak)) bool usbcore_try_plugged_get_descriptor(const usb_setup_t *s,
+                                                              usbcore_desc_src_t *out) {
+    (void)s; (void)out; return false;   /* -> usb_standard.c STALLs */
+}
+
+/* CDC only: the CONFIGURATION descriptor is exactly the static PROGMEM
+ * g_config_descriptor (wTotalLength / bNumInterfaces are compile-time
+ * constants there), streamed from flash by usb_standard.c. The strong
+ * override in USBCore_DU_dyn.cpp instead builds the run-time composite
+ * into the accumulator, whose interface/endpoint layout only exists
+ * once modules have plugged in. */
+__attribute__((weak)) void usbcore_get_config_descriptor(usbcore_desc_src_t *out) {
+    out->ptr = g_config_descriptor;
+    out->len = sizeof(g_config_descriptor);
+    out->pgm = true;
 }
 
 __attribute__((weak)) void usbcore_init_plugged_endpoints(void) { }

@@ -128,6 +128,9 @@ extern uint8_t  g_remote_wakeup_enabled;
  * Internal helpers (shared between USB modules)
  * ============================================================ */
 void ep0_start_data_in(const uint8_t *data, uint16_t len, uint16_t host_requested);
+/* PROGMEM-source variant: streams the data stage from flash in <=64 B
+ * chunks via g_ep0_data_buf (no RAM staging buffer required). */
+void ep0_start_data_in_P(const uint8_t *data_pgm, uint16_t len, uint16_t host_requested);
 void ep0_start_data_out(uint8_t *buffer, uint16_t len);
 void ep0_send_zlp(void);
 void ep0_stall(void);

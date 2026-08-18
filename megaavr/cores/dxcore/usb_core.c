@@ -31,6 +31,7 @@
 #include <avr/interrupt.h>
 #include <util/delay.h>
 #include <string.h>
+#include <avr/pgmspace.h>
 #include "usb_core.h"
 #include "usb_standard.h"
 #include "USBCore_DU.h"
@@ -136,12 +137,17 @@ static void usb_ep_table_init(void) {
 static const uint8_t *g_ep0_in_src;      /* next byte to send           */
 static uint16_t       g_ep0_in_rem;      /* bytes still to send         */
 static bool           g_ep0_in_need_zlp; /* terminating ZLP required?   */
+static bool           g_ep0_in_pgm;      /* source is PROGMEM, not RAM  */
 
 /* Load and fire one IN packet (n <= USB_EP0_SIZE). EP0.IN must be deactivated
  * (BUSNAK set) on entry — true right after SETUP and after each IN TRNCOMPL,
  * which satisfies the datasheet rule that CNT/MCNT are written while NAKed. */
 static void ep0_send_chunk(uint16_t n) {
-    for (uint16_t i = 0; i < n; i++) g_ep0_data_buf[i] = g_ep0_in_src[i];
+    if (g_ep0_in_pgm) {
+        memcpy_P(g_ep0_data_buf, g_ep0_in_src, n);
+    } else {
+        for (uint16_t i = 0; i < n; i++) g_ep0_data_buf[i] = g_ep0_in_src[i];
+    }
     g_ep0_in_src += n;
     g_ep0_in_rem -= n;
 
@@ -155,9 +161,11 @@ static void ep0_send_chunk(uint16_t n) {
     USB0.STATUS[0].INCLR = USB_UNFOVF_bm | USB_TRNCOMPL_bm | USB_STALLED_bm | USB_BUSNAK_bm;
 }
 
-void ep0_start_data_in(const uint8_t *data, uint16_t len, uint16_t host_requested) {
+static void ep0_start_data_in_ex(const uint8_t *data, uint16_t len,
+                                 uint16_t host_requested, bool pgm) {
     if (len > host_requested) len = host_requested;
 
+    g_ep0_in_pgm = pgm;
     g_ep0_in_src = data;
     g_ep0_in_rem = len;
     /* A short final packet ends the transfer. If we send a whole number of
@@ -175,6 +183,19 @@ void ep0_start_data_in(const uint8_t *data, uint16_t len, uint16_t host_requeste
     /* Fire the first packet (len==0 sends a single ZLP) */
     uint16_t n = (g_ep0_in_rem > USB_EP0_SIZE) ? USB_EP0_SIZE : g_ep0_in_rem;
     ep0_send_chunk(n);
+}
+
+void ep0_start_data_in(const uint8_t *data, uint16_t len, uint16_t host_requested) {
+    ep0_start_data_in_ex(data, len, host_requested, false);
+}
+
+/* Same as ep0_start_data_in(), but `data_pgm` points into flash. The chunk
+ * refill in handle_ep0_in_complete() then stages each <=64 B packet from
+ * PROGMEM into g_ep0_data_buf, so no RAM-resident copy of the descriptor
+ * is ever needed. Everything else (wLength truncation, ZLP rule, DATA0/1
+ * toggling, RMW discipline) is the identical, hardware-proven path. */
+void ep0_start_data_in_P(const uint8_t *data_pgm, uint16_t len, uint16_t host_requested) {
+    ep0_start_data_in_ex(data_pgm, len, host_requested, true);
 }
 
 void ep0_start_data_out(uint8_t *buffer, uint16_t len) {

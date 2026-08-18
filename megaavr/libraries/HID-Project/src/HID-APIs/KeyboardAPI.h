@@ -32,6 +32,21 @@ THE SOFTWARE.
 class KeyboardAPI : public Print
 {
 public:
+  /* WazamonoCore: upstream's write(KeyboardKeycode)/write(uint8_t) hid the
+   * remaining Print::write overloads, which triggers -Woverloaded-virtual
+   * on every TU under -Wall -Wextra. Beyond the noise, any diagnostic here
+   * makes the mingw avr-g++ echo include-chain paths in the ANSI code page
+   * (CP932) when the sketchbook lives under a non-ASCII directory name,
+   * and those bytes fail the Arduino IDE's UTF-8 gRPC transport ("grpc:
+   * error while marshaling"; see ImprovedKeylayouts.h). Re-exposing the
+   * base overloads fixes the hiding itself: exact-match calls like
+   * write(KeyboardKeycode) and write(uint8_t) resolve as before, and
+   * write(buffer, size) now usefully types a byte sequence. Note GCC
+   * attributes this warning to the hidden declaration in Print.h, so a
+   * local "#pragma GCC diagnostic ignored" here cannot suppress it - this
+   * using-declaration is the correct fix, not just the convenient one. */
+  using Print::write;
+
   inline void begin(void);
   inline void end(void);
   

@@ -64,15 +64,50 @@ void usbPoll(void);
 /* ============================================================
  * Internal globals shared between USB modules
  *
- * g_ep_table is USB_EP_TABLE_t (from ioavr64du32.h):
- *   FIFO[32]    : transaction-complete FIFO area
- *   EP[16]      : endpoint descriptors (16 x 16 bytes)
- *   FRAMENUM    : frame number (2 bytes)
+ * g_ep_table holds ONLY the endpoint descriptor table:
+ *   EP[USB_NUM_EP] : endpoint descriptors (USB_NUM_EP x 16 bytes)
  *
+ * The official USB_EP_TABLE_t (ioavr64du32.h) additionally reserves
+ * FIFO[32] (used only when CTRLA.FIFOEN=1) and FRAMENUM (used only
+ * when CTRLA.STFRNUM=1). This stack enables neither, so by default a
+ * trimmed table sized by the USB_EP_SLOTS knob is used instead, saving
+ * 162 B at 8 EPs / 34 B at 16 EPs. The hardware only ever accesses
+ * EPPTR .. EPPTR+(MAXEP+1)*16-1 with FIFOEN=STFRNUM=0 (DS40002548A
+ * Figure 28-9), and MAXEP derives from the same knob, so it can never
+ * read past this struct.
+ *
+ * The omitted areas remain available behind two INTERNAL build macros
+ * (deliberately not exposed in the boards.txt menus), each matching
+ * its CTRLA enable bit 1:1 per Figure 28-9:
+ *
+ *   -DUSB_EP_TABLE_FIFO     reserve the transaction-complete FIFO,
+ *                           (MAXEP+1)x2 bytes at negative offsets
+ *                           below EPPTR (prerequisite for FIFOEN=1)
+ *   -DUSB_EP_TABLE_FRAMENUM reserve FRAMENUM right after the EP
+ *                           table (prerequisite for STFRNUM=1)
+ *
+ * Defining a macro only reserves the RAM area; actually using the
+ * feature additionally requires setting CTRLA.FIFOEN / CTRLA.STFRNUM
+ * and the corresponding handling code, which this stack does not
+ * contain today. EPPTR = &g_ep_table.EP[0] is correct in every
+ * layout combination (with the FIFO present it points past it,
+ * exactly as the memory map requires).
+ *
+ * DS40002548A 28.5.7: EPPTR[0] must be zero -> keep aligned(2).
+ * (EP[0]'s offset is 0 or (MAXEP+1)*2, both even, so the attribute
+ * on the object suffices in every layout.)
  * Access endpoints as: g_ep_table.EP[n].OUT.STATUS, .CTRL, .CNT, etc.
- * EPPTR must be set to &g_ep_table.EP[0] (NOT the struct base).
  * ============================================================ */
-extern USB_EP_TABLE_t g_ep_table;
+typedef struct {
+#if defined(USB_EP_TABLE_FIFO)
+    register8_t FIFO[USB_NUM_EP * 2];  /* active when CTRLA.FIFOEN=1  */
+#endif
+    USB_EP_PAIR_t EP[USB_NUM_EP];      /* USB_EP_PAIR_t from ioavr64du32.h */
+#if defined(USB_EP_TABLE_FRAMENUM)
+    _WORDREGISTER(FRAMENUM);           /* active when CTRLA.STFRNUM=1 */
+#endif
+} usb_ep_table_t;
+extern usb_ep_table_t g_ep_table;
 
 extern uint8_t  g_ep0_setup_buf[8];
 extern uint8_t  g_ep0_data_buf[USB_EP0_SIZE];

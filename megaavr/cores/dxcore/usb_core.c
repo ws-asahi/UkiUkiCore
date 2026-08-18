@@ -9,8 +9,10 @@
  * Target: AVR64DU32 with DxCore
  *
  * Architecture:
- *   - Uses official USB_EP_TABLE_t (FIFO[32] + EP[16] + FRAMENUM)
- *   - EPPTR set to &g_ep_table.EP[0]  (FIFO occupies negative offsets)
+ *   - Uses a trimmed EP table (EP[USB_NUM_EP]; the FIFO/FRAMENUM areas
+ *     are omitted by default since FIFOEN=STFRNUM=0, but can be reserved
+ *     again via USB_EP_TABLE_FIFO / USB_EP_TABLE_FRAMENUM - see usb_core.h)
+ *   - EPPTR set to &g_ep_table.EP[0] (valid in every layout)
  *   - Fully interrupt-driven: USB0_BUSEVENT_vect (reset/SOF) and
  *     USB0_TRNCOMPL_vect (SETUP + per-endpoint TRNCOMPL) drive all activity;
  *     usbPoll() is a no-op kept for source compatibility.
@@ -36,7 +38,7 @@
 /* ============================================================
  * Global state
  * ============================================================ */
-USB_EP_TABLE_t g_ep_table __attribute__((aligned(2)));
+usb_ep_table_t g_ep_table __attribute__((aligned(2)));  /* EPPTR[0]=0 required (28.5.7) */
 
 uint8_t  g_ep0_setup_buf[8]            __attribute__((aligned(2)));
 uint8_t  g_ep0_data_buf[USB_EP0_SIZE]  __attribute__((aligned(2)));
@@ -83,7 +85,7 @@ __attribute__((weak)) void usb_cdc_on_sof(void)         { }
  *   EP2 OUT armed to receive bulk data from host.
  * ============================================================ */
 static void usb_ep_table_init(void) {
-    /* Zero entire table (FIFO + EP[16] + FRAMENUM) */
+    /* Zero entire table (EP[USB_NUM_EP] + any reserved FIFO/FRAMENUM areas) */
     memset(&g_ep_table, 0, sizeof(g_ep_table));
 
     /* EP0 OUT: Control, ready to receive SETUP */
@@ -463,10 +465,11 @@ void usbInit(void) {
 
     /* 5. Point USB peripheral at &g_ep_table.EP[0]
      *    Hardware layout (datasheet 28.7.1):
-     *      EPPTR - 32 .. -1   : FIFO[31..0] (negative offsets)
      *      EPPTR + 0          : EP[0].OUT.STATUS
-     *      EPPTR + (N+1)*16   : FRAMENUM
-     *    USB_EP_TABLE_t has FIFO[32] first, so EPPTR points past it. */
+     *      EPPTR + (MAXEP+1)*16-1 : last byte accessed with
+     *                               FIFOEN=STFRNUM=0 (the default)
+     *    (FIFO below EPPTR / FRAMENUM after the table exist only when
+     *     reserved via USB_EP_TABLE_FIFO / USB_EP_TABLE_FRAMENUM.) */
     USB0.EPPTR = (uint16_t)&g_ep_table.EP[0];
 
     /* 6. Enable USB interrupts (interrupt-driven; loop() need not poll).

@@ -64,9 +64,9 @@ extern "C" {
  * USB_EP_SLOTS is the number of endpoint ADDRESSES the peripheral serves
  * (EP0..EP{SLOTS-1}); it programs CTRLA.MAXEP = SLOTS-1. DS40002548A 28.5.1:
  * incoming packets with an endpoint number above MAXEP are discarded, and the
- * endpoint descriptor table at EPPTR spans (MAXEP+1) x 16 bytes. The official
- * USB_EP_TABLE_t used for g_ep_table covers the full 16 endpoints, so both
- * settings below fit it without changes.
+ * endpoint descriptor table at EPPTR spans (MAXEP+1) x 16 bytes. g_ep_table
+ * (usb_core.h) is sized from this same knob, so table size, CTRLA.MAXEP and
+ * the PluggableUSB bridge always agree.
  *
  * Selectable from the IDE ("USB Endpoints" menu -> -DUSB_EP_SLOTS=16);
  * default is 8 (EP0-EP7: EP0 control, EP1-3 CDC, EP4-7 PluggableUSB).

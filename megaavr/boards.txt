@@ -8,12 +8,11 @@
 #  Derived from DxCore's avrduusb (USB-CDC bootloader) definition;
 #  DxCore (C) Spence Konde, LGPL 2.1. Customizations (C) Workshop Asahi.
 #
-#  Only the Tsurugi (AVR64DU32) carries a 24 MHz crystal, so only it has a
-#  Clock menu (WITH the crystal = production default, or WITHOUT it, internal
-#  OSCHF, to validate the board crystal-less). Tachi (AVR64DU32, rev.4,
-#  crystal-less) and Kunai (AVR32DU20) have no Clock menu and are fixed to
-#  24 MHz internal OSCHF; USB always runs from OSCHF + PLL48M auto-tuned to
-#  the USB SOF, independent of the system clock source.
+#  All three boards are crystal-less and run from the 24 MHz internal OSCHF.
+#  The Clock menu is kept, with '24 MHz internal' as its only (and therefore
+#  always-selected) entry, so that additional clock options can be reintroduced
+#  later without changing FQBNs or tooling. USB always runs from OSCHF +
+#  PLL48M auto-tuned to the USB SOF, independent of the system clock source.
 # =====================================================================
 
 menu.clock=Clock Speed
@@ -90,11 +89,12 @@ wazamonotachi.upload.wait_for_upload_port=true
 wazamonotachi.bootloader.file=hex/{bootloader.class}.hex
 wazamonotachi.bootloader.appspm=
 
-# --- Clock: fixed 24 MHz internal OSCHF (crystal-less; no Clock menu).
+# --- Clock menu: single entry, 24 MHz internal OSCHF (crystal-less board).
 #     clocksource 0 = internal OSCHF. USB CLK_USB (48 MHz) = OSCHF + PLL48M,
 #     SOF-tuned. PA0/PA1 are not connected on this board (reserved). ---
-wazamonotachi.build.speed=24
-wazamonotachi.build.clocksource=0
+wazamonotachi.menu.clock.24internal=24 MHz internal
+wazamonotachi.menu.clock.24internal.build.speed=24
+wazamonotachi.menu.clock.24internal.build.clocksource=0
 
 # --- millis()/micros() timer. TCB0 is the default so TCB1 stays free for
 #     D3 PWM and TCA0 stays free for D5-D10 PWM. ---
@@ -187,11 +187,12 @@ wazamonotsurugi.upload.wait_for_upload_port=true
 wazamonotsurugi.bootloader.file=hex/{bootloader.class}.hex
 wazamonotsurugi.bootloader.appspm=
 
-# --- Clock: 24 MHz internal OSCHF, fixed (no IDE menu). Board rev.C carries
+# --- Clock menu: single entry, 24 MHz internal OSCHF. Board rev.C carries
 #     no crystal: PA0/PA1 are the CDC TX/RX activity LEDs. USB's 48 MHz comes
 #     from PLL48M auto-tuned to the USB SOF, independent of CLK_PER. ---
-wazamonotsurugi.build.speed=24
-wazamonotsurugi.build.clocksource=0
+wazamonotsurugi.menu.clock.24internal=24 MHz internal
+wazamonotsurugi.menu.clock.24internal.build.speed=24
+wazamonotsurugi.menu.clock.24internal.build.clocksource=0
 
 # --- Locked to AVR64DU32. Variant + bootloader hex fixed to Wazamono Tsurugi. ---
 wazamonotsurugi.build.mcu=avr64du32
@@ -272,10 +273,11 @@ wazamonokunai.upload.wait_for_upload_port=true
 wazamonokunai.bootloader.file=hex/{bootloader.class}.hex
 wazamonokunai.bootloader.appspm=
 
-# --- Clock: fixed 24 MHz internal OSCHF (crystal-less; no Clock menu). ---
+# --- Clock menu: single entry, 24 MHz internal OSCHF (crystal-less board). ---
 #  clocksource 0 = internal OSCHF. USB CLK_USB (48 MHz) = OSCHF + PLL48M, SOF-tuned.
-wazamonokunai.build.speed=24
-wazamonokunai.build.clocksource=0
+wazamonokunai.menu.clock.24internal=24 MHz internal
+wazamonokunai.menu.clock.24internal.build.speed=24
+wazamonokunai.menu.clock.24internal.build.clocksource=0
 
 # --- Locked to AVR32DU20. Variant + bootloader hex fixed to Wazamono Kunai. ---
 wazamonokunai.build.mcu=avr32du20

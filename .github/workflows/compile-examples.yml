@@ -40,12 +40,19 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # The Clock menu has a single entry (24internal) on every board;
+          # spell it out anyway so the FQBN stays valid if more clock options
+          # are reintroduced later. usbeps defaults to the first entry (ep8),
+          # so both endpoint variants are spelled out explicitly; the ep16
+          # build (USB_EP_SLOTS=16) is covered once, on Tachi.
           - board: "Wazamono Tachi (AVR64DU32)"
-            fqbn: "WazamonoCore:megaavr:wazamonotachi:clock=24internal"
+            fqbn: "WazamonoCore:megaavr:wazamonotachi:clock=24internal,usbeps=ep8"
+          - board: "Wazamono Tachi (AVR64DU32, 16 EP)"
+            fqbn: "WazamonoCore:megaavr:wazamonotachi:clock=24internal,usbeps=ep16"
           - board: "Wazamono Tsurugi (AVR64DU32)"
-            fqbn: "WazamonoCore:megaavr:wazamonotsurugi:clock=24internal"
+            fqbn: "WazamonoCore:megaavr:wazamonotsurugi:clock=24internal,usbeps=ep8"
           - board: "Wazamono Kunai (AVR32DU20)"
-            fqbn: "WazamonoCore:megaavr:wazamonokunai"
+            fqbn: "WazamonoCore:megaavr:wazamonokunai:clock=24internal,usbeps=ep8"
 
     steps:
       - name: Checkout repository

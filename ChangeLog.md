@@ -4,6 +4,14 @@ WazamonoCore の変更履歴です。WazamonoCore は [DxCore](https://github.co
 
 ---
 
+## Unreleased — SerialUPDI を avrdude 8.1 経由に変更
+
+- **SerialUPDI が Python なしで動作するように**: 書込装置 `SerialUPDI - *` の3項目を `prog.py`（pymcuprog）から avrdude 8.1 の `-c serialupdi` へ切り替え。手動 / git インストールでは `megaavr/tools/python3/` が存在せず、ブートローダ書き込みが `executable file not found in %PATH%` で失敗していた問題を解消します。
+- 併せて、上流 DxCore の AVR DU セクションが定義していなかった `bootloader.serupdifuse5` に依存しなくなりました。ヒューズ書き込みは PICkit / nEDBG / Atmel-ICE と同じ `avrdudefuse5` 経路に一本化されます。
+- `megaavr/tools/prog.py` と `megaavr/tools/libs/` はツリーに残っていますが、どのレシピからも参照されません（`bootloader.pymcuprogstring` も同様に未使用）。
+
+---
+
 ## v0.0.6 — Tsurugi ピンマップ rev.3（水晶レス・Serial2・択一 PWM）
 
 Tsurugi のハードウェア rev.C に対応する変更です。Tachi / Kunai に変更はありません。

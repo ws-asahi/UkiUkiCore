@@ -41,7 +41,7 @@
             {
               "packager": "WazamonoCore",
               "name": "avrdude",
-              "version": "8.1-wazamono1"
+              "version": "8.1-wazamono2"
             }
           ]
         }
@@ -125,6 +125,47 @@
               "archiveFileName": "avrdude-8.1-wazamono1-x86_64-pc-linux-gnu.tar.gz",
               "checksum": "SHA-256:9e347a07ca0c26dff6be72e4501f79a0b1374b3b77511d54da856591a16aaad7",
               "size": "3698363"
+            }
+          ]
+        },
+        {
+          "name": "avrdude",
+          "version": "8.1-wazamono2",
+          "systems": [
+            {
+              "host": "aarch64-linux-gnu",
+              "url": "https://github.com/ws-asahi/wazamono-toolchain/releases/download/tools-15.2.0-wazamono2/avrdude-8.1-wazamono2-aarch64-linux-gnu.tar.gz",
+              "archiveFileName": "avrdude-8.1-wazamono2-aarch64-linux-gnu.tar.gz",
+              "checksum": "SHA-256:74511e2a5f1caec7d2ba177b7bb79b59043a3e13673ef54e057a14262a3ee939",
+              "size": "3766444"
+            },
+            {
+              "host": "arm64-apple-darwin",
+              "url": "https://github.com/ws-asahi/wazamono-toolchain/releases/download/tools-15.2.0-wazamono2/avrdude-8.1-wazamono2-arm64-apple-darwin.tar.gz",
+              "archiveFileName": "avrdude-8.1-wazamono2-arm64-apple-darwin.tar.gz",
+              "checksum": "SHA-256:42d5e0a8caa1f8a12fe0763a9bdd23c3c0053791e479b8aa29ccf903cffb72c1",
+              "size": "3324715"
+            },
+            {
+              "host": "x86_64-apple-darwin",
+              "url": "https://github.com/ws-asahi/wazamono-toolchain/releases/download/tools-15.2.0-wazamono2/avrdude-8.1-wazamono2-x86_64-apple-darwin.tar.gz",
+              "archiveFileName": "avrdude-8.1-wazamono2-x86_64-apple-darwin.tar.gz",
+              "checksum": "SHA-256:42d5e0a8caa1f8a12fe0763a9bdd23c3c0053791e479b8aa29ccf903cffb72c1",
+              "size": "3324715"
+            },
+            {
+              "host": "x86_64-mingw32",
+              "url": "https://github.com/ws-asahi/wazamono-toolchain/releases/download/tools-15.2.0-wazamono2/avrdude-8.1-wazamono2-x86_64-mingw32.tar.gz",
+              "archiveFileName": "avrdude-8.1-wazamono2-x86_64-mingw32.tar.gz",
+              "checksum": "SHA-256:679d156c42889e53e78c83c76eef6d4e87def72f58438faf2928989f6ff6fd39",
+              "size": "4032267"
+            },
+            {
+              "host": "x86_64-pc-linux-gnu",
+              "url": "https://github.com/ws-asahi/wazamono-toolchain/releases/download/tools-15.2.0-wazamono2/avrdude-8.1-wazamono2-x86_64-pc-linux-gnu.tar.gz",
+              "archiveFileName": "avrdude-8.1-wazamono2-x86_64-pc-linux-gnu.tar.gz",
+              "checksum": "SHA-256:4d66c2c32d46916bec1dac0aae14e7824f69e5e6afbc898479bc00a9845f5141",
+              "size": "3698367"
             }
           ]
         }

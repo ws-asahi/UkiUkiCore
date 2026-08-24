@@ -36,7 +36,7 @@
             {
               "packager": "WazamonoCore",
               "name": "avr-gcc",
-              "version": "15.2.0-wazamono1"
+              "version": "15.2.0-wazamono2"
             },
             {
               "packager": "WazamonoCore",
@@ -64,6 +64,26 @@
               "archiveFileName": "avr-gcc-15.2.0-wazamono1-x86_64-pc-linux-gnu.tar.gz",
               "checksum": "SHA-256:1863198b4fdb0557068fef29d84b9898e45d4ccdcae58d492dc99274fbe367a4",
               "size": "147794731"
+            }
+          ]
+        },
+        {
+          "name": "avr-gcc",
+          "version": "15.2.0-wazamono2",
+          "systems": [
+            {
+              "host": "x86_64-mingw32",
+              "url": "https://github.com/ws-asahi/wazamono-toolchain/releases/download/tools-15.2.0-wazamono2/avr-gcc-15.2.0-wazamono2-x86_64-mingw32.tar.gz",
+              "archiveFileName": "avr-gcc-15.2.0-wazamono2-x86_64-mingw32.tar.gz",
+              "checksum": "SHA-256:80e72fceb0946c308e3207e5c377f42e6032bfbcb9f4f655ad004f3964e2c8f2",
+              "size": "142972964"
+            },
+            {
+              "host": "x86_64-pc-linux-gnu",
+              "url": "https://github.com/ws-asahi/wazamono-toolchain/releases/download/tools-15.2.0-wazamono2/avr-gcc-15.2.0-wazamono2-x86_64-pc-linux-gnu.tar.gz",
+              "archiveFileName": "avr-gcc-15.2.0-wazamono2-x86_64-pc-linux-gnu.tar.gz",
+              "checksum": "SHA-256:d880d9f2c66ed2425e80fd1f30c300d6f536edf75f7b244510627909d6ec94d3",
+              "size": "147625452"
             }
           ]
         },

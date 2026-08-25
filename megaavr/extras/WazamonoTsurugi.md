@@ -139,8 +139,8 @@
 | D4 | PC3 | A10 | AIN31 | ~PWM(TCB1 + LUT1) |
 | D5 | PD0 | A11 | AIN0 | ~PWM(TCA0 WO0) / **IN0**(CustomLogic) |
 | D6 | PD1 | A12 | AIN1 | ~PWM(TCA0 WO1) / **IN1**(CustomLogic) |
-| D7 | PF4 | A13 | AIN20 | - |
-| D8 | PF5 | A14 | AIN21 | ~PWM(TCB1 WO) |
+| D7 | PF5 | A13 | AIN21 | ~PWM(**TCB1 WO 直結**・択一) |
+| D8 | PF4 | A14 | AIN20 | - |
 | D9 | PD2 | A15 | AIN2 | ~PWM(TCA0 WO2) / **IN2**(CustomLogic) / **P**(AnalogComp)|
 | D10 | PD3 | A16 | AIN3 | ~PWM(TCA0 WO3) / **OUT**(CustomLogic) / **N**(AnalogComp) |
 | D11 | PD4 | A17 | AIN4 | ~PWM(TCA0 WO4) / **MOSI**(SPI) |
@@ -157,7 +157,7 @@
 | D31 | PA1 | - | - | **LED_BUILTIN_RX**(USB-CDCと連動)|
 
 >  
-> **D3 / D4 / D8 の PWM は択一**です。  
+> **D3 / D4 / D7 の PWM は択一**です。  
 > 1 本の TCB1 波形をいずれかのピンに出し分ける構造のため、最後に `analogWrite()` したピンが出口になります(既定は D3)。  
 > 3 本同時に異なる PWM は出せません。周波数・デューティは 3 ピンで共通です。  
 > tone などで TCB1 を使用する時は 3 つとも PWM が無効化されます。  
@@ -223,12 +223,12 @@
 ### PWM(`analogWrite()`)
 
 - **D5 / D6 / D9 / D10 / D11 / D12** - TCA0
-- **D3 / D4 / D8** - TCB1 の 8bit PWM 波形を LUT もしくは直接出力(排他使用)
-- Uno R3 に対して D12 へ PWM 機能が追加されており、D3 を使用しない時は D4 または D8 で PWMを出力できます。
+- **D3 / D4 / D7** - TCB1 の 8bit PWM 波形を LUT もしくは直接出力(排他使用)
+- Uno R3 に対して D12 へ PWM 機能が追加されており、D3 を使用しない時は D4 または D7 で PWMを出力できます。
 
 >  
-> **排他 PWM:** TCB1 が他の用途に使われている間、`analogWrite(D3)`(またはD4, D8) は PWM をあきらめて単純な HIGH/LOW 出力(127 を閾値)に切り替わります。  
-> - `tone()` は TCB1 を使うため、実行中は D3, D4, D8 の PWM が停止します。  
+> **排他 PWM:** TCB1 が他の用途に使われている間、`analogWrite(D3)`(またはD4, D7) は PWM をあきらめて単純な HIGH/LOW 出力(127 を閾値)に切り替わります。  
+> - `tone()` は TCB1 を使うため、実行中は D3, D4, D7 の PWM が停止します。  
 > これは Uno R3 の Timer2(`tone()` 実行中は D3, D11 が停止)に相当する挙動です。  
 >  
 

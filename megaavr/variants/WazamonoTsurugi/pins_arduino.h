@@ -21,8 +21,8 @@
  *   D4   PC3   ~PWM(TCB1 via CCL LUT1) (VDD-driven, confirmed) A10, AIN31
  *   D5   PD0   ~PWM(TCA0 WO0) | CCL                         A11, AIN0
  *   D6   PD1   ~PWM(TCA0 WO1) | CCL                         A12, AIN1
- *   D7   PF4   (general I/O; no PWM - TCB0 is millis)          A13, AIN20
- *   D8   PF5   (general I/O; see D3 PWM note below)         A14, AIN21
+ *   D7   PF5   ~PWM(TCB1 WO direct; see the PWM note below)  A13, AIN21
+ *   D8   PF4   (general I/O; no PWM - TCB0 is millis)          A14, AIN20
  *   D9   PD2   ~PWM(TCA0 WO2) | CCL | AC0 AINP0 | EVOUTD    A15, AIN2
  *   D10  PD3   ~PWM(TCA0 WO3) | CCL | AC0 AINN0 | (SS)      A16, AIN3
  *   D11  PD4   ~PWM(TCA0 WO4) | SPI MOSI                    A17, AIN4
@@ -106,8 +106,8 @@
 #define PIN_PC3 (4)   // D4  ~PWM(TCB1 via CCL LUT1); VDD-driven output (confirmed by measurement)
 #define PIN_PD0 (5)   // D5  TCA0 WO0
 #define PIN_PD1 (6)   // D6  TCA0 WO1
-#define PIN_PF4 (7)   // D7  general I/O (no PWM: TCB0 = millis)
-#define PIN_PF5 (8)   // D8  general I/O (TCB1 WO parking position - see D3 PWM note)
+#define PIN_PF5 (7)   // D7  TCB1 WO position (ALT1) - third outlet of the exclusive PWM mux
+#define PIN_PF4 (8)   // D8  general I/O (no PWM: TCB0 = millis)
 #define PIN_PD2 (9)   // D9  TCA0 WO2
 #define PIN_PD3 (10)  // D10 TCA0 WO3 / SS (Uno convention, SSD=1)
 #define PIN_PD4 (11)  // D11 TCA0 WO4 / SPI MOSI
@@ -152,7 +152,7 @@
 /* ---- Event output pins: FIXED by the board's pin-configuration table ----
  * One pin per event output, no alternatives. Libraries (CustomLogic, and the
  * Event library in its Wazamono form) route event outputs to these pins only.
- *   EVOUTA -> PA7 = D8   (PORTMUX ALT1; PA2/D18 stays I2C SDA)
+ *   EVOUTA -> PA7 = D2   (PORTMUX ALT1; PA2/D18 stays I2C SDA)
  *   EVOUTD -> PD2 = D9   (PORTMUX default; the hardware offers only PD2 or
  *                         PD7, and PD7 is the AREF pin on this board)
  *   EVOUTF -> PF2 = A2   (PORTMUX default) */
@@ -201,7 +201,7 @@
   #define digitalPinHasPWMTCB(p) (0)                   /* TCB1 is millis; no TCB PWM */
 #elif defined(MILLIS_USE_TIMERB0)
   /* TCB0 = millis -> TCB1 free. ONE waveform, THREE selectable outlets:
-   * D3 (LUT0 alt), D4 (LUT1 default), D8 (TCB1 WO, ALT1). Exclusive - the
+   * D3 (LUT0 alt), D4 (LUT1 default), D7 (TCB1 WO, ALT1). Exclusive - the
    * last analogWrite() among the three owns the route; default outlet D3. */
   #define digitalPinHasPWMTCB(p) ((p) == PIN_PA6 || (p) == PIN_PC3 || (p) == PIN_PF5)
 #else
@@ -215,7 +215,7 @@
 #define TCA0_PINS                       (PORTMUX_TCA0_PORTD_gc)
 #define TCB0_PINS                       (0x00)   // TCB0 = millis; WO unused (default PA2 pos)
 #define TCB1_PINS                       (0x02)   // PORTMUX.TCBROUTEA bit 1: TCB1 WO parked on ALT1
-                                                 // (PF5 = D8). The D3 waveform travels through LUT0,
+                                                 // (PF5 = D7). The D3 waveform travels through LUT0,
                                                  // not through a WO pin; parking keeps the default
                                                  // position PA3 (= A5/SCL) clear. (DS40002548A 17.3.5)
 
@@ -232,16 +232,16 @@
  * tone()/TCB1 reconfiguration (CNTMODE check) and LUT0 use by other code
  * (signature check in wazamono_lutpwm.c).
  * CCMPEN stays 0: the CCL taps the internal WO signal, which was measured on
- * silicon to run regardless of that bit (see wazamono_lutpwm.h). D8 (= PF5,
+ * silicon to run regardless of that bit (see wazamono_lutpwm.h). D7 (= PF5,
  * TCB1's parked WO position) therefore stays a plain GPIO while D3 PWM runs. */
-#define WAZAMONO_TCB1_PWMMUX            (1)         /* exclusive D3/D4/D8 routing (default D3) */
+#define WAZAMONO_TCB1_PWMMUX            (1)         /* exclusive D3/D4/D7 routing (default D3) */
 #define WAZAMONO_TCB1_PWM_LUT0_PIN      (PIN_PA6)   /* D3: LUT0-OUT, alternate position */
 #define WAZAMONO_TCB1_PWM_LUT0          (0)
 #define WAZAMONO_TCB1_PWM_LUT0_ALT      (1)
 #define WAZAMONO_TCB1_PWM_LUT1_PIN      (PIN_PC3)   /* D4: LUT1-OUT, default position */
 #define WAZAMONO_TCB1_PWM_LUT1          (1)
 #define WAZAMONO_TCB1_PWM_LUT1_ALT      (0)
-#define WAZAMONO_TCB1_PWM_WO_PIN        (PIN_PF5)   /* D8: TCB1 WO itself (TCB1_PINS = ALT1), outlet = CCMPEN */
+#define WAZAMONO_TCB1_PWM_WO_PIN        (PIN_PF5)   /* D7: TCB1 WO itself (TCB1_PINS = ALT1), outlet = CCMPEN */
 
 #define digitalPinHasPWM(p)             (digitalPinHasPWMTCB(p) || digitalPinHasPWMTCA(p))
 
@@ -338,8 +338,8 @@
 #define PIN_A10  (PIN_PC3)   // D4
 #define PIN_A11  (PIN_PD0)   // D5
 #define PIN_A12  (PIN_PD1)   // D6
-#define PIN_A13  (PIN_PF4)   // D7
-#define PIN_A14  (PIN_PF5)   // D8
+#define PIN_A13  (PIN_PF5)   // D7
+#define PIN_A14  (PIN_PF4)   // D8
 #define PIN_A15  (PIN_PD2)   // D9
 #define PIN_A16  (PIN_PD3)   // D10
 #define PIN_A17  (PIN_PD4)   // D11
@@ -380,8 +380,8 @@ static const uint8_t D3  = PIN_PA6;  // ~PWM(TCB1 via CCL LUT0)
 static const uint8_t D4  = PIN_PC3;  // ~PWM(TCB1 via CCL LUT1)
 static const uint8_t D5  = PIN_PD0;
 static const uint8_t D6  = PIN_PD1;
-static const uint8_t D7  = PIN_PF4;
-static const uint8_t D8  = PIN_PF5;
+static const uint8_t D7  = PIN_PF5;  // ~PWM (TCB1 WO direct - exclusive with D3/D4)
+static const uint8_t D8  = PIN_PF4;
 static const uint8_t D9  = PIN_PD2;
 static const uint8_t D10 = PIN_PD3;  // SS (Uno convention)
 static const uint8_t D11 = PIN_PD4;  // MOSI
@@ -452,8 +452,8 @@ static const uint8_t A20  = PIN_A20;
     PC,         //  4 PC3  D4  TCB1 PWM via CCL LUT1
     PD,         //  5 PD0  D5  TCA0 WO0
     PD,         //  6 PD1  D6  TCA0 WO1
-    PF,         //  7 PF4  D7
-    PF,         //  8 PF5  D8
+    PF,         //  7 PF5  D7  TCB1 WO direct
+    PF,         //  8 PF4  D8
     PD,         //  9 PD2  D9  TCA0 WO2
     PD,         // 10 PD3  D10 TCA0 WO3 / SS
     PD,         // 11 PD4  D11 TCA0 WO4 / MOSI
@@ -489,8 +489,8 @@ static const uint8_t A20  = PIN_A20;
     PIN3_bp,   //  4 PC3  D4
     PIN0_bp,   //  5 PD0  D5
     PIN1_bp,   //  6 PD1  D6
-    PIN4_bp,   //  7 PF4  D7
-    PIN5_bp,   //  8 PF5  D8
+    PIN5_bp,   //  7 PF5  D7
+    PIN4_bp,   //  8 PF4  D8
     PIN2_bp,   //  9 PD2  D9
     PIN3_bp,   // 10 PD3  D10
     PIN4_bp,   // 11 PD4  D11
@@ -526,8 +526,8 @@ static const uint8_t A20  = PIN_A20;
     PIN3_bm,   //  4 PC3  D4
     PIN0_bm,   //  5 PD0  D5
     PIN1_bm,   //  6 PD1  D6
-    PIN4_bm,   //  7 PF4  D7
-    PIN5_bm,   //  8 PF5  D8
+    PIN5_bm,   //  7 PF5  D7
+    PIN4_bm,   //  8 PF4  D8
     PIN2_bm,   //  9 PD2  D9
     PIN3_bm,   // 10 PD3  D10
     PIN4_bm,   // 11 PD4  D11
@@ -563,11 +563,11 @@ static const uint8_t A20  = PIN_A20;
     NOT_ON_TIMER, //  1 PA4  D1
     NOT_ON_TIMER, //  2 PA7  D2
     TIMERB1,      //  3 PA6  D3  (TCB1 PWM via CCL LUT0 - default outlet)
-    TIMERB1,      //  4 PC3  D4  (TCB1 PWM via CCL LUT1 - exclusive with D3/D8)
+    TIMERB1,      //  4 PC3  D4  (TCB1 PWM via CCL LUT1 - exclusive with D3/D7)
     NOT_ON_TIMER, //  5 PD0  D5  (TCA0 WO0, dynamic)
     NOT_ON_TIMER, //  6 PD1  D6  (TCA0 WO1, dynamic)
-    NOT_ON_TIMER, //  7 PF4  D7  (no PWM: TCB0 = millis)
-    TIMERB1,      //  8 PF5  D8  (TCB1 WO direct - exclusive with D3/D4)
+    TIMERB1,      //  7 PF5  D7  (TCB1 WO direct - exclusive with D3/D4)
+    NOT_ON_TIMER, //  8 PF4  D8  (no PWM: TCB0 = millis)
     NOT_ON_TIMER, //  9 PD2  D9  (TCA0 WO2, dynamic)
     NOT_ON_TIMER, // 10 PD3  D10 (TCA0 WO3, dynamic)
     NOT_ON_TIMER, // 11 PD4  D11 (TCA0 WO4, dynamic)

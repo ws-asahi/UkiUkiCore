@@ -50,6 +50,19 @@ confirmed on hardware, PC3 drives a full-VDD-swing output and reads
 correctly with the regulator disabled and VUSB unpowered. Treat it as a
 normal VDD-domain GPIO.
 
+### INLVL on the DU-series: works, but no longer documented
+The DU io headers define the INLVL bit (PINnCTRL bit 6 - Schmitt-trigger
+vs. TTL input levels, as on the MVIO parts), and the feature is functional
+on actual silicon: feeding VDD/2 into a pin through a resistor divider,
+the input reads 0 with the Schmitt-trigger threshold and 1 after
+switching that pin to TTL levels (verified on an AVR64DU32). Datasheet
+Rev. B (DS40002548B for the AVR64DU28/32, DS40002576B for the AVR32/16DU -
+the Kunai's AVR32DU20 is in the latter; both 06/2026), however, removed
+every INLVL bit from the PORT chapter: Microchip no longer documents or
+characterizes the feature on the DU. It works today, but treat it as an
+undocumented feature - the thresholds carry no guaranteed specs, and
+nothing prevents it from disappearing in a future silicon revision.
+
 ## Ballpark overhead figures
 The digital I/O functions are astonishingly inefficient. This isn't my fault (not on mTC - on DxC I have definitely not helped...) - it's the Arduino API's fault
 These figures are the difference between a sketch containing a single call to the function, with volatile variables used as arguments to prevent compiler from making assumptions about their values, which may substantially reduce the size of the binary otherwise.

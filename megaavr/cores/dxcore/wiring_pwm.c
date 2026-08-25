@@ -467,7 +467,24 @@ void analogWrite(uint8_t pin, int val) {
   uint8_t bit_mask = digitalPinToBitMask(pin);
   if (bit_mask == NOT_A_PIN) return; //this catches any run-time determined pin that isn't a pin.
   if ((val == 0 || val == 255)) {
-    digitalWrite(pin,val ? HIGH : LOW);
+    /* Wazamono: the classic Arduino AVR core calls pinMode(pin, OUTPUT)
+     * *before* this branch ("make sure the pin is in output mode ... which
+     * doesn't require a pinMode call for the analog output pins" -
+     * ArduinoCore-avr, wiring_analog.c). Upstream returned here without ever
+     * setting the direction, so on a pin that had not already been made an
+     * output, analogWrite(pin, 0) left it Hi-Z and analogWrite(pin, 255) only
+     * enabled the pull-up instead of driving the pin high. The normal PWM path
+     * below always ends in _setOutput(), so only these two endpoint values
+     * were affected - which is exactly where a sketch is most likely to skip
+     * pinMode() (fades that start at 0, on/off via analogWrite).
+     * digitalWrite() first (it sets OUT and turns PWM off), then the
+     * direction, so the pin never briefly drives a stale level. Leaving
+     * PULLUPEN set by digitalWrite()'s input-pin emulation is harmless and
+     * matches classic AVR semantics: DS40002548B 18.3.2.3 states the pull-up
+     * is disconnected while the pin is configured as an output. */
+    uint8_t portnum = digitalPinToPort(pin);
+    digitalWrite(pin, val ? HIGH : LOW);
+    _setOutput(portnum, bit_mask);
     return;
   }
   uint8_t portnum  = digitalPinToPort(pin);

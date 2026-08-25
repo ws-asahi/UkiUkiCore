@@ -32,6 +32,22 @@ bool    usbCdcTxInFlight(void);
  * for confirming the 1200 bps touch path from a user sketch via Serial1. */
 uint32_t usbCdcLineCodingBaud(void);
 
+/* Remaining fields of the host-requested line coding, exposed so that
+ * USBSerial can offer the Leonardo Serial_ accessors (stopbits(),
+ * paritytype(), numbits()). Raw CDC-ACM encodings:
+ *   stop bits : 0 = 1, 1 = 1.5, 2 = 2
+ *   parity    : 0 = none, 1 = odd, 2 = even, 3 = mark, 4 = space
+ *   data bits : 5, 6, 7, 8 or 16 (the literal bit count, as on the 32U4) */
+uint8_t usbCdcLineCodingStopBits(void);
+uint8_t usbCdcLineCodingParity(void);
+uint8_t usbCdcLineCodingDataBits(void);
+
+/* Most recent CDC SEND_BREAK duration requested by the host, consumed on
+ * read: returns 0..0xFFFF once, then -1 until the next request arrives
+ * (0 = end break, 0xFFFF = indefinite break). Matches Leonardo's
+ * Serial_::readBreak(). */
+int32_t usbCdcReadBreak(void);
+
 /* True when EP3 IN is ready to accept a fresh buffer */
 bool usbCdcTxReady(void);
 

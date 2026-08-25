@@ -109,6 +109,7 @@ static cdc_line_coding_t g_line_coding = {
 
 static uint8_t volatile  g_control_line_state = 0;   /* DTR/RTS */
 static bool    g_pending_set_line_coding = false;
+static volatile int32_t  g_break_value = -1;         /* last CDC SEND_BREAK, -1 = none pending */
 
 /* ============================================================
  * RX / TX ring buffers
@@ -375,6 +376,10 @@ void usb_cdc_handle_class_request(const usb_setup_t *s) {
     }
 
     case CDC_REQ_SEND_BREAK:
+        /* wValue carries the break duration in ms (0 = end break,
+         * 0xFFFF = indefinite). Latched for usbCdcReadBreak(); as on the
+         * 32U4 core, an unread value is overwritten by the next request. */
+        g_break_value = (int32_t)s->wValue;
         ep0_send_zlp();
         break;
 
@@ -441,6 +446,20 @@ bool usbCdcTxIdle(void) {
 uint8_t usbCdcLineState(void) { return g_control_line_state; }
 bool    usbCdcTxInFlight(void){ return g_tx_in_flight; }
 uint32_t usbCdcLineCodingBaud(void) { return g_line_coding.dwDTERate; }
+
+uint8_t usbCdcLineCodingStopBits(void) { return g_line_coding.bCharFormat; }
+uint8_t usbCdcLineCodingParity(void)   { return g_line_coding.bParityType; }
+uint8_t usbCdcLineCodingDataBits(void) { return g_line_coding.bDataBits; }
+
+int32_t usbCdcReadBreak(void) {
+    /* Read-and-clear must be atomic against the EP0 ISR that latches it. */
+    uint8_t oldsreg = SREG;
+    cli();
+    int32_t v = g_break_value;
+    g_break_value = -1;
+    SREG = oldsreg;
+    return v;
+}
 
 uint16_t usbCdcAvailable(void) {
     int16_t n = (int16_t)g_rx_head - (int16_t)g_rx_tail;

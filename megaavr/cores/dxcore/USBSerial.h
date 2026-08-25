@@ -73,6 +73,35 @@ public:
     /** True once the host has opened the virtual COM port (DTR asserted). */
     operator bool(void) const { return usbCdcReady(); }
 
+    /* ---- Leonardo / Pro Micro Serial_ compatibility ----------------------
+     * The 32U4 core's Serial_ class exposes the CDC control-line state and
+     * the host's requested line coding. Sketches use them to detect a serial
+     * monitor opening (dtr()) or to mirror the host's baud onto a hardware
+     * UART (a USB-to-serial bridge is the classic example). Same names, same
+     * semantics, same raw encodings as USBAPI.h / CDC.cpp. */
+    bool     dtr(void)        const { return (usbCdcLineState() & 0x01) != 0; }
+    bool     rts(void)        const { return (usbCdcLineState() & 0x02) != 0; }
+    uint32_t baud(void)       const { return usbCdcLineCodingBaud(); }
+    uint8_t  stopbits(void)   const { return usbCdcLineCodingStopBits(); }
+    uint8_t  paritytype(void) const { return usbCdcLineCodingParity(); }
+    uint8_t  numbits(void)    const { return usbCdcLineCodingDataBits(); }
+
+    /** Most recent host SEND_BREAK duration, consumed on read (-1 = none). */
+    int32_t  readBreak(void)        { return usbCdcReadBreak(); }
+
+    enum {
+        ONE_STOP_BIT          = 0,
+        ONE_AND_HALF_STOP_BIT = 1,
+        TWO_STOP_BITS         = 2,
+    };
+    enum {
+        NO_PARITY    = 0,
+        ODD_PARITY   = 1,
+        EVEN_PARITY  = 2,
+        MARK_PARITY  = 3,
+        SPACE_PARITY = 4,
+    };
+
     /* ---- printHex! ---- mirrors HardwareSerial (DxCore UART.cpp) ----------
      * Lightweight casting overloads are inline; the uint8_t / uint16_t bodies
      * and the pointer/array versions live in USBSerial.cpp. */

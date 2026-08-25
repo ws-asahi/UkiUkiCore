@@ -175,6 +175,20 @@
 #define LED_BUILTIN_RX                 (PIN_PF3)   // D17 = USB-CDC RX activity LED
 #define LED_BUILTIN_TX                 (PIN_PC3)   // D30 = USB-CDC TX activity LED (active-LOW)
 
+/* 32U4 Leonardo / Pro Micro activity-LED helper macros, same semantics:
+ * xxLED1 = ON, xxLED0 = OFF (both LEDs are active-LOW on this board too;
+ * TX = PC3/D30, RX = PF3/D17). The 32U4 TX_RX_LED_INIT only touched DDR;
+ * here OUT is set HIGH (= off) before DIR so the LEDs cannot flash on.
+ * As on the 32U4 (USBCore.cpp), the core's own CDC activity one-shot
+ * (wazamono_tachi_init.cpp) drives the same pins, so a sketch holding an
+ * LED on with these macros will see the same brief fight over the pin. */
+#define TX_RX_LED_INIT                 (PORTC.OUTSET = PIN3_bm, PORTC.DIRSET = PIN3_bm, \
+                                        PORTF.OUTSET = PIN3_bm, PORTF.DIRSET = PIN3_bm)
+#define TXLED1                         (PORTC.OUTCLR = PIN3_bm)   /* TX LED (PC3/D30) ON  */
+#define TXLED0                         (PORTC.OUTSET = PIN3_bm)   /* TX LED (PC3/D30) OFF */
+#define RXLED1                         (PORTF.OUTCLR = PIN3_bm)   /* RX LED (PF3/D17) ON  */
+#define RXLED0                         (PORTF.OUTSET = PIN3_bm)   /* RX LED (PF3/D17) OFF */
+
 #ifdef CORE_ATTACH_OLD
   #define EXTERNAL_NUM_INTERRUPTS      (48)
 #endif
@@ -309,24 +323,31 @@
           ##### # # # ##### #    #   # #  ##     ####   #  # # #  ###
           #   # #  ## #   # #    #   # #   #     #      #  #  ##     #
           #   # #   # #   # ####  ###   ###      #     ### #   #  # */
-/* Arduino analog aliases (rev.4). The classic Pro Micro aliases are reproduced
- * exactly: A0..A3 = D18..D21, A6 = D4, A7 = D6, A8 = D8, A9 = D9, A10 = D10;
- * A4/A5 do not exist on a Pro Micro and A11 (= D12 on a Leonardo) is left
- * UNDEFINED so Leonardo sketches cannot silently land on a different pin.
+/* Arduino analog aliases (rev.4). A0..A3 = D18..D21 match the Pro Micro
+ * exactly. A4/A5/A11: the SparkFun promicro variant DOES define these
+ * (A4 = 22, A5 = 23, A11 = 29 - they map to 32U4 pins that are simply not
+ * routed to the board's headers), so for source compatibility the same
+ * numbers are defined here. On the Tachi, 22/23/29 are pin-table gaps
+ * (NOT_A_PORT): digitalWrite() is a clean no-op and analogRead() returns
+ * the ADC bad-pin error, instead of silently landing on a different pin.
+ * A6..A10 point at the same physical pins as on the Pro Micro
+ * (D4/D6/D8/D9/D10) but carry those pins' OWN numbers (4/6/8/9/10), not the
+ * Leonardo duplicate numbers 24..28; analogRead(A6) etc. behave identically,
+ * only the numeric value of the alias differs (documented incompatibility).
  * Extension aliases: A12..A17 continue over D0..D7 and A18..A21 over D14..D17
  * (A# = D# + 4 in that group); A34 = D30 (TX LED) continues the same offset. */
 #define PIN_A0   (PIN_PD7)   // D18 (also SPI SS / Serial2 RX / VREFA)
 #define PIN_A1   (PIN_PF0)   // D19
 #define PIN_A2   (PIN_PF1)   // D20
 #define PIN_A3   (PIN_PF2)   // D21
-#define PIN_A4   (NOT_A_PIN)
-#define PIN_A5   (NOT_A_PIN)
+#define PIN_A4   (22)        // gap index (Pro Micro A4 = unrouted 32U4 pin) - safe no-op
+#define PIN_A5   (23)        // gap index (Pro Micro A5 = unrouted 32U4 pin) - safe no-op
 #define PIN_A6   (PIN_PF4)   // D4
 #define PIN_A7   (PIN_PD1)   // D6
 #define PIN_A8   (PIN_PA7)   // D8
 #define PIN_A9   (PIN_PD2)   // D9
 #define PIN_A10  (PIN_PD3)   // D10
-/* A11 intentionally undefined (Leonardo D12 guard, see above). */
+#define PIN_A11  (29)        // gap index (Leonardo A11 = D12; no such pin here) - safe no-op
 #define PIN_A12  (PIN_PA5)   // D0
 #define PIN_A13  (PIN_PA4)   // D1
 #define PIN_A14  (PIN_PA2)   // D2
@@ -389,11 +410,14 @@ static const uint8_t A0   = PIN_A0;
 static const uint8_t A1   = PIN_A1;
 static const uint8_t A2   = PIN_A2;
 static const uint8_t A3   = PIN_A3;
+static const uint8_t A4   = PIN_A4;   // dead index 22 - compile-compat with Pro Micro, no-op at runtime
+static const uint8_t A5   = PIN_A5;   // dead index 23 - compile-compat with Pro Micro, no-op at runtime
 static const uint8_t A6   = PIN_A6;
 static const uint8_t A7   = PIN_A7;
 static const uint8_t A8   = PIN_A8;
 static const uint8_t A9   = PIN_A9;
 static const uint8_t A10  = PIN_A10;
+static const uint8_t A11  = PIN_A11;  // dead index 29 - compile-compat with Leonardo A11 (D12), no-op at runtime
 static const uint8_t A12  = PIN_A12;
 static const uint8_t A13  = PIN_A13;
 static const uint8_t A14  = PIN_A14;
@@ -647,8 +671,16 @@ static const uint8_t A34  = PIN_A34;
   #ifndef SERIAL_PORT_HARDWARE
     #define SERIAL_PORT_HARDWARE    Serial1     /* Pro Micro hardware UART on D0/D1 */
   #endif
+  /* Pro Micro / Leonardo define SERIAL_PORT_HARDWARE_OPEN = Serial1 (the D0/D1
+   * UART is the "first open" port there, and it is here too: Serial2 shares
+   * its pins with SPI SCK/SS). Matching that value keeps sketches written
+   * against the SparkFun variant on the same physical pins. */
   #ifndef SERIAL_PORT_HARDWARE_OPEN
-    #define SERIAL_PORT_HARDWARE_OPEN  Serial2  /* extra UART on D15/D18 (USART1) */
+    #define SERIAL_PORT_HARDWARE_OPEN  Serial1
+  #endif
+  /* 32U4-core alias used by Caterina-era and SAMD-portable sketches. */
+  #ifndef SerialUSB
+    #define SerialUSB               SERIAL_PORT_USBVIRTUAL
   #endif
 #endif
 

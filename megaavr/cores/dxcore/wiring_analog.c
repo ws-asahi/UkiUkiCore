@@ -862,15 +862,14 @@ inline __attribute__((always_inline)) void check_valid_resolution(uint8_t res) {
        * returned whatever they were floating at, with no error. */
       pin &= 0x7F;
     }
-    #if PROGMEM_SIZE < 8096
-      if (pin > 0x33)  // covers most ways a bad channel could come about
-    #else
-      if (pin > NUM_ANALOG_INPUTS && ((pin < 0x30) || (pin > 0x33)))
-    #endif
+    /* Wazamono fix: same as analogRead() - the DU's internal channels are
+     * 0x40/0x42/0x44, and the old 0x30-0x33 range check rejected them the
+     * moment the mask above stopped destroying them. */
+    if (pin > NUM_ANALOG_INPUTS && pin != 0x40 && pin != 0x42 && pin != 0x44)
     {
       return ADC_ENH_ERROR_BAD_PIN_OR_CHANNEL;
     }
-    pin &= 0x3F;
+    pin &= 0x7F;
 
     if (ADC0.COMMAND & ADC_START_gm) return ADC_ENH_ERROR_BUSY;
 

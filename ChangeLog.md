@@ -4,19 +4,71 @@ WazamonoCore の変更履歴です。WazamonoCore は [DxCore](https://github.co
 
 ---
 
-## Unreleased — SerialUPDI を avrdude 8.1 経由に変更
+## v0.0.6 — Tachi の Pro Micro 互換性検証と、そこで判明した不具合の修正 / Tsurugi ピンマップ rev.3
+
+Wazamono Tachi rev.4 の実機（3.3V 個体・5V 個体）で Pro Micro (ATmega32U4) との互換性を全域にわたり検証し、その過程で見つかったコアの不具合を修正しました。あわせて Tsurugi のハードウェア rev.C 対応と、SerialUPDI の avrdude 8.1 経由への変更を含みます。
+
+### 全ボードに影響する修正
+
+検証の過程で見つかった、Wazamono 3 機種すべて（および DxCore 系の他機種）に影響する不具合です。
+
+- **`analogWrite(pin, 0)` / `analogWrite(pin, 255)` がピンを出力にしない** (`wiring_pwm.c`): Arduino AVR コアは 0/255 の分岐より前に `pinMode(pin, OUTPUT)` を呼び、アナログ出力ピンは `pinMode()` 不要であることを明示していますが、本コアは端点分岐から方向を設定せずに return していました。`pinMode()` を呼んでいないピンでは `analogWrite(pin, 0)` が Hi-Z のまま、`analogWrite(pin, 255)` はプルアップが有効になるだけで駆動しません。通常の PWM 経路は末尾で `_setOutput()` を通るため、影響は端点 2 値のみですが、そこは「フェードを 0 から始める」「ON/OFF を `analogWrite()` で書く」といった `pinMode()` を省きやすい場所です。
+- **`HardwareSerial::getPin()` が常に `NOT_A_PIN` を返す** (`UART.cpp`): `_getPin()` の引数順が宣言と食い違っており、`mux_count` に要求ピン番号、`pin` に mux 総数が渡っていました。`pin > 3` のガードに掛かるため、USART0 の mux 選択肢が 5 つ以上ある機種（AVR DU を含む）では全インデックスが `NOT_A_PIN` になります。通常の UART 利用では `getPin()` を呼ばないため表面化しませんが、`mspiBegin()` / `syncBegin()` は XCK ピンの方向と反転を設定するためだけにこれを使うので、**USART の SPI ホストモードと同期モードがエラーも出さずに無動作**になっていました。
+- **`noTone()` 後に TCB の PWM が復帰しない** (`timers.h`): `Tone.cpp` の `disableTimer()` には TCB を PWM モードへ戻す処理がありますが、`ENABLE_TCB_PWM` で囲まれており、この定数がコアのどこにも定義されていませんでした。`init_TCBs()` は millis 以外の TCB を 8bit PWM モードに設定しているため本コアは実際に TCB を PWM に使っており、復帰処理が消えた結果 **一度 `tone()` を鳴らすと該当ピンの `analogWrite()` がリセットまで死ぬ**状態でした。Tachi では millis が TCB0 のため `tone()` は TCB1 を取り、犠牲になるのは D3 です。
+
+### AVR DU 系の修正
+
+- **ADC の内部チャネルが実 I/O ピンに化ける** (`wiring_analog.c`): `analogRead()` / `_analogReadEnh()` がチャネルを `0x3F` でマスクしていました。AVR DU の MUXPOS は 7bit で、内部チャネルは 0x40 (GND) / 0x42 (TEMPSENSE) / 0x44 (VDDDIV10) にあり、tinyAVR/Dx の 0x30–0x33 とは配置が異なります。マスクの結果 `ADC_GROUND` → AIN0、`ADC_TEMPERATURE` → AIN2、`ADC_VDDDIV10` → AIN4 となり、**エラーも返さずに無関係な I/O ピンを読んで**いました（実機では VDD 実測が 1.4V、内蔵温度が 415℃ と表示）。不正チャネル判定も 0x30–0x33 前提だったため、DU の正しい値のみを受理するよう修正しています。
+- **`analogClockSpeed()` が異常値を返す** (`wiring_analog.c`): `int16_t` の PROGMEM テーブルを `pgm_read_byte_near()`（下位バイトのみ）で読み、比較と戻り値ではコード空間のアドレスをデータ空間で直接参照していました。24MHz で正解 2000kHz のところ −9227kHz を返し、ADC クロックを指定した場合には誤ったプリスケーラが選ばれます。
+
+### Tachi
+
+- **Pro Micro (32U4) 互換マクロを追加**: `TX_RX_LED_INIT` / `TXLED0` / `TXLED1` / `RXLED0` / `RXLED1`（TX = PC3/D30、RX = PF3/D17、いずれもアクティブ LOW）、`SerialUSB`、および `A4`(22) / `A5`(23) / `A11`(29)。A4/A5/A11 は SparkFun の promicro variant が未配線ピン向けに定義しているもので、本コアでは未定義だったためスケッチがコンパイルできませんでした。同じ番号を割り当てましたが、Tachi 側ではいずれもピンテーブルの欠番なので、コンパイルは通り実行時は安全な no-op になります（別の実ピンに着地することはありません）。
+- `SERIAL_PORT_HARDWARE_OPEN` を `Serial2` から **`Serial1` へ変更**。SparkFun の値と一致し、定義上も D0/D1 の Serial1 が「最初の空きポート」として正当です（Serial2 は SPI の SCK/SS と排他）。
+
+### USB CDC
+
+- **Leonardo `Serial_` の CDC アクセサを追加** (`USBSerial.h`): `dtr()` / `rts()` / `baud()` / `stopbits()` / `paritytype()` / `numbits()` / `readBreak()` と 2 つの enum を、ArduinoCore-avr と同じ名前・意味・生値で実装しました。状態自体は `usb_cdc.c` が保持していたため、不足していたアクセサの追加と、従来 ZLP を返して破棄していた `SEND_BREAK` の wValue のラッチを行っています。ホストの指定ボーレートを `Serial.baud()` で拾って `Serial1.begin()` へ渡す USB-シリアル変換ブリッジという定番のスケッチが、コンパイルすら通らない状態でした。
+
+### SPISlave
+
+- **プライムした返信の先頭 2 バイトが上書きできない**: BUFWR=1 では DREIF が Low の間の DATA 書き込みが黙って捨てられるため（DS40002548B 図 26-4）、`begin()` が仕込んだゼロを `setData()` が置き換えられず、最初のトランザクションでゼロが 2 バイト先行していました。プライム前に ENABLE を一巡させて送信経路を空にします。
+- **BUFOVF が残留して受信経路がジャムする**: ホストが割り込み処理より速くクロックするとクライアントはオーバーフローし、BUFOVF は受信 FIFO を読み出すまで `end()` / `begin()` を跨いでも消えません。この状態では RXCIF が立たなくなるため、SPI 割り込みが返信を補充せずシフトレジスタが MOSI を 1 バイト遅れでエコーし、SS 立ち上がりハンドラは空のトランザクションを報告します。**一度高速で失敗すると、以後リセットまで低速でも通信できません**でした。`begin()` / `end()` / プライム経路で DATA を 3 回読んで FIFO を空にします。
+- `SPISlave.h` のコメントを修正（Tachi の SS は PD7 = D18 = A0。旧リビジョンの D4 表記でした）。
+
+### 非正準ピン配列への対応
+
+- **`_getPin()` が RX/XDIR をピン番号の +1 で導出していた** (`UART.cpp`): PORT のビット位置としては正しい関係ですが、返すのは Arduino ピン番号なので、variant がポートのビット順にピンを振っている場合しか成立しません。Tachi は TX=PA4=D1 / RX=PA5=D0 なので `getPin(1)` が D2（PA2 = Grove の SDA）を返していました。`NONCANONICAL_PIN_NUMBERS` が定義されている場合は同一ポート内でビット位置を進めて逆引きします。正準配列の variant は従来どおりです。
+
+### 検証で確認された仕様（変更なし）
+
+Tachi rev.4 実機で確認し、修正不要と判断した項目です。詳細は WazamonoTachi.md を参照してください。
+
+- ピンマップ 36 エントリ・アナログ別名・予約ピンの no-op が設計どおり
+- PWM は D3/D5/D6/D9/D10 が Pro Micro と同一集合（D14/D16 が追加、SPI と排他）。全 7ch が 1470.6Hz で統一（32U4 は 490/980Hz 混在）
+- クロックは水晶レスながら実測 ±0.1% 以内（n=2、5V/3.3V 両方）。Serial1 の総合ボーレート誤差は最大 0.08% で、8N1 の許容 ±2% に対して 25 倍以上の余裕。オートチューンは 1 ステップ 0.4% の分解能に対し素の精度が上回るため実質的に無動作
+- ADC は 10bit ネイティブで `analogRead()` は 0–1023（32U4 と同一）。内部参照 4 種が 0.3% 以内で相互整合。差動 ADC なし（32U4 にはある）／累積で 13bit まで拡張可
+- 外部割り込みはヘッダ 18 本すべてで RISING/FALLING/CHANGE/LOW が使用可（32U4 は 5 本のみ、LOW は INT0-3 限定）。応答は約 5〜7us で、PORT のビット位置に対し 0.33us/bit の線形な差（r=0.995、下位ビットほど速い）
+- USART0 の SPI ホストモードと SPI0 クライアントモードによる同一個体間通信が 4 モードすべてで成立。安定上限は 1MHz（制限要因は SPI ハードではなく同一 CPU 上の割り込み競合）
+
+### 既知の非互換（設計上、修正しません）
+
+- `tone()` が潰す PWM ピンが異なります（32U4 は Timer1 で D9/D10、Tachi は TCB1 で **D3**）
+- `digitalPinToInterrupt()` が恒等写像のため `NOT_AN_INTERRUPT` を返しません。欠番ピンを渡しても `attachInterrupt()` 側が弾いて no-op になりますが、`NOT_AN_INTERRUPT` で分岐するスケッチはその分岐に入りません
+- EEPROM が 1KB → **256B**（DS40002548B 表 8-3。AVR DU 全品種で 256B 固定）。SRAM は 2.5KB → 8KB、Flash は 32KB → 64KB
+- `analogReference()` の選択肢が異なります（32U4 の `INTERNAL` / `INTERNAL1V1` / `INTERNAL2V56` は**意図的に未定義**。近い値へ黙って読み替えると測定値が静かに狂うため、コンパイルエラーで気付ける方を選んでいます）
+- A0 (PD7) が VREFA を兼ねるため、外部リファレンス使用時は A0 / SPI SS / Serial2 RX を同時に失います
+- `LED_BUILTIN` = 17（32U4 は 13、いずれも配線されないピン）、`SS` = 18（32U4 は 17 = RX LED）、`A6`–`A10` の数値がピン自身の番号（32U4 は Leonardo の複製番号 24–28。指すピンは同一）
+
+### ツール
 
 - **SerialUPDI が Python なしで動作するように**: 書込装置 `SerialUPDI - *` の3項目を `prog.py`（pymcuprog）から avrdude 8.1 の `-c serialupdi` へ切り替え。手動 / git インストールでは `megaavr/tools/python3/` が存在せず、ブートローダ書き込みが `executable file not found in %PATH%` で失敗していた問題を解消します。
 - 併せて、上流 DxCore の AVR DU セクションが定義していなかった `bootloader.serupdifuse5` に依存しなくなりました。ヒューズ書き込みは PICkit / nEDBG / Atmel-ICE と同じ `avrdudefuse5` 経路に一本化されます。
 - `megaavr/tools/prog.py` と `megaavr/tools/libs/` はツリーに残っていますが、どのレシピからも参照されません（`bootloader.pymcuprogstring` も同様に未使用）。
 
----
+### Tsurugi ピンマップ rev.3（破壊的変更を含む）
 
-## v0.0.6 — Tsurugi ピンマップ rev.3（水晶レス・Serial2・択一 PWM）
-
-Tsurugi のハードウェア rev.C に対応する変更です。Tachi / Kunai に変更はありません。
-
-### Tsurugi（破壊的変更を含む）
+Tsurugi のハードウェア rev.C に対応する変更です。Tachi / Kunai には影響しません。
 
 - ピンマップ rev.3: **D4=PC3（旧 D7）/ D7=PF4（旧 D4）を入れ替え**。D4 が CCL LUT1-OUT の既定位置になります。A10/A13 は D 番号に追従します。
 - **AREF（PD7）を D20/A20 として公開**: 外部基準電圧を使わないときは GPIO / SPI0 ハードウェア SS(ALT4) / Serial2 RX として使用可能（モダン AVR の構造的特徴。Uno R3 では不可能）。

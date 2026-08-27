@@ -8,3 +8,4 @@ megaavr/extras/.DS_Store
 
 # Local environment-specific tool paths (not for upstream)
 megaavr/platform.local.txt
+WazamonoCore-*.tar.bz2

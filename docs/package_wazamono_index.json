@@ -12,13 +12,13 @@
         {
           "name": "Wazamono Boards (AVR DU series)",
           "architecture": "megaavr",
-          "version": "0.0.3",
+          "version": "0.0.6",
           "category": "Contributed",
           "help": {
             "online": "https://github.com/ws-asahi/WazamonoCore"
           },
-          "url": "https://github.com/ws-asahi/WazamonoCore/releases/download/v0.0.3/WazamonoCore-0.0.3.tar.bz2",
-          "archiveFileName": "WazamonoCore-0.0.3.tar.bz2",
+          "url": "https://github.com/ws-asahi/WazamonoCore/releases/download/v0.0.6/WazamonoCore-0.0.6.tar.bz2",
+          "archiveFileName": "WazamonoCore-0.0.6.tar.bz2",
           "checksum": "SHA-256:37eb0d7afcbef21b8c8bc1abd646b0acd70fc9ef4e14892c63603c8937975398",
           "size": "3684833",
           "boards": [

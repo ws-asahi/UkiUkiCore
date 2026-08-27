@@ -36,8 +36,23 @@ static volatile bool     s_running = false;
 
 /* Pre-stage the first (up to) two reply bytes while SS is high: the first
  * write lands in the shift register (BUFWR = 1), the second in the transmit
- * buffer. With no reply staged, zeros are pre-staged (zero-fill). */
+ * buffer. With no reply staged, zeros are pre-staged (zero-fill).
+ *
+ * The transmit path has to be flushed first. With BUFWR = 1 a write to DATA
+ * is silently dropped while DREIF is low - DS40002548B Figure 26-4 spells
+ * this out: "the Transmit Data Buffer register is not updated since the
+ * DREIF is low", and the value is lost. So whatever is already staged cannot
+ * be overwritten by simply writing again, and a prime that follows an
+ * earlier prime (begin() then setData(), or a host that clocked fewer bytes
+ * than were staged) would leave the stale bytes in place - they come out as
+ * the first bytes of the next transaction. Cycling ENABLE empties the shift
+ * register and the transmit buffer. Only ever called with SS high, so no
+ * transfer is disturbed. */
 static void _spislave_prime(void) {
+  uint8_t ctrla = SPI0.CTRLA;
+  SPI0.CTRLA    = ctrla & ~SPI_ENABLE_bm;
+  SPI0.CTRLA    = ctrla;
+  SPI0.INTFLAGS = SPI_RXCIF_bm | SPI_TXCIF_bm | SPI_SSIF_bm | SPI_BUFOVF_bm;
   SPI0.DATA = (0 < s_tx_len) ? s_tx[0] : 0;
   SPI0.DATA = (1 < s_tx_len) ? s_tx[1] : 0;
   s_tx_pos = 2;

@@ -10,25 +10,6 @@
 
 #ifndef Core_Devices_h
 #define Core_Devices_h
-
-
-/* Wazamono: Arduino.h guards its EXTERNAL analog reference constant with
- *   #if defined(EXTERNAL_VREF_AVAILABLE)
- * but nothing in the core ever defines that macro, so EXTERNAL simply does
- * not exist and analogReference(EXTERNAL) fails to compile. Every classic
- * board the Wazamono line is compared against - Uno R3, Leonardo, Pro Micro -
- * has it, so a sketch that selects an external reference will not build.
- *
- * The AVR DU does have a VREFA input (ADC_REFSEL_VREFA_gc /
- * VREF_REFSEL_VREFA_gc, on PD7), so the constant is enabled here. Whether the
- * pin is reachable is a board question, not a part question: on the Tachi it
- * is A0/D18, on the Tsurugi the AREF header pin, and on the Kunai it is D3 and
- * shared with Serial2 RX. Selecting EXTERNAL without driving VREFA leaves the
- * reference floating, exactly as it would on a classic board with nothing on
- * its AREF pin. */
-#if defined(__AVR_DU__) && !defined(EXTERNAL_VREF_AVAILABLE)
-  #define EXTERNAL_VREF_AVAILABLE 1
-#endif
 #include <avr/io.h>
 #include <core_parameters.h>
 /*
@@ -431,6 +412,28 @@
   #define     _AVR_FAMILY       ("DU")
   #define     _AVR_CLOCKMODE    (0x001F)  // Crap manual tuning, autotune, USB autotune for crystalless USB, crystal, clock select, supports RTC xtal.
   #define     _AVR_FLASHMODE    (2)
+  /* Wazamono: Arduino.h guards its EXTERNAL analog reference constant with
+   *   #if defined(EXTERNAL_VREF_AVAILABLE)
+   * but nothing in the core ever defines that macro, so EXTERNAL does not
+   * exist and analogReference(EXTERNAL) fails to compile. All three classic
+   * boards this line is compared against - Uno R3, Leonardo, Pro Micro -
+   * have it.
+   *
+   * The DU has a VREFA input (ADC_REFSEL_VREFA_gc / VREF_REFSEL_VREFA_gc, on
+   * PD7), so the guard macro is enabled here. It has to go after __AVR_DU__
+   * is defined - that happens in the part-number block earlier in this file,
+   * so the top of the header is too early - and before Arduino.h reaches the
+   * reference constants, which it does because Arduino.h includes this file
+   * first.
+   *
+   * Whether VREFA is reachable is a board question, not a part question: on
+   * the Tachi it is A0/D18, on the Tsurugi the AREF header pin, on the Kunai
+   * D3 shared with Serial2 RX. Selecting EXTERNAL without driving VREFA
+   * leaves the reference floating, exactly as on a classic board with an
+   * unconnected AREF pin. */
+  #if !defined(EXTERNAL_VREF_AVAILABLE)
+    #define EXTERNAL_VREF_AVAILABLE 1
+  #endif
 #elif defined(__AVR_EA__)
   #define     _AVR_GENUS        _AVR_EX_SERIES
   #define     _AVR_FAMILY       ("EA")

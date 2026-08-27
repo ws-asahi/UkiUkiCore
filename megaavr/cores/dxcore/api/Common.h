@@ -129,40 +129,6 @@ typedef void (*voidFuncPtr)(void);
 #define bitToggle(value, bit) ((value) ^= (1UL << (bit)))
 #endif
 
-/* Wazamono: abs().
- *
- * ArduinoCore-avr defines it as a macro:  #define abs(x) ((x)>0?(x):-(x))
- * so it works for any arithmetic type. ArduinoCore-API - which this file
- * descends from - dropped the macro and relies on the C++ overloads that
- * <cstdlib>/<cmath> provide on ARM. avr-libc has no such overloads, so on AVR
- * the only candidate left is int abs(int), and every call is silently
- * truncated to int. Measured on a Tachi:
- *
- *     abs(-1.5f)    -> 1.0      (Pro Micro: 1.5)
- *     abs(-2.75)    -> 2.0      (Pro Micro: 2.75)
- *     abs(-100000L) -> 31072    (Pro Micro: 100000)
- *
- * The long case is the worst: -100000 does not fit in a 16-bit int, so the
- * argument itself is mangled before abs() ever runs. No warning, no error,
- * just a wrong number - the hardest kind of porting bug to find.
- *
- * A macro would restore the classic behaviour but would also break any code
- * that writes std::abs(x), because a function-like macro expands there too.
- * A function template avoids that: for an int argument the C function is an
- * exact match and is preferred over the template, so nothing changes for
- * existing integer code; for float, double and long the template is the exact
- * match and wins. if constexpr keeps unsigned types from tripping -Wtype-limits
- * on the always-false x < 0 test. */
-#if defined(__cplusplus) && !defined(abs)
-  template <typename T>
-  static inline __attribute__((always_inline)) constexpr T abs(T x) {
-    if constexpr (T(-1) < T(0)) {   /* 符号付きのときだけ比較する */
-      return x < 0 ? -x : x;
-    } else {
-      return x;
-    }
-  }
-#endif
 
 #if defined(DISCOURAGE_NONSTANDARD_TYPES) && DISCOURAGE_NONSTANDARD_TYPES
 typedef bool      boolean __attribute__ ((deprecated("a 'boolean' is called a 'bool' in standard C - suggest using standard type name")));
@@ -235,5 +201,40 @@ void loop(void);
   long random(long, long);
   void randomSeed(unsigned long);
   long map(long, long, long, long, long);
+
+/* Wazamono: abs().
+ *
+ * ArduinoCore-avr defines it as a macro:  #define abs(x) ((x)>0?(x):-(x))
+ * so it works for any arithmetic type. ArduinoCore-API - which this file
+ * descends from - dropped the macro and relies on the C++ overloads that
+ * <cstdlib>/<cmath> provide on ARM. avr-libc has no such overloads, so on AVR
+ * the only candidate left is int abs(int), and every call is silently
+ * truncated to int. Measured on a Tachi:
+ *
+ *     abs(-1.5f)    -> 1.0      (Pro Micro: 1.5)
+ *     abs(-2.75)    -> 2.0      (Pro Micro: 2.75)
+ *     abs(-100000L) -> 31072    (Pro Micro: 100000)
+ *
+ * The long case is the worst: -100000 does not fit in a 16-bit int, so the
+ * argument itself is mangled before abs() ever runs. No warning, no error,
+ * just a wrong number - the hardest kind of porting bug to find.
+ *
+ * A macro would restore the classic behaviour but would also break any code
+ * that writes std::abs(x), because a function-like macro expands there too.
+ * A function template avoids that: for an int argument the C function is an
+ * exact match and is preferred over the template, so nothing changes for
+ * existing integer code; for float, double and long the template is the exact
+ * match and wins. if constexpr keeps unsigned types from tripping -Wtype-limits
+ * on the always-false x < 0 test. */
+#if defined(__cplusplus) && !defined(abs)
+  template <typename T>
+  static inline __attribute__((always_inline)) constexpr T abs(T x) {
+    if constexpr (T(-1) < T(0)) {   /* 符号付きのときだけ比較する */
+      return x < 0 ? -x : x;
+    } else {
+      return x;
+    }
+  }
+#endif
 
 #endif // __cplusplus

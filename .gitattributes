@@ -1,0 +1,9 @@
+# シェルスクリプトは必ず LF で作業ツリーへ展開する。
+# Windows で core.autocrlf=true のまま取得すると CRLF になり、
+# WSL や Git Bash で実行したときにシェバンの解釈が
+#   env: $'bash\r': No such file or directory
+# で失敗する（\r まで実行ファイル名の一部として扱われるため）。
+*.sh text eol=lf
+
+# 同じ理由でブートローダのビルド補助も LF 固定にする。
+*.bash text eol=lf

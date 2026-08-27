@@ -261,8 +261,14 @@ class TwoWire: public Stream {
 
     twi_buf_index_t requestFrom(uint8_t address, twi_buf_index_t quantity, uint8_t sendStop = 1);
 
-    uint8_t masterTransmit(auto *length, uint8_t *buffer, uint8_t addr, uint8_t sendStop);
-    uint8_t masterReceive(auto *length, uint8_t *buffer, uint8_t addr, uint8_t sendStop);
+    /* Wazamono: these took `auto *length`, which in a non-template function
+     * is the C++20 abbreviated function template syntax. The core builds with
+     * -std=gnu++17, so GCC accepts it only as an extension and warns
+     * -Wc++20-extensions on every sketch that includes Wire.h. Both call sites
+     * pass &_bytesToReadWrite, so `auto` always deduced to twi_buf_index_t*;
+     * naming the type is exactly equivalent and silences the warning. */
+    uint8_t masterTransmit(twi_buf_index_t *length, uint8_t *buffer, uint8_t addr, uint8_t sendStop);
+    uint8_t masterReceive(twi_buf_index_t *length, uint8_t *buffer, uint8_t addr, uint8_t sendStop);
 
     virtual size_t write(uint8_t);
     virtual size_t write(const uint8_t *, size_t);

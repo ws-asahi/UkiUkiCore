@@ -24,7 +24,10 @@ STAGE="$(mktemp -d)"
 trap 'rm -rf "$STAGE"' EXIT
 
 # --- platform.txt の version と一致しているか確認 -------------------------
-PLATFORM_VER="$(sed -n 's/^version=\([0-9].*\)$/\1/p' megaavr/platform.txt | tail -1)"
+# platform.txt は Windows で CRLF のまま取得されることがある。CR を落とさずに
+# 比較すると、値の末尾に \r が付いたまま突き合わせることになり、一致するはずの
+# 場合でも失敗する（しかも \r で行頭に戻るため、エラー文まで崩れて読めなくなる）。
+PLATFORM_VER="$(sed -n 's/^version=\([0-9].*\)$/\1/p' megaavr/platform.txt | tail -1 | tr -d '\r[:space:]')"
 if [[ "$PLATFORM_VER" != "$VERSION" ]]; then
   echo "エラー: megaavr/platform.txt の version は '$PLATFORM_VER' で、指定の '$VERSION' と一致しません。" >&2
   exit 1

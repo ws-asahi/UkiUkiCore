@@ -34,18 +34,25 @@ if [[ "$PLATFORM_VER" != "$VERSION" ]]; then
 fi
 
 # --- 書庫の作成 -----------------------------------------------------------
-# Board Manager は書庫内の単一のトップディレクトリを展開します。
-# ビルド生成物とリポジトリ管理用のファイルは含めません。
+# Board Manager は書庫内の単一のトップディレクトリを剥がし、その直下を
+# プラットフォームの根として扱う。つまり boards.txt / platform.txt /
+# cores / variants は「トップ直下」に無ければならない。megaavr を
+# ディレクトリごと入れると 1 階層深くなり、arduino-cli が
+# プラットフォームを見つけられずに導入が失敗する。
+# v0.0.3 の書庫も megaavr の中身を展開した形になっている。
 echo "書庫を作成: $ARCHIVE"
 mkdir -p "$STAGE/WazamonoCore-${VERSION}"
-cp -a megaavr "$STAGE/WazamonoCore-${VERSION}/"
-for f in ChangeLog.md Installation.md LICENSE.md README.md CODE_OF_CONDUCT.md; do
-  [[ -e "$f" ]] && cp -a "$f" "$STAGE/WazamonoCore-${VERSION}/"
-done
+cp -a megaavr/. "$STAGE/WazamonoCore-${VERSION}/"
 
 find "$STAGE" \( -name '*.lst' -o -name '*.map' -o -name '*.o' -o -name '*.d' \
               -o -name '.DS_Store' -o -name 'platform.local.txt' \) -delete
 find "$STAGE" -name '.git*' -prune -exec rm -rf {} + 2>/dev/null || true
+
+# 展開後に platform.txt がトップ直下に来ているかを必ず確かめる。
+if [[ ! -f "$STAGE/WazamonoCore-${VERSION}/platform.txt" ]]; then
+  echo "エラー: platform.txt が書庫のトップ直下にありません。構造が不正です。" >&2
+  exit 1
+fi
 
 tar -cjf "$ARCHIVE" -C "$STAGE" "WazamonoCore-${VERSION}"
 

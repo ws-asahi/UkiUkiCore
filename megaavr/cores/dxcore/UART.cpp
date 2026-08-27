@@ -592,6 +592,23 @@
             baud   >>= 1;                       // And lower the baud rate by haldf
       }
       baud_setting = (((4 * F_CPU) / baud));  // And now the registers that baud was passed in are done.
+      /* Wazamono: in Synchronous and SPI Host modes only the integer part of
+       * BAUD selects the rate - DS40002548B 25.3.2.2.1 states that only
+       * BAUD[15:6] determines the baud rate and that the fractional part
+       * BAUD[5:0] "must be written as zero", with
+       *     fBAUD = fCLK_PER / (S * BAUD[15:6]),  S = 2
+       * The value computed above is the asynchronous one and normally has a
+       * non-zero fraction, which is out of spec here and silently produces a
+       * different clock than the caller asked for: on a 24 MHz part every
+       * request between 6 and 12 MHz truncated to BAUD[15:6] = 1 and came out
+       * at 12 MHz. Round to the nearest valid setting instead. */
+      if ((ctrlc & USART_CMODE_gm) == USART_CMODE_MSPI_gc ||
+          (ctrlc & USART_CMODE_gm) == USART_CMODE_SYNCHRONOUS_gc) {
+        baud_setting = (baud_setting + 0x20) & 0xFFC0;   /* 四捨五入して小数部を落とす */
+        if (baud_setting < 64) {
+          baud_setting = 64;
+        }
+      }
       if (baud_setting < 64)                      // so set to the maximum baud rate setting.
         baud_setting= 64;       // set the U2X bit in what will become CTRLB
       //} else if (baud < (F_CPU / 16800)) {      // Baud rate is too low

@@ -532,7 +532,28 @@
            */
       #endif
       if (pin & 1) {
-        base++;
+        #if defined(NONCANONICAL_PIN_NUMBERS)
+          /* Wazamono fix: RX sits one PORT bit above TX, and XDIR one above
+           * XCK - but "one Arduino pin number above" only follows from that
+           * when the variant numbers its pins in port-bit order. A board with
+           * a custom map does not: on the Tachi TX = PA4 = D1 and RX = PA5 =
+           * D0, so base + 1 named D2 (PA2) instead of D0. Step through the
+           * port and bit position and look the neighbour back up. */
+          uint8_t port = digitalPinToPort(base);
+          uint8_t bp   = digitalPinToBitPosition(base);
+          if (port == NOT_A_PORT || bp == NOT_A_PIN || bp > 6) {
+            return NOT_A_PIN;
+          }
+          bp++;
+          for (uint8_t p = 0; p < NUM_TOTAL_PINS; p++) {
+            if (digitalPinToPort(p) == port && digitalPinToBitPosition(p) == bp) {
+              return p;
+            }
+          }
+          return NOT_A_PIN;   /* that PORT bit is not exposed on this board */
+        #else
+          base++;
+        #endif
       }
       return base; // RX = TX + 1. XDIR = XCK + 1 for all Dx and Ex parts!
     }

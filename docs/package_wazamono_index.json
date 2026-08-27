@@ -19,8 +19,8 @@
           },
           "url": "https://github.com/ws-asahi/WazamonoCore/releases/download/v0.0.6/WazamonoCore-0.0.6.tar.bz2",
           "archiveFileName": "WazamonoCore-0.0.6.tar.bz2",
-          "checksum": "SHA-256:37eb0d7afcbef21b8c8bc1abd646b0acd70fc9ef4e14892c63603c8937975398",
-          "size": "3684833",
+          "checksum": "SHA-256:0741156cdae28ed051ef40413fa3219edfa2e1d50cdbbff0de6fa4a59d56680a",
+          "size": "3757908",
           "boards": [
             {
               "name": "Wazamono Tachi (AVR64DU32)"

@@ -478,6 +478,44 @@ F     b7  f07 f17 | D1  MUX  7  |         f27 f37     E0F A07
   #define INTERNAL2V500            ((VREF_REFSEL_2V500_gc << 4) | (VREF_REFSEL_2V500_gc ))
   #define INTERNAL4V1              ((VREF_REFSEL_4V096_gc << 4) | (VREF_REFSEL_4V096_gc ))
   #define DEFAULT                  ((VREF_REFSEL_VDD_gc   << 4) | (VREF_REFSEL_VDD_gc   ))
+  #define INTERNAL                 INTERNAL2V500      /* see the note below */
+
+/* Wazamono: INTERNAL.
+ *
+ * ArduinoCore-avr defines INTERNAL, but what it means depends entirely on the
+ * part - the constant only ever meant "this chip's internal reference":
+ *
+ *     ATmega32U4 (Leonardo, Pro Micro)   INTERNAL = 3 -> 2.56 V
+ *     ATmega328P (Uno R3)                INTERNAL = 3 -> 1.1 V
+ *     ATmega1280/2560 etc.               INTERNAL is not defined at all;
+ *                                        only INTERNAL1V1 and INTERNAL2V56 are
+ *
+ * The AVR DU offers 1.024 V, 2.048 V, 2.500 V and 4.096 V, so neither classic
+ * value exists exactly. 2.500 V is mapped here for every Wazamono board:
+ *
+ *   - It is within 2.34% of the Pro Micro / Leonardo value the Tachi replaces,
+ *     which is inside the +/-4% the reference itself is specified to
+ *     (DS40002548B Table 35-17). A sketch ported from a Pro Micro reads within
+ *     the tolerance it already had.
+ *   - Keeping the same voltage on Tachi, Tsurugi and Kunai means a sketch moved
+ *     between Wazamono boards does not silently change scale. Following each
+ *     board's ancestor instead would make INTERNAL mean 2.5 V on one board and
+ *     1.024 V on another, reintroducing the very trap that makes the classic
+ *     constant treacherous.
+ *   - 4.096 V is deliberately not used: it requires VDD >= 4.55 V
+ *     (DS40002548B Table 35-17), so it is out of spec on a 3.3 V board and
+ *     marginal on a 5 V rail that sags. 2.500 V only needs VDD >= 2.7 V.
+ *
+ * A sketch coming from an Uno R3, where INTERNAL was 1.1 V, will read about
+ * 2.3x lower than before. That is unavoidable - the DU has no 1.1 V reference -
+ * and is why sketches that care should name the voltage: INTERNAL1V024,
+ * INTERNAL2V048, INTERNAL2V500 and INTERNAL4V096 are all available.
+ *
+ * INTERNAL1V1 and INTERNAL2V56 are deliberately NOT defined. Those names
+ * promise a specific voltage this part cannot produce, so a sketch using them
+ * should fail to build rather than quietly read 7% or 2% off. They are also
+ * Mega-only in ArduinoCore-avr - neither the Uno R3, the Leonardo nor the Pro
+ * Micro defines them - so nothing the Wazamono line replaces needs them. */
 
   
 #else /* ADC INTERNAL REFS           High nybble for DAC/AC        Low nybble for ADC   */
@@ -492,6 +530,7 @@ F     b7  f07 f17 | D1  MUX  7  |         f27 f37     E0F A07
   #define INTERNAL4V1              ((VREF_REFSEL_4V096_gc << 4) | (ADC_REFSEL_4V096_gc  ))
   #define INTERNAL2V5              ((VREF_REFSEL_2V500_gc << 4) | (ADC_REFSEL_2V500_gc  ))
   #define VDD                      ((  VREF_REFSEL_VDD_gc << 4) | (ADC_REFSEL_VDD_gc    ))
+  #define INTERNAL                 INTERNAL2V500      /* see the note below */
 
 #endif
 

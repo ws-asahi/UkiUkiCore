@@ -495,7 +495,18 @@
 
     // Not static
     uint8_t HardwareSerial::getPin(uint8_t pin) {
-      return _getPin(_usart_pins, pin, _pin_set, _mux_count);
+      /* Wazamono fix: _getPin() is declared
+       *   _getPin(pinInfo, mux_count, mux_setting, pin)
+       * but the arguments were passed as (pinInfo, pin, _pin_set, _mux_count),
+       * so mux_count received the requested pin index and pin received the
+       * mux count. Its first guard is "if (pin > 3 ...) return NOT_A_PIN",
+       * and every part with more than four USART0 mux options tripped it, so
+       * getPin() returned NOT_A_PIN for every index on every such part.
+       * That silently broke mspiBegin()/syncBegin(), whose only job is to set
+       * the direction of the XCK pin that getPin(2) is supposed to name:
+       * with XCK left as an input the USART never drives the clock and a
+       * host-SPI transfer produces nothing at all. */
+      return _getPin(_usart_pins, _mux_count, _pin_set, pin);
     }
     // Static
     uint8_t HardwareSerial::_getPin(uint8_t * mux_table_ptr, uint8_t muxcount, uint8_t pinset, uint8_t pin) {

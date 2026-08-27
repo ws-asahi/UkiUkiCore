@@ -33,7 +33,7 @@
  *   - Reply bytes beyond setData()'s length are sent as 0x00, matching the
  *     ESP8266 library's zero-fill behaviour.
  *
- * Supported boards: Wazamono Tachi (SS = D4/PD7) and Wazamono Kunai
+ * Supported boards: Wazamono Tachi (SS = PD7 = D18 = A0) and Wazamono Kunai
  * (SS = D1/PA7). The Tsurugi routes the hardware SS position to its AREF
  * pin, so client mode is not offered there.
  *

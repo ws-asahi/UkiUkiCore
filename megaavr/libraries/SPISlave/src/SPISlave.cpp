@@ -48,11 +48,24 @@ static volatile bool     s_running = false;
  * the first bytes of the next transaction. Cycling ENABLE empties the shift
  * register and the transmit buffer. Only ever called with SS high, so no
  * transfer is disturbed. */
+static void _spislave_reset_fifo(void) {
+  /* Drain the receive path and clear the flags. BUFOVF is not cleared by
+   * writing a one to it while the receive FIFO still holds the overflow -
+   * DS40002548B 26.5.5 lists reading DATA first among the ways to clear it -
+   * and disabling the peripheral does not clear it either. The FIFO is the
+   * Receive Data register plus the Receive Data Buffer, so three reads cover
+   * it with the shift register. */
+  (void)SPI0.DATA;
+  (void)SPI0.DATA;
+  (void)SPI0.DATA;
+  SPI0.INTFLAGS = SPI_RXCIF_bm | SPI_TXCIF_bm | SPI_SSIF_bm | SPI_BUFOVF_bm;
+}
+
 static void _spislave_prime(void) {
   uint8_t ctrla = SPI0.CTRLA;
   SPI0.CTRLA    = ctrla & ~SPI_ENABLE_bm;
   SPI0.CTRLA    = ctrla;
-  SPI0.INTFLAGS = SPI_RXCIF_bm | SPI_TXCIF_bm | SPI_SSIF_bm | SPI_BUFOVF_bm;
+  _spislave_reset_fifo();
   SPI0.DATA = (0 < s_tx_len) ? s_tx[0] : 0;
   SPI0.DATA = (1 < s_tx_len) ? s_tx[1] : 0;
   s_tx_pos = 2;
@@ -134,7 +147,13 @@ void SPISlaveClass::begin(uint8_t dataMode) {
    * SSD is a Host-mode-only bit and is left 0. */
   SPI0.CTRLA   = 0;
   SPI0.CTRLB   = SPI_BUFEN_bm | SPI_BUFWR_bm | (dataMode & SPI_MODE_gm);
-  SPI0.INTFLAGS = SPI_RXCIF_bm | SPI_TXCIF_bm | SPI_SSIF_bm | SPI_BUFOVF_bm;
+  /* A previous session may have ended in overflow (a host clocking faster
+   * than the interrupt can be serviced). BUFOVF survives both end() and a
+   * fresh begin() unless the receive FIFO is read out, and while it is set
+   * the receive path stays jammed: no RXCIF, so neither the SPI interrupt
+   * nor the transaction ends up delivering anything, and the shift register
+   * just echoes MOSI back a byte late. Clear it properly before enabling. */
+  _spislave_reset_fifo();
   SPI0.INTCTRL = SPI_RXCIE_bm;
   SPI0.CTRLA   = SPI_ENABLE_bm;                     /* MASTER = 0 -> Client  */
 
@@ -153,6 +172,7 @@ void SPISlaveClass::end(void) {
   SPI0.INTCTRL = 0;
   SPI0.CTRLA   = 0;
   SPI0.CTRLB   = 0;
+  _spislave_reset_fifo();          /* leave nothing behind for the next begin() */
   pinMode(PIN_SPI_MISO, INPUT);
   s_running = false;
 }

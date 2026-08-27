@@ -60,6 +60,10 @@ Tachi rev.4 実機で確認し、修正不要と判断した項目です。詳�
 - A0 (PD7) が VREFA を兼ねるため、外部リファレンス使用時は A0 / SPI SS / Serial2 RX を同時に失います
 - `LED_BUILTIN` = 17（32U4 は 13、いずれも配線されないピン）、`SS` = 18（32U4 は 17 = RX LED）、`A6`–`A10` の数値がピン自身の番号（32U4 は Leonardo の複製番号 24–28。指すピンは同一）
 
+### ブートローダ
+
+- Tachi のブートローダ hex は **avr64du32 / LED = PF3 / VREG = 0** 向けで生成済みです。今回の互換性検証はすべてこの hex を書き込んだ rev.4 実機で実施しました。v0.0.5 の「`usbcdcboot_wazamonotachi.hex` は avr64du28/PA0 向けのまま」という注記は解消済みです（Tachi は AVR64DU28 の採用を検討した時期がありましたが、実装面積の都合で AVR64DU32 に戻しています）。
+
 ### ツール
 
 - **SerialUPDI が Python なしで動作するように**: 書込装置 `SerialUPDI - *` の3項目を `prog.py`（pymcuprog）から avrdude 8.1 の `-c serialupdi` へ切り替え。手動 / git インストールでは `megaavr/tools/python3/` が存在せず、ブートローダ書き込みが `executable file not found in %PATH%` で失敗していた問題を解消します。

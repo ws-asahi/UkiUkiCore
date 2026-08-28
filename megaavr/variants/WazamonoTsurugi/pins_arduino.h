@@ -89,13 +89,19 @@
 #include <avr/pgmspace.h>
 #include "timers.h"
 
-/* Informational pinout tags. DU_32PIN_PINOUT keeps DU-32 feature assumptions in
- * the core; WAZAMONO_TSURUGI_PINOUT identifies this board. NONCANONICAL_PIN_NUMBERS
- * tells the core to derive (port,bit) from the tables below instead of assuming
- * pin number == port order (our numbering does not follow port order). */
+/* Board identification: WAZAMONO_AVR_TSURUGI is THE macro that identifies this
+ * board (cf. ARDUINO_AVR_PROMICRO / ARDUINO_UNOWIFIR4). It is used by the core,
+ * the bundled libraries, the examples and the bootloader sources alike.
+ * boards.txt additionally sets build.board=WAZAMONO_AVR_TSURUGI, so the Arduino
+ * build system emits the conventional -DARDUINO_WAZAMONO_AVR_TSURUGI as well.
+ * MCU identification comes from the compiler (-mmcu): __AVR_AVR64DU32__,
+ * plus the core's family tags __AVR_DU__ / _AVR_FAMILY / _AVR_PINCOUNT
+ * (core_devices.h).
+ * DU_32PIN_PINOUT keeps DU-32 feature assumptions in the core;
+ * NONCANONICAL_PIN_NUMBERS tells the core to derive (port,bit) from the tables
+ * below instead of assuming pin number == port order. */
+#define WAZAMONO_AVR_TSURUGI (1)
 #define DU_32PIN_PINOUT
-#define WAZAMONO_TSURUGI_PINOUT
-#define WAZAMONO_BOARD_TSURUGI 1  /* Board identification macro (matches bootloader convention) */
 #define NONCANONICAL_PIN_NUMBERS
 
 /* ---- Digital pin number for each MCU pin (Uno R3 layout, D0..D19 contiguous) ---- */

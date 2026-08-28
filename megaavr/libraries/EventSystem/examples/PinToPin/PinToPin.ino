@@ -40,11 +40,11 @@
 void setup() {
   Serial.begin(115200);
 
-  #if defined(WAZAMONO_BOARD_TACHI)
+  #if defined(WAZAMONO_AVR_TACHI)
   bool ok = EventSystem.connect(10, 8);   // D10 -> D8 (EVOUTA)
-  #elif defined(WAZAMONO_BOARD_TSURUGI)
+  #elif defined(WAZAMONO_AVR_TSURUGI)
   bool ok = EventSystem.connect(10, 2);   // D10 -> D2 (EVOUTA)
-  #elif defined(WAZAMONO_BOARD_KUNAI)
+  #elif defined(WAZAMONO_AVR_KUNAI)
   bool ok = EventSystem.connect(8, 1);    // D8 -> D1 (EVOUTA)
   #else
   #error "This example supports Wazamono boards only."

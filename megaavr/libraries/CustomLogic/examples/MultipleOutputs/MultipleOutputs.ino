@@ -27,11 +27,11 @@ void setup() {
 
   CustomLogic.begin(AND);          // OUT pin, as usual
 
-  #if defined(WAZAMONO_BOARD_TACHI)
+  #if defined(WAZAMONO_AVR_TACHI)
     CustomLogic.addOutput(8);      // ...and also on D8 (PA7, EVOUTA)
-  #elif defined(WAZAMONO_BOARD_TSURUGI)
+  #elif defined(WAZAMONO_AVR_TSURUGI)
     CustomLogic.addOutput(2);      // ...and also on D2 (PA7, EVOUTA)
-  #elif defined(WAZAMONO_BOARD_KUNAI)
+  #elif defined(WAZAMONO_AVR_KUNAI)
     CustomLogic.addOutput(1);      // ...and also on D1 (PA7, EVOUTA)
   #else
     #error "This example supports Wazamono boards only."

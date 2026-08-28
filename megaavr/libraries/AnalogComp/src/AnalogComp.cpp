@@ -4,7 +4,7 @@
 AnalogCompClass AnalogComp;
 
 /* ---- board default inputs ------------------------------------------- */
-#if defined(WAZAMONO_BOARD_KUNAI)
+#if defined(WAZAMONO_AVR_KUNAI)
   #define AC_DEFAULT_PLUS_PIN   PIN_PD6   /* D6, AINP3 */
   #define AC_DEFAULT_MINUS_PIN  PIN_PD7   /* D7, AINN2 */
 #else /* Tachi / Tsurugi */
@@ -18,7 +18,7 @@ static bool plusPinToMux(uint8_t pin, uint8_t *gc) {
   if (pin == PIN_PD2) { *gc = AC_MUXPOS_AINP0_gc; return true; }
   #endif
   if (pin == PIN_PD6) { *gc = AC_MUXPOS_AINP3_gc; return true; }
-  #if defined(WAZAMONO_BOARD_TSURUGI)
+  #if defined(WAZAMONO_AVR_TSURUGI)
   /* AINP4 = PC3 = D7: a plain, VDD-driven GPIO on Tsurugi. */
   if (pin == PIN_PC3) { *gc = AC_MUXPOS_AINP4_gc; return true; }
   #else

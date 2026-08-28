@@ -21,11 +21,11 @@ void setup() {
   AnalogComp.begin(INTERNAL2V5);              // + input vs internal 2.5 V
   AnalogComp.setHysteresis(AC_HYST_MEDIUM);
 
-  #if defined(WAZAMONO_BOARD_TACHI)
+  #if defined(WAZAMONO_AVR_TACHI)
   EventSystem.connect(EVENT_ANALOG_COMP, 8);  // -> D8 (EVOUTA)
-  #elif defined(WAZAMONO_BOARD_TSURUGI)
+  #elif defined(WAZAMONO_AVR_TSURUGI)
   EventSystem.connect(EVENT_ANALOG_COMP, 2);  // -> D2 (EVOUTA)
-  #elif defined(WAZAMONO_BOARD_KUNAI)
+  #elif defined(WAZAMONO_AVR_KUNAI)
   EventSystem.connect(EVENT_ANALOG_COMP, 1);  // -> D1 (EVOUTA)
   #else
   #error "This example supports Wazamono boards only."

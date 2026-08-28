@@ -27,13 +27,13 @@
 
 /* Identity.  VID is shared (pid.codes test range); the bootloader PID is
  * per-board so each Wazamono board enumerates with its own bootloader identity.
- * Select the board at build time with -DWAZAMONO_BOARD_TSURUGI (default Tachi). */
+ * Select the board at build time with -DWAZAMONO_AVR_TSURUGI (default Tachi). */
 #define USB_BL_VID              0x1209
-#if defined(WAZAMONO_BOARD_TSURUGI)
+#if defined(WAZAMONO_AVR_TSURUGI)
 #define USB_BL_PID              0x0007   /* Wazamono Tsurugi bootloader */
-#elif defined(WAZAMONO_BOARD_KUNAI)
+#elif defined(WAZAMONO_AVR_KUNAI)
 #define USB_BL_PID              0x0009   /* Wazamono Kunai bootloader */
-#else  /* default: WAZAMONO_BOARD_TACHI */
+#else  /* default: WAZAMONO_AVR_TACHI */
 #define USB_BL_PID              0x0005   /* Wazamono Tachi bootloader */
 #endif
 #define USB_BL_DEVICE_VER       0x0100

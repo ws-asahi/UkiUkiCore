@@ -97,7 +97,7 @@ endif
 # and src/usb_desc.c).  Pass the board tag, e.g.:
 #   make ... BOARD=TSURUGI      (unset / BOARD=TACHI = the default Tachi identity)
 ifneq ($(strip $(BOARD)),)
-CFLAGS += -DWAZAMONO_BOARD_$(BOARD)
+CFLAGS += -DWAZAMONO_AVR_$(BOARD)
 endif
 
 # --- LED polarity (per-build) ---------------------------------------

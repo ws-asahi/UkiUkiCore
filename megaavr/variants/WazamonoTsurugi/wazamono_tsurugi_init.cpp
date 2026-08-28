@@ -30,7 +30,7 @@
 
 #include <Arduino.h>
 
-#if defined(WAZAMONO_TSURUGI_PINOUT)
+#if defined(WAZAMONO_AVR_TSURUGI)
 
 /* ---- Force-link marker ----------------------------------------------------
  * Arduino archives variant-folder objects into core.a, and the core's main.cpp
@@ -83,4 +83,4 @@ void usb_cdc_on_led_tick(void) {
 
 } /* extern "C" */
 
-#endif /* WAZAMONO_TSURUGI_PINOUT */
+#endif /* WAZAMONO_AVR_TSURUGI */

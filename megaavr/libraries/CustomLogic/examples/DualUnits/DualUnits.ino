@@ -17,7 +17,7 @@
 
 void setup() {
   CustomLogic.begin(AND);     // unit 0: OUT high only while IN0 and IN1 are high
-  #if !defined(WAZAMONO_BOARD_KUNAI)
+  #if !defined(WAZAMONO_AVR_KUNAI)
   CustomLogic1.begin(OR);     // unit 1: OUT high while IN0 or IN1 is high
   #endif
 }

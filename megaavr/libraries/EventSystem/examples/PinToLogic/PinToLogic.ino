@@ -22,11 +22,11 @@
 void setup() {
   Serial.begin(115200);
 
-  #if defined(WAZAMONO_BOARD_TACHI)
+  #if defined(WAZAMONO_AVR_TACHI)
   EventSystem.connect(9, EVENT_TO_LOGIC_A);   // D9 -> CustomLogic EVENT_A
-  #elif defined(WAZAMONO_BOARD_TSURUGI)
+  #elif defined(WAZAMONO_AVR_TSURUGI)
   EventSystem.connect(2, EVENT_TO_LOGIC_A);   // D2 -> CustomLogic EVENT_A
-  #elif defined(WAZAMONO_BOARD_KUNAI)
+  #elif defined(WAZAMONO_AVR_KUNAI)
   EventSystem.connect(8, EVENT_TO_LOGIC_A);   // D8 -> CustomLogic EVENT_A
   #else
   #error "This example supports Wazamono boards only."

@@ -41,7 +41,7 @@
 
 #include <Arduino.h>
 
-#if !defined(WAZAMONO_BOARD_TACHI) && !defined(WAZAMONO_BOARD_TSURUGI) && !defined(WAZAMONO_BOARD_KUNAI)
+#if !defined(WAZAMONO_AVR_TACHI) && !defined(WAZAMONO_AVR_TSURUGI) && !defined(WAZAMONO_AVR_KUNAI)
   #error "CustomLogic supports Wazamono boards only."
 #endif
 
@@ -168,7 +168,7 @@ private:
 };
 
 extern CustomLogicClass CustomLogic;
-#if !defined(WAZAMONO_BOARD_KUNAI)
+#if !defined(WAZAMONO_AVR_KUNAI)
 extern CustomLogicClass CustomLogic1;
 #endif
 

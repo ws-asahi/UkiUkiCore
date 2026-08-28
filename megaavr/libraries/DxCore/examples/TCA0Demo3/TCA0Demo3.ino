@@ -17,13 +17,13 @@
 #endif
 
 /* PWM comes out on TCA0 WO2, so the physical pin follows each board's PWM port mux. */
-#if defined(WAZAMONO_BOARD_TACHI)
+#if defined(WAZAMONO_AVR_TACHI)
   #define DEMO_OUT_PIN 21                         // D21 (PF2, TCA0 WO2)
   #define DEMO_TCA_MUX PORTMUX_TCA0_PORTF_gc
-#elif defined(WAZAMONO_BOARD_TSURUGI)
+#elif defined(WAZAMONO_AVR_TSURUGI)
   #define DEMO_OUT_PIN 9                          // D9 (PD2, TCA0 WO2)
   #define DEMO_TCA_MUX PORTMUX_TCA0_PORTD_gc
-#elif defined(WAZAMONO_BOARD_KUNAI)
+#elif defined(WAZAMONO_AVR_KUNAI)
   #define DEMO_OUT_PIN 3                          // D3 (PA2, TCA0 WO2)
   #define DEMO_TCA_MUX PORTMUX_TCA0_PORTA_gc
 #else

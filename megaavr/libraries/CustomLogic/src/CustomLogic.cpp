@@ -3,7 +3,7 @@
 
 /* ---- board unit -> LUT/pin assignment --------------------------------- */
 /* IN0, IN1, IN2, OUT, OUT-alt (NOT_A_PIN when the LUT has no alternate) */
-#if defined(WAZAMONO_BOARD_KUNAI)
+#if defined(WAZAMONO_AVR_KUNAI)
 static const uint8_t unit0_pins[5] = {PIN_PA0, PIN_PA1, PIN_PA2, PIN_PA3, PIN_PA6};
 CustomLogicClass CustomLogic(0, unit0_pins);   /* LUT0 */
 #else /* Tachi / Tsurugi */
@@ -189,7 +189,7 @@ bool CustomLogicClass::setInput(uint8_t input, LogicInput source) {
       if (!isEvenLut(_lut)) return false;
       break;
     case LOGIC_OTHER_UNIT:
-      #if defined(WAZAMONO_BOARD_KUNAI)
+      #if defined(WAZAMONO_AVR_KUNAI)
         return false;                    /* this board has a single unit */
       #else
         break;

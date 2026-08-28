@@ -6,11 +6,11 @@
 
 /* Twelve pins that exist on each Wazamono board. Tachi has no D11-D13 and
  * Kunai has no D13/D14, so the last slots differ per board. */
-#if defined(WAZAMONO_BOARD_TACHI)
+#if defined(WAZAMONO_AVR_TACHI)
 const byte servopins[12] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 14};
-#elif defined(WAZAMONO_BOARD_TSURUGI)
+#elif defined(WAZAMONO_AVR_TSURUGI)
 const byte servopins[12] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
-#elif defined(WAZAMONO_BOARD_KUNAI)
+#elif defined(WAZAMONO_AVR_KUNAI)
 const byte servopins[12] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
 #else
   #error "This example supports Wazamono boards only."

@@ -31,7 +31,7 @@
 
 #include <Arduino.h>
 
-#if !defined(WAZAMONO_BOARD_TACHI) && !defined(WAZAMONO_BOARD_TSURUGI) && !defined(WAZAMONO_BOARD_KUNAI)
+#if !defined(WAZAMONO_AVR_TACHI) && !defined(WAZAMONO_AVR_TSURUGI) && !defined(WAZAMONO_AVR_KUNAI)
   #error "AnalogComp supports Wazamono boards only."
 #endif
 

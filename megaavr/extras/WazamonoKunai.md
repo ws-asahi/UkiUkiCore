@@ -271,6 +271,23 @@ Seeeduino XIAO と同じ番号付けです。
 
 ---
 
+## ボード / MCU 識別マクロ
+
+| マクロ | 定義元 | 用途 |
+|--------|--------|------|
+| `WAZAMONO_AVR_KUNAI` | variant(`pins_arduino.h`) | **ボード識別(正式)**。他ボードは `WAZAMONO_AVR_TACHI` / `WAZAMONO_AVR_TSURUGI` / `WAZAMONO_AVR_KUNAI` |
+| `ARDUINO_WAZAMONO_AVR_KUNAI` | Arduino ビルドシステム(`boards.txt` の `build.board`) | Arduino 慣例の `ARDUINO_<board>` 形式 |
+| `__AVR_AVR32DU20__` | コンパイラ(`-mmcu`) | MCU 識別(`__AVR_ATmega32U4__` 相当) |
+| `__AVR_DU__` / `_AVR_FAMILY` / `_AVR_PINCOUNT` | コア(`core_devices.h`) | ファミリ `"DU"` / ピン数 `20` |
+
+```cpp
+#if defined(WAZAMONO_AVR_KUNAI)
+  // Kunai 固有の処理
+#endif
+```
+
+---
+
 ## ソフトウェア・ハードウェア互換性(Seeeduino XIAO)
 
 - Kunai は新型 8-bit AVR マイコンを搭載するため SAMD21 とは互換性の無い場面が多いです。

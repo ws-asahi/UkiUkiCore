@@ -27,7 +27,7 @@ wazamonotachi.vid.0=0x1209
 wazamonotachi.pid.0=0x0006
 wazamonotachi.vid.1=0x1209
 wazamonotachi.pid.1=0x0005
-wazamonotachi.build.board=WAZAMONO_AVR_TACHI
+wazamonotachi.build.board=AVR_TACHI
 wazamonotachi.build.core=dxcore
 wazamonotachi.build.f_cpu={build.speed}000000L
 wazamonotachi.build.text_section_start=.text=0x1000
@@ -130,7 +130,7 @@ wazamonotsurugi.vid.0=0x1209
 wazamonotsurugi.pid.0=0x0008
 wazamonotsurugi.vid.1=0x1209
 wazamonotsurugi.pid.1=0x0007
-wazamonotsurugi.build.board=WAZAMONO_AVR_TSURUGI
+wazamonotsurugi.build.board=AVR_TSURUGI
 wazamonotsurugi.build.core=dxcore
 wazamonotsurugi.build.f_cpu={build.speed}000000L
 wazamonotsurugi.build.text_section_start=.text=0x1000
@@ -214,7 +214,7 @@ wazamonokunai.vid.0=0x1209
 wazamonokunai.pid.0=0x000A
 wazamonokunai.vid.1=0x1209
 wazamonokunai.pid.1=0x0009
-wazamonokunai.build.board=WAZAMONO_AVR_KUNAI
+wazamonokunai.build.board=AVR_KUNAI
 wazamonokunai.build.core=dxcore
 wazamonokunai.build.f_cpu={build.speed}000000L
 wazamonokunai.build.text_section_start=.text=0x1000

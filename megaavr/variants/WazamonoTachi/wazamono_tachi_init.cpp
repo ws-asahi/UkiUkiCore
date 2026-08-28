@@ -31,7 +31,7 @@
 
 #include <Arduino.h>
 
-#if defined(WAZAMONO_AVR_TACHI)
+#if defined(ARDUINO_AVR_TACHI)
 
 /* ---- Force-link marker ----------------------------------------------------
  * Arduino archives variant-folder objects into core.a, and the core's main.cpp
@@ -85,4 +85,4 @@ void usb_cdc_on_led_tick(void) {
 
 } /* extern "C" */
 
-#endif /* WAZAMONO_AVR_TACHI */
+#endif /* ARDUINO_AVR_TACHI */

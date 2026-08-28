@@ -11,13 +11,13 @@
 
 unsigned int DutyCycle = 0;
 /* PWM comes out on TCA0 WO1, so the physical pin follows each board's PWM port mux. */
-#if defined(WAZAMONO_AVR_TACHI)
+#if defined(ARDUINO_AVR_TACHI)
   uint8_t OutputPin = 20;                         // D20 (PF1, TCA0 WO1)
   #define DEMO_TCA_MUX PORTMUX_TCA0_PORTF_gc
-#elif defined(WAZAMONO_AVR_TSURUGI)
+#elif defined(ARDUINO_AVR_TSURUGI)
   uint8_t OutputPin = 6;                          // D6 (PD1, TCA0 WO1)
   #define DEMO_TCA_MUX PORTMUX_TCA0_PORTD_gc
-#elif defined(WAZAMONO_AVR_KUNAI)
+#elif defined(ARDUINO_AVR_KUNAI)
   uint8_t OutputPin = 5;                          // D5 (PA1, TCA0 WO1; shared with SCL)
   #define DEMO_TCA_MUX PORTMUX_TCA0_PORTA_gc
 #else

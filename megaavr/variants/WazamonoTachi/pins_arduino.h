@@ -94,18 +94,21 @@
 #include <avr/pgmspace.h>
 #include "timers.h"
 
-/* Board identification: WAZAMONO_AVR_TACHI is THE macro that identifies this
- * board (cf. ARDUINO_AVR_PROMICRO / ARDUINO_UNOWIFIR4). It is used by the core,
- * the bundled libraries, the examples and the bootloader sources alike.
- * boards.txt additionally sets build.board=WAZAMONO_AVR_TACHI, so the Arduino
- * build system emits the conventional -DARDUINO_WAZAMONO_AVR_TACHI as well.
+/* Board identification: ARDUINO_AVR_TACHI is THE macro that identifies this
+ * board, following the Arduino convention (ARDUINO_AVR_PROMICRO, ARDUINO_UNOWIFIR4).
+ * The Arduino build system defines it from boards.txt (build.board=AVR_TACHI
+ * -> -DARDUINO_AVR_TACHI); the fallback below covers builds outside the IDE
+ * (e.g. the bootloader tree, which passes it explicitly). It is used by the
+ * core, the bundled libraries, the examples and the bootloader sources alike.
  * MCU identification comes from the compiler (-mmcu): __AVR_AVR64DU32__,
  * plus the core's family tags __AVR_DU__ / _AVR_FAMILY / _AVR_PINCOUNT
  * (core_devices.h).
  * DU_32PIN_PINOUT keeps DU-32 feature assumptions in the core;
  * NONCANONICAL_PIN_NUMBERS tells the core to derive (port,bit) from the tables
  * below instead of assuming pin number == port order. */
-#define WAZAMONO_AVR_TACHI (1)
+#ifndef ARDUINO_AVR_TACHI
+  #define ARDUINO_AVR_TACHI 1
+#endif
 #define DU_32PIN_PINOUT
 #define NONCANONICAL_PIN_NUMBERS
 

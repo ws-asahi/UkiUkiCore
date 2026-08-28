@@ -60,7 +60,7 @@ static uint8_t evoutPortmuxBit(uint8_t idx) {
  * CustomLogic is LUT2 on Tachi/Tsurugi and LUT0 on Kunai; CustomLogic1 is
  * LUT3 and does not exist on Kunai. */
 static volatile uint8_t *logicUser(uint8_t n /* 0..3 */) {
-  #if defined(WAZAMONO_AVR_KUNAI)
+  #if defined(ARDUINO_AVR_KUNAI)
   if (n == 0) return &EVSYS.USERCCLLUT0A;
   if (n == 1) return &EVSYS.USERCCLLUT0B;
   return nullptr;                       /* no CustomLogic1 on Kunai */
@@ -146,7 +146,7 @@ bool EventSystemClass::setSource(EventSource src) {
   uint8_t gen;
   switch (src) {
     case EVENT_ANALOG_COMP:  gen = EVSYS_CHANNEL_AC0_OUT_gc;  break;
-    #if defined(WAZAMONO_AVR_KUNAI)
+    #if defined(ARDUINO_AVR_KUNAI)
     case EVENT_CUSTOM_LOGIC: gen = EVSYS_CHANNEL_CCL_LUT0_gc; break;
     #else
     case EVENT_CUSTOM_LOGIC: gen = EVSYS_CHANNEL_CCL_LUT2_gc; break;

@@ -438,7 +438,7 @@ void usb_min_init(void) {
      * externally (configuration 3s, datasheet directs
      * USBVREG = 0). Selected per board by build_wazamono.sh/.bat via VREG=0/1
      * (VREG=1 -> -DUSB_VREG_INTERNAL, see Makefile); the board tag macro
-     * (WAZAMONO_AVR_x) now only selects the USB descriptor identity and no
+     * (ARDUINO_AVR_x) now only selects the USB descriptor identity and no
      * longer implies a power configuration.
      * NOTE: VREG operation additionally relies on the USBSINK fuse staying
      * enabled (FUSE.SYSCFG1 bit 3, factory default 1, recommended enabled

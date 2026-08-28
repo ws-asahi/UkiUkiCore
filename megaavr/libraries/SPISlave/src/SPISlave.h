@@ -48,8 +48,8 @@
 
 #include <Arduino.h>
 
-#if !defined(WAZAMONO_AVR_TACHI) && !defined(WAZAMONO_AVR_KUNAI)
-  #if defined(WAZAMONO_AVR_TSURUGI)
+#if !defined(ARDUINO_AVR_TACHI) && !defined(ARDUINO_AVR_KUNAI)
+  #if defined(ARDUINO_AVR_TSURUGI)
     #error "SPISlave: the Tsurugi's hardware SS position (PD7) is the AREF pin - SPI client mode is not available on this board."
   #else
     #error "SPISlave supports the Wazamono Tachi and Kunai only."

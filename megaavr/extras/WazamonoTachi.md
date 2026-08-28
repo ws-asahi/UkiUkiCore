@@ -294,15 +294,14 @@
 
 | マクロ | 定義元 | 用途 |
 |--------|--------|------|
-| `WAZAMONO_AVR_TACHI` | variant(`pins_arduino.h`) | **ボード識別(正式)**。Tsurugi / Kunai は `WAZAMONO_AVR_TSURUGI` / `WAZAMONO_AVR_KUNAI` |
-| `ARDUINO_WAZAMONO_AVR_TACHI` | Arduino ビルドシステム(`boards.txt` の `build.board`) | Arduino 慣例の `ARDUINO_<board>` 形式 |
+| `ARDUINO_AVR_TACHI` | Arduino ビルドシステム(`boards.txt` の `build.board=AVR_TACHI`)。IDE 外ビルド用に variant にもフォールバック定義あり | **ボード識別**(Arduino 慣例の `ARDUINO_<board>` 形式、`ARDUINO_AVR_PROMICRO` 相当)。Tsurugi / Kunai は `ARDUINO_AVR_TSURUGI` / `ARDUINO_AVR_KUNAI` |
 | `__AVR_AVR64DU32__` | コンパイラ(`-mmcu`) | MCU 識別(`__AVR_ATmega32U4__` 相当)。Kunai は `__AVR_AVR32DU20__` |
 | `__AVR_DU__` / `_AVR_FAMILY` / `_AVR_PINCOUNT` | コア(`core_devices.h`) | ファミリ `"DU"` / ピン数 `32` |
 
 ```cpp
-#if defined(WAZAMONO_AVR_TACHI)
+#if defined(ARDUINO_AVR_TACHI)
   // Tachi 固有の処理
-#elif defined(WAZAMONO_AVR_TSURUGI)
+#elif defined(ARDUINO_AVR_TSURUGI)
   // Tsurugi 固有の処理
 #endif
 ```

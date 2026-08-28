@@ -318,13 +318,12 @@ Tsurugi は **2 系統の電源入力**を持ち、いずれからでも 5V を�
 
 | マクロ | 定義元 | 用途 |
 |--------|--------|------|
-| `WAZAMONO_AVR_TSURUGI` | variant(`pins_arduino.h`) | **ボード識別(正式)**。他ボードは `WAZAMONO_AVR_TACHI` / `WAZAMONO_AVR_TSURUGI` / `WAZAMONO_AVR_KUNAI` |
-| `ARDUINO_WAZAMONO_AVR_TSURUGI` | Arduino ビルドシステム(`boards.txt` の `build.board`) | Arduino 慣例の `ARDUINO_<board>` 形式 |
+| `ARDUINO_AVR_TSURUGI` | Arduino ビルドシステム(`boards.txt` の `build.board=AVR_TSURUGI`)。IDE 外ビルド用に variant にもフォールバック定義あり | **ボード識別**(Arduino 慣例の `ARDUINO_<board>` 形式、`ARDUINO_AVR_PROMICRO` 相当)。他ボードは `ARDUINO_AVR_TACHI` / `ARDUINO_AVR_TSURUGI` / `ARDUINO_AVR_KUNAI` |
 | `__AVR_AVR64DU32__` | コンパイラ(`-mmcu`) | MCU 識別(`__AVR_ATmega32U4__` 相当) |
 | `__AVR_DU__` / `_AVR_FAMILY` / `_AVR_PINCOUNT` | コア(`core_devices.h`) | ファミリ `"DU"` / ピン数 `32` |
 
 ```cpp
-#if defined(WAZAMONO_AVR_TSURUGI)
+#if defined(ARDUINO_AVR_TSURUGI)
   // Tsurugi 固有の処理
 #endif
 ```

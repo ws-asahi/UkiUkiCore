@@ -31,7 +31,7 @@
 
 #include <Arduino.h>
 
-#if defined(WAZAMONO_AVR_KUNAI)
+#if defined(ARDUINO_AVR_KUNAI)
 
 extern "C" { __attribute__((used)) char wazamono_kunai_variant_keep = 0; }
 
@@ -68,4 +68,4 @@ void usb_cdc_on_led_tick(void) {
 
 } /* extern "C" */
 
-#endif /* WAZAMONO_AVR_KUNAI */
+#endif /* ARDUINO_AVR_KUNAI */

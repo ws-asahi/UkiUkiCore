@@ -131,7 +131,7 @@
 | D1 | PA4 | A13 | AIN24 | **TX**(Serial1) / **MISO**(SPI1)|
 | D2 | PA2 | A14 | AIN22 | **SDA**(I2C) |
 | D3 | PA3 | A15 | AIN23 | ~PWM(TCB1 WO) / **SCL**(I2C) |
-| D4 | PF4 | A6 | AIN20 | - |
+| D4 | PC3 | A6 | AIN31 | ~PWM(TCB1 + LUT1) |
 | D5 | PD0 | A16 | AIN0 | ~PWM(TCA0 WO0) / **IN0**(CustomLogic) |
 | D6 | PD1 | A7 | AIN1 | ~PWM(TCA0 WO1) / **IN1**(CustomLogic) |
 | D7 | PA6 | A17 | AIN26 | ~PWM(TCB1 + LUT0) / **XCK**(Serial1)/ **CLK**(SPI1) |
@@ -141,15 +141,18 @@
 | D14 | PD5 | A18 | AIN5 | ~PWM(TCA0 WO5) / **MISO**(SPI) |
 | D15 | PD6 | A19 | AIN6 | **SCK**(SPI) / **TX**(Serial2) |
 | D16 | PD4 | A20 | AIN4 | ~PWM(TCA0 WO4) / SPI **MOSI** |
-| D17 | PF3 | A21 | AIN19 | **LED_BUILTIN_RX**(USB-CDCと連動) / **OUT**(CustomLogic1) |
+| D17 | PF3 | A21 | AIN19 | **LED_BUILTIN**(基板上ユーザー LED) / **OUT**(CustomLogic1) |
 | A0 | PD7 | D18 | AIN7 | SPI **SS** / **RX**(Serial2) / **AREF** |
 | A1 | PF0 | D19 | AIN16 | **IN0**(CustomLogic1) |
 | A2 | PF1 | D20 | AIN17 | **IN1**(CustomLogic1) |
 | A3 | PF2 | D21 | AIN18 | **IN2**(CustomLogic1) / EVOUTF |
-| D30 | PC3 | A34 | AIN31 | **LED_BUILTIN_TX**(USB-CDCと連動) / ~PWM(TCB1 + LUT1)|
+| A4 | PF4 | D22 | AIN20 | テストパッド TP1(ヘッダなし) |
+| A5 | PF5 | D23 | AIN21 | テストパッド TP2(ヘッダなし) |
+| D30 | PA0 | - | - | **LED_BUILTIN_TX**(USB-CDC と連動) |
+| D31 | PA1 | - | - | **LED_BUILTIN_RX**(USB-CDC と連動) |
 
 > 
-> **D3 / D7 / D30 の PWM は択一**です。  
+> **D3 / D4 / D7 の PWM は択一**です。  
 > 1 本の TCB1 波形をいずれかのピンに出し分ける構造のため、最後に `analogWrite()` したピンが出口になります(既定は D3)。  
 > 3 本同時に異なる PWM は出せません。周波数・デューティは 3 ピンで共通です。  
 > tone などで TCB1 を使用する時は 3 つとも PWM が無効化されます。  
@@ -157,7 +160,8 @@
 > **A0 / D18 は AREF または SPI SS (スレーブ側) として使用できます**。  
 > それぞれの機能は排他利用です。  
 > 
-> D17,D30は物理ピンを持ちません。  
+> D17 / D30 / D31 は物理ピンを持ちません(基板上 LED)。A4 / A5 はヘッダに出ておらず、裏面テストパッドのみです。  
+> D30 / D31(PA0 / PA1)は ADC チャネルを持ちません。  
 > 
 
 ---
@@ -214,19 +218,20 @@
 ### PWM(`analogWrite()`)
 
 - **D5 / D6 / D9 / D10 / D14 / D16** - TCA0
-- **D3 / D7 / D30** - TCB1 の 8bit PWM 波形を LUT もしくは直接出力(排他使用)
-- Pro Micro に対して PD14 / D16 へ PWM 機能が追加されており、D3 を使用しない時は D7 または D30 でPWMを出力できます。
+- **D3 / D4 / D7** - TCB1 の 8bit PWM 波形を直接(D3)または CCL LUT 経由(D4: LUT1、D7: LUT0)で出力(排他使用)
+- Pro Micro に対して D14 / D16 へ PWM 機能が追加されており、D3 を使用しない時は D4 または D7 で PWM を出力できます。
 
 > 
-> **排他 PWM:** TCB1 が他の用途に使われている間、`analogWrite(D3)`(またはD7, D30) は PWM をあきらめて単純な HIGH/LOW 出力(127 を閾値)に切り替わります。  
-> `tone()` は TCB1 を使うため、実行中は D3, D7, D30 の PWM が停止します。  
+> **排他 PWM:** TCB1 が他の用途に使われている間、`analogWrite(D3)`(または D4, D7) は PWM をあきらめて単純な HIGH/LOW 出力(127 を閾値)に切り替わります。  
+> `tone()` は TCB1 を使うため、実行中は D3, D4, D7 の PWM が停止します。  
 > これは Pro Micro の Timer3(`tone()` 実行中は D5 が停止)に相当する挙動です。  
 > 
 
 ### アナログ入力
 
 - シルク表記の **A0–A3**(= D18–D21)
-- 各デジタルピンも ADC チャネルを持ち、A6–A21 として参照可能
+- **A4 / A5**(= D22 / D23)は裏面テストパッド TP1 / TP2 のみ(SparkFun Pro Micro の A4 / A5 = 22 / 23 と番号互換)
+- 各デジタルピンも ADC チャネルを持ち、A6–A21 として参照可能(D30 / D31 を除く)
 
 ---
 
@@ -261,11 +266,12 @@
 | 部品 | 色 | 接続 | 用途 |
 |------|----|----|------|
 | 電源 LED | 黄緑 | 電源ライン | 通電表示 |
-| LED_BUILTIN_RX | 橙 | D17(Active-LOW) | USB-CDC 送信アクティビティ |
-| LED_BUILTIN_TX | 橙 | D30(Active-LOW) | USB-CDC 送信アクティビティ |
+| LED_BUILTIN | 橙 | D17 = PF3(Active-LOW) | ユーザー LED(コアは触りません) |
+| LED_BUILTIN_TX | 橙 | D30 = PA0(Active-LOW) | USB-CDC 送信アクティビティ |
+| LED_BUILTIN_RX | 橙 | D31 = PA1(Active-LOW) | USB-CDC 受信アクティビティ |
 
 > 
-> Rx / Tx LED は CDC 受信の瞬間に約 100ms のパルスで点灯し、スケッチからの `digitalWrite(D17, ...)` と共存します。  
+> Rx / Tx LED は CDC 送受信の瞬間に約 100ms のパルスで点灯し、スケッチからの `digitalWrite(D30, ...)` / `digitalWrite(D31, ...)` と共存します。  
 > Pro Micro 系スケッチ互換の `TXLED1`/`TXLED0`/`RXLED1`/`RXLED0` マクロ(1=点灯、0=消灯)も定義済みです。  
 > USB-CDC の通信中は約 100ms のアクティビティパルスが variant 側から上書きされる点も 32U4 コアと同じ挙動です。  
 > 
@@ -281,6 +287,25 @@
 初回のみ、または USB ブートローダを書き込み直す場合は、UPDI プログラマ(PICkit 4/5、Atmel-ICE、jtag2updi 等)を UPDI パッドに接続して書き込みます。
 
 <sub>開発用 VID/PID は pid.codes のテスト範囲(アプリ `0x1209:0x0006` / ブートローダ `0x1209:0x0005`)を使用しています。</sub>
+
+---
+
+## ボード / MCU 識別マクロ
+
+| マクロ | 定義元 | 用途 |
+|--------|--------|------|
+| `WAZAMONO_AVR_TACHI` | variant(`pins_arduino.h`) | **ボード識別(正式)**。Tsurugi / Kunai は `WAZAMONO_AVR_TSURUGI` / `WAZAMONO_AVR_KUNAI` |
+| `ARDUINO_WAZAMONO_AVR_TACHI` | Arduino ビルドシステム(`boards.txt` の `build.board`) | Arduino 慣例の `ARDUINO_<board>` 形式 |
+| `__AVR_AVR64DU32__` | コンパイラ(`-mmcu`) | MCU 識別(`__AVR_ATmega32U4__` 相当)。Kunai は `__AVR_AVR32DU20__` |
+| `__AVR_DU__` / `_AVR_FAMILY` / `_AVR_PINCOUNT` | コア(`core_devices.h`) | ファミリ `"DU"` / ピン数 `32` |
+
+```cpp
+#if defined(WAZAMONO_AVR_TACHI)
+  // Tachi 固有の処理
+#elif defined(WAZAMONO_AVR_TSURUGI)
+  // Tsurugi 固有の処理
+#endif
+```
 
 ---
 

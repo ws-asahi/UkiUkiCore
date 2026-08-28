@@ -62,9 +62,10 @@
  *           analogWrite(D3) then falls back to plain digital output.
  *   SPI0  -> ALT4 (PD4 MOSI / PD5 MISO / PD6 SCK = D11/D12/D13). Board is SPI host;
  *           default CS exposed as PIN_SPI_SS = PD3 (D10, Uno convention). The ALT4
- *           hardware SS is PD7 (= AREF here); run SPI host with Client Select
- *           Disable (SPI0.CTRLB.SSD = 1) so the AREF level cannot flip host ->
- *           client mode.
+ *           hardware SS is PD7 (= AREF here, PIN_SPI_SS_HARDWARE); run SPI host
+ *           with Client Select Disable (SPI0.CTRLB.SSD = 1) so the AREF level
+ *           cannot flip host -> client mode. SPI client mode (SPISlave library)
+ *           uses PD7 as SS - exclusive with AREF, GPIO D20/A20 and Serial2 RX.
  *   TWI0  -> default (PA2 SDA / PA3 SCL) = D18/D19 = A4/A5 (Uno I2C convention).
  *   USART0-> "Serial1", ALT1 (PA4 TX / PA5 RX) = D1/D0. The Uno R3 D0/D1 UART,
  *           named Serial1 to match the Uno R4 convention (WAZAMONO_SERIAL1_IS_
@@ -263,6 +264,8 @@
 #define PIN_SPI_MISO                    (PIN_PD5)   // D12
 #define PIN_SPI_SCK                     (PIN_PD6)   // D13
 #define PIN_SPI_SS                      (PIN_PD3)   // D10 (Uno convention; software CS, host mode)
+#define PIN_SPI_SS_HARDWARE             (PIN_PD7)   // D20 = AREF: the ALT4 SS pin itself (client mode / SPISlave;
+                                                    //   exclusive with AREF, GPIO D20/A20 and Serial2 RX)
 #define PIN_SPI_MOSI_PINSWAP_4          (PIN_PD4)
 #define PIN_SPI_MISO_PINSWAP_4          (PIN_PD5)
 #define PIN_SPI_SCK_PINSWAP_4           (PIN_PD6)

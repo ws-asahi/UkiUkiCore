@@ -33,9 +33,16 @@
  *   - Reply bytes beyond setData()'s length are sent as 0x00, matching the
  *     ESP8266 library's zero-fill behaviour.
  *
- * Supported boards: Wazamono Tachi (SS = PD7 = D18 = A0) and Wazamono Kunai
- * (SS = D1/PA7). The Tsurugi routes the hardware SS position to its AREF
- * pin, so client mode is not offered there.
+ * Supported boards (SS = the hardware SS pin of the board's SPI0 position,
+ * PIN_SPI_SS_HARDWARE - not necessarily PIN_SPI_SS, which is the host-mode CS):
+ *   Tachi    SS = PD7 = D18 (A0)     SPI0 ALT4   MOSI D16 / MISO D14 / SCK D15
+ *   Tsurugi  SS = PD7 = D20 = AREF   SPI0 ALT4   MOSI D11 / MISO D12 / SCK D13
+ *   Kunai    SS = PA7 = D1           SPI0 DEFAULT MOSI D10 / MISO D9  / SCK D8
+ * Tsurugi: the AREF header pin IS the SS input while SPISlave is active, so
+ * it is exclusive with an external analog reference (analogReference(EXTERNAL)),
+ * with GPIO/analog use of D20/A20, and with Serial2 (whose RX is PD7 and whose
+ * TX PD6 is SCK). begin() enables the pull-up on it; nothing else about the
+ * pin is changed, so remove any shield reference voltage from AREF first.
  *
  * Callbacks run in interrupt context: keep them short, and declare data they
  * share with loop() as volatile. Using this library and SPI.h (host mode) on
@@ -48,12 +55,17 @@
 
 #include <Arduino.h>
 
-#if !defined(ARDUINO_AVR_TACHI) && !defined(ARDUINO_AVR_KUNAI)
-  #if defined(ARDUINO_AVR_TSURUGI)
-    #error "SPISlave: the Tsurugi's hardware SS position (PD7) is the AREF pin - SPI client mode is not available on this board."
-  #else
-    #error "SPISlave supports the Wazamono Tachi and Kunai only."
-  #endif
+#if !defined(ARDUINO_AVR_TACHI) && !defined(ARDUINO_AVR_TSURUGI) && !defined(ARDUINO_AVR_KUNAI)
+  #error "SPISlave supports the Wazamono Tachi, Tsurugi and Kunai only."
+#endif
+
+/* The SS input of client mode is the SPI0 position's own SS pin. Variants
+ * export it as PIN_SPI_SS_HARDWARE; PIN_SPI_SS may instead be the host-mode
+ * software CS (Tsurugi: D10), which the hardware does not look at. */
+#if defined(PIN_SPI_SS_HARDWARE)
+  #define SPISLAVE_SS_PIN (PIN_SPI_SS_HARDWARE)
+#else
+  #define SPISLAVE_SS_PIN (PIN_SPI_SS)
 #endif
 
 /* Receive/transmit buffer size in bytes (one transaction each way). The

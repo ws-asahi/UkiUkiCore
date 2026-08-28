@@ -5,7 +5,7 @@
  * client's staged answer in a second transaction.
  *
  * Connect MOSI/MISO/SCK to the client's SPI pins, CS_PIN to the client's SS
- * (Tachi: A0/D18, Kunai: D1), and join GND.
+ * (Tachi: A0/D18, Tsurugi: AREF/D20, Kunai: D1), and join GND.
  *
  * The client stages its reply from onData() - i.e. after the question's
  * transaction has ended - so the answer is fetched with a separate read

@@ -16,7 +16,7 @@
  *     goes straight to the shift register (BUFWR = 1), the second waits in
  *     the transmit buffer.
  *   - Transaction framing comes from the SS pin itself: a rising edge on
- *     PIN_SPI_SS (attachInterrupt) marks the end, fires the callbacks, and
+ *     SPISLAVE_SS_PIN (attachInterrupt) marks the end, fires the callbacks, and
  *     re-stages the reply for the next transaction. The SPI hardware has no
  *     "deselected" interrupt of its own (SSIF only flags a Host-mode demotion,
  *     26.5.6), which is why the port interrupt is used.
@@ -126,18 +126,19 @@ void SPISlaveClass::begin(uint8_t dataMode) {
   if (s_running) {
     end();
   }
-  /* Pin positions: the variant's fixed SPI location (Tachi ALT4, Kunai
-   * DEFAULT). Only the SPI0 field of SPIROUTEA is touched. */
+  /* Pin positions: the variant's fixed SPI location (Tachi/Tsurugi ALT4,
+   * Kunai DEFAULT). Only the SPI0 field of SPIROUTEA is touched. */
   PORTMUX.SPIROUTEA = (PORTMUX.SPIROUTEA & ~PORTMUX_SPI0_gm) | SPI_MUX;
 
   /* Table 26-1 (Client mode): MISO is the one pin whose direction the user
    * must set; MOSI/SCK/SS are inputs. While SS is high the hardware releases
    * MISO. A pull-up on SS keeps the client deselected if the host side is
-   * absent or its CS line is not yet driven. */
+   * absent or its CS line is not yet driven. SS is the position's own SS
+   * pin (SPISLAVE_SS_PIN) - on Tsurugi that is the AREF header pin. */
   pinMode(PIN_SPI_MISO, OUTPUT);
   pinMode(PIN_SPI_MOSI, INPUT);
   pinMode(PIN_SPI_SCK,  INPUT);
-  pinMode(PIN_SPI_SS,   INPUT_PULLUP);
+  pinMode(SPISLAVE_SS_PIN,   INPUT_PULLUP);
 
   s_rx_len = 0;
   s_tx_len = 0;
@@ -160,7 +161,7 @@ void SPISlaveClass::begin(uint8_t dataMode) {
   _spislave_prime();
 
   /* Transaction framing: SS returning high ends the exchange. */
-  attachInterrupt(PIN_SPI_SS, _spislave_ss_rising, RISING);
+  attachInterrupt(SPISLAVE_SS_PIN, _spislave_ss_rising, RISING);
   s_running = true;
 }
 
@@ -168,7 +169,7 @@ void SPISlaveClass::end(void) {
   if (!s_running) {
     return;
   }
-  detachInterrupt(PIN_SPI_SS);
+  detachInterrupt(SPISLAVE_SS_PIN);
   SPI0.INTCTRL = 0;
   SPI0.CTRLA   = 0;
   SPI0.CTRLB   = 0;
@@ -189,7 +190,7 @@ void SPISlaveClass::setData(uint8_t *data, size_t len) {
    * bytes replace the previously primed ones in the hardware (BUFWR = 1
    * writes while SS is high overwrite the shift register, 26.3.2.2.1).
    * Mid-transaction, the new reply takes effect from the next SS cycle. */
-  if (s_running && (digitalRead(PIN_SPI_SS) == HIGH)) {
+  if (s_running && (digitalRead(SPISLAVE_SS_PIN) == HIGH)) {
     s_tx_pos = 0;
     _spislave_prime();
   }

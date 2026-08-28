@@ -199,6 +199,7 @@
 >  
 > **クライアント(受信側)動作:** ハードウェア SS(AREF) が実ピンにあるため、  
 > 付属の **SPISlave ライブラリ**（ESP8266 互換 API）で SPI スレーブとしても動作できます。  
+> その間 AREF ピンは SS 入力となり、外部基準電圧(`analogReference(EXTERNAL)`)・GPIO D20/A20・Serial2 とは排他です。  
 >  
 > 詳細は [libraries/SPISlave](../libraries/SPISlave/README.md) を参照。  
 >  

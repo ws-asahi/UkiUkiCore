@@ -296,6 +296,7 @@
 #define PIN_SPI_MISO                    (PIN_PD5)   // D14
 #define PIN_SPI_SCK                     (PIN_PD6)   // D15
 #define PIN_SPI_SS                      (PIN_PD7)   // D18 (hardware SS; host mode -> user GPIO)
+#define PIN_SPI_SS_HARDWARE             (PIN_PD7)   // the ALT4 SS pin itself (client mode / SPISlave)
 
 // TWI 0  (Grove I2C)
 #define PIN_WIRE_SDA                    (PIN_PA2)   // D2

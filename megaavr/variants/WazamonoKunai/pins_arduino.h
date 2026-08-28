@@ -208,6 +208,7 @@
 #define PIN_SPI_MISO                    (PIN_PA5)   // D9
 #define PIN_SPI_SCK                     (PIN_PA6)   // D8
 #define PIN_SPI_SS                      (PIN_PA7)   // D1 (hardware SS position; host mode + SSD=1, software CS)
+#define PIN_SPI_SS_HARDWARE             (PIN_PA7)   // the DEFAULT-position SS pin itself (client mode / SPISlave)
 
 /* ---- TWI 0 (I2C on A4/A5 = D4/D5, XIAO convention; TWI0 DEFAULT position) ---- */
 #define PIN_WIRE_SDA                    (PIN_PA2)   // D4 / A4

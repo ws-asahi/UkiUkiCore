@@ -8,10 +8,13 @@ API は **ESP8266 Arduino コアに同梱されている SPISlave ライブラ�
 
 | ボード | SS ピン | SPI 位置 |
 |--------|---------|----------|
-| Wazamono Tachi | D18（PD7） | SPI0 ALT4（MOSI=D16 / MISO=D14 / SCK=D15） |
+| Wazamono Tachi | A0 / D18（PD7） | SPI0 ALT4（MOSI=D16 / MISO=D14 / SCK=D15） |
+| Wazamono Tsurugi | **AREF** / D20（PD7） | SPI0 ALT4（MOSI=D11 / MISO=D12 / SCK=D13） |
 | Wazamono Kunai | D1（PA7） | SPI0 既定（MOSI=D10 / MISO=D9 / SCK=D8） |
 
-> Wazamono Tsurugi はハードウェア SS の位置（PD7）が AREF ピンのためクライアントモードを提供しません（コンパイルエラーになります）。
+SS は各ボードの SPI0 位置が持つ**ハードウェア SS ピン**（variant の `PIN_SPI_SS_HARDWARE`）です。ホストモード用の `PIN_SPI_SS`（Tsurugi では D10 のソフトウェア CS）とは異なる場合があります。
+
+> **Tsurugi の注意:** ハードウェア SS は **AREF ヘッダピン**です。SPISlave 動作中は AREF が SS 入力になるため、外部基準電圧（`analogReference(EXTERNAL)` / シールドからの AREF 供給）、GPIO/アナログとしての D20/A20、および Serial2（RX=PD7、TX=PD6=SCK）とは**排他**です。`begin()` は AREF にプルアップを有効にします。ホストの CS 線を AREF ピンに接続してください。
 
 ## 使い方
 

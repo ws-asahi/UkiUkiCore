@@ -10,9 +10,9 @@
  *   IN2 = this unit's own output   <- LOGIC_OWN_OUTPUT, no pin used
  *
  * Wiring (buttons to GND - the inputs are pulled up, so pressed = LOW):
- *   SET   -> IN0: Tachi A3 / Tsurugi D5  / Kunai D4
- *   RESET -> IN1: Tachi A2 / Tsurugi D6  / Kunai D5
- *   LED   -> OUT: Tachi A0 / Tsurugi D10 / Kunai D2
+ *   SET   -> IN0: Tachi D5 / Tsurugi D5  / Kunai D4
+ *   RESET -> IN1: Tachi D6 / Tsurugi D6  / Kunai D5
+ *   LED   -> OUT: Tachi D10 / Tsurugi D10 / Kunai D2
  *
  * The truth table below says: if SET is pressed the output is HIGH; else if
  * RESET is pressed it is LOW; else it keeps whatever it had (its own output).

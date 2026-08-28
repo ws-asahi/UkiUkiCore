@@ -9,7 +9,7 @@
  ** MOSI - Tachi: D16 / Tsurugi: D11 / Kunai: D10
  ** MISO - Tachi: D14 / Tsurugi: D12 / Kunai: D9
  ** SCK  - Tachi: D15 / Tsurugi: D13 / Kunai: D8
- ** CS   - PIN_SPI_SS (Tachi: D4 / Tsurugi: D10 / Kunai: D0)
+ ** CS   - PIN_SPI_SS (Tachi: A0 (D18) / Tsurugi: D10 / Kunai: D1)
 
   created  22 December 2010
   by Limor Fried
@@ -23,7 +23,7 @@
 #include <SPI.h>
 #include <SD.h>
 
-const int chipSelect = PIN_SPI_SS; // Tachi: D4 / Tsurugi: D10 / Kunai: D0
+const int chipSelect = PIN_SPI_SS; // Tachi: A0 (D18) / Tsurugi: D10 / Kunai: D1
 
 void setup() {
   // Open serial communications and wait for port to open:

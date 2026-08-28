@@ -30,7 +30,7 @@
 #include <SPI.h>
 
 // Use the board's SS pin as the slave select for the digital pot; any free pin can be used.
-const int slaveSelectPin = PIN_SPI_SS; // Tachi: D4 / Tsurugi: D10 / Kunai: D0
+const int slaveSelectPin = PIN_SPI_SS; // Tachi: A0 (D18) / Tsurugi: D10 / Kunai: D1
 
 void setup() {
   // set the slaveSelectPin as an output:

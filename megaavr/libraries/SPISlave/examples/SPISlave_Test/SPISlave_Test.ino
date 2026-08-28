@@ -1,6 +1,6 @@
 /* SPISlave_Test - Wazamono SPI client ("slave") demo.
  *
- * Runs on a Wazamono Tachi (SS = D4) or Kunai (SS = D1) and answers questions
+ * Runs on a Wazamono Tachi (SS = A0/D18) or Kunai (SS = D1) and answers questions
  * from an SPI host. Pair it with the SPISlave_Host example on a second board.
  * The flow mirrors the SPISlave_Test example of the ESP8266 Arduino core.
  *
@@ -8,7 +8,7 @@
  *   MOSI <- host MOSI     Tachi: D16 / Kunai: D10
  *   MISO -> host MISO     Tachi: D14 / Kunai: D9
  *   SCK  <- host SCK      Tachi: D15 / Kunai: D8
- *   SS   <- host CS pin   Tachi: D4  / Kunai: D1
+ *   SS   <- host CS pin   Tachi: A0 (D18) / Kunai: D1
  *   GND  -- GND
  *
  * Callbacks run in interrupt context: this sketch only copies data there and

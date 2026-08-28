@@ -8,16 +8,16 @@
  * Output pins of the CustomLogic unit (event-output pins are FIXED per
  * board by its pin-configuration table):
  *                   OUT           OUT (alt)     event outputs
- *   Tachi           A0  (PD3)     D1  (PD6)     D2, D0, D7
- *   Tsurugi         D10 (PD3)     D13 (PD6)     D8, D9, A2
- *   Kunai           D2  (PA3)     D8  (PA6)     D0, D7
+ *   Tachi           D10 (PD3)     D15 (PD6)     D8, D9, A3
+ *   Tsurugi         D10 (PD3)     D13 (PD6)     D2, D9, A2
+ *   Kunai           D2  (PA3)     D8  (PA6)     D1, D7
  *
  * setOutput(pin)  - the result appears on that pin only
  * addOutput(pin)  - ...and on this one too (dedicated pin + one pin per port)
  * disableOutput() - nowhere; the block still works for interrupts and for
  *                   feeding the other unit
  *
- * Here the AND gate drives its own OUT pin AND the event output on PA2, so
+ * Here the AND gate drives its own OUT pin AND the event output on PA7, so
  * two LEDs (or an LED and a downstream circuit) follow the same result.
  */
 #include <CustomLogic.h>
@@ -27,11 +27,11 @@ void setup() {
 
   CustomLogic.begin(AND);          // OUT pin, as usual
 
-  #if defined(WAZAMONO_AVR_TACHI)
+  #if defined(ARDUINO_AVR_TACHI)
     CustomLogic.addOutput(8);      // ...and also on D8 (PA7, EVOUTA)
-  #elif defined(WAZAMONO_AVR_TSURUGI)
+  #elif defined(ARDUINO_AVR_TSURUGI)
     CustomLogic.addOutput(2);      // ...and also on D2 (PA7, EVOUTA)
-  #elif defined(WAZAMONO_AVR_KUNAI)
+  #elif defined(ARDUINO_AVR_KUNAI)
     CustomLogic.addOutput(1);      // ...and also on D1 (PA7, EVOUTA)
   #else
     #error "This example supports Wazamono boards only."

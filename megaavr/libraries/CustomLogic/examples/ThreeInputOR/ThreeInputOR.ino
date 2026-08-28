@@ -12,7 +12,7 @@
  *
  * Pins of the CustomLogic unit:
  *            IN0        IN1        IN2        OUT
- *   Tachi    A3         A2         A1         A0
+ *   Tachi    D5         D6         D9         D10
  *   Tsurugi  D5         D6         D9         D10
  *   Kunai    D4         D5         D3         D2
  */

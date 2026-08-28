@@ -113,7 +113,7 @@ EventSystemライブラリを併用する必要はありません。
 
 ```cpp
 CustomLogic.begin(AND);
-CustomLogic.addOutput(2);      // 専用OUTピン + D2 の2箇所へ同時出力(Tachi)
+CustomLogic.addOutput(8);      // 専用OUTピン + D8 の2箇所へ同時出力(Tachi)
 // CustomLogic.setOutput(2);   // D2 のみへ出力(専用OUTピンは使わない)
 // CustomLogic.disableOutput();// どのピンにも出さない(割り込み・連結のみ)
 ```
@@ -123,7 +123,7 @@ CustomLogic.addOutput(2);      // 専用OUTピン + D2 の2箇所へ同時出力
 
 - イベントチャネルは**高番号側(CH5→)から空きを自動確保**します。EventSystemの接続
   (EventSystem=CH0から順の固定番号)や、他の手段で設定済みのチャネルは決して奪いません。
-- **代替OUTピンの注意**: Tachiでは**D1(Serial1のTX)**、Tsurugiでは**D13(SPIのSCK)**と
+- **代替OUTピンの注意**: Tachiでは**D15(SPIのSCK / Serial2のTX)**、Tsurugiでは**D13(SPIのSCK)**と
   兼用です。TsurugiのD13はオンボードLEDにオペアンプ経由で接続されているため、D13へ出力すると
   **オンボードLEDが論理結果を表示**します(SPIとは併用不可)。TsurugiのPD7はAREFのため
   イベント出力の対象外です。

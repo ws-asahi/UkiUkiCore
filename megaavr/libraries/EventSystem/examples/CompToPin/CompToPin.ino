@@ -6,11 +6,11 @@
  *
  * Wiring:
  *   the voltage to watch -> AnalogComp + input
- *                           Tachi: A1 / Tsurugi: D9* / Kunai: D6
+ *                           Tachi: D9* / Tsurugi: D9* / Kunai: D6
  *   an LED (+ resistor)  -> the event-output pin, to GND
- *                           Tachi: D2 / Tsurugi: D8 / Kunai: D0
+ *                           Tachi: D8 / Tsurugi: D2 / Kunai: D1
  *
- * (*Tsurugi: D9 doubles as the EVOUTD pin; it is free while EVOUTD is unused.)
+ * (*Tachi/Tsurugi: D9 doubles as the EVOUTD pin; it is free while EVOUTD is unused.)
  */
 #include <AnalogComp.h>
 #include <EventSystem.h>
@@ -21,11 +21,11 @@ void setup() {
   AnalogComp.begin(INTERNAL2V5);              // + input vs internal 2.5 V
   AnalogComp.setHysteresis(AC_HYST_MEDIUM);
 
-  #if defined(WAZAMONO_AVR_TACHI)
+  #if defined(ARDUINO_AVR_TACHI)
   EventSystem.connect(EVENT_ANALOG_COMP, 8);  // -> D8 (EVOUTA)
-  #elif defined(WAZAMONO_AVR_TSURUGI)
+  #elif defined(ARDUINO_AVR_TSURUGI)
   EventSystem.connect(EVENT_ANALOG_COMP, 2);  // -> D2 (EVOUTA)
-  #elif defined(WAZAMONO_AVR_KUNAI)
+  #elif defined(ARDUINO_AVR_KUNAI)
   EventSystem.connect(EVENT_ANALOG_COMP, 1);  // -> D1 (EVOUTA)
   #else
   #error "This example supports Wazamono boards only."

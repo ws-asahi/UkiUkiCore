@@ -6,7 +6,7 @@
  *
  * Default input pins:
  *            plus (+)         minus (-)
- *   Tachi    A1  (PD2)        A0  (PD3)
+ *   Tachi    D9  (PD2)        D10 (PD3)
  *   Tsurugi  D9  (PD2)        D10 (PD3)
  *   Kunai    D6  (PD6)        D7  (PD7)
  *

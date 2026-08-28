@@ -38,7 +38,7 @@ const byte WRITE        = 0b00000010;   // SCP1000's write command
 // pins used for the connection with the sensor
 // the other you need are controlled by the SPI library):
 const int dataReadyPin  = 8;           // D8: data-ready signal from the sensor
-const int chipSelectPin = PIN_SPI_SS;  // Tachi: D4 / Tsurugi: D10 / Kunai: D0
+const int chipSelectPin = PIN_SPI_SS;  // Tachi: A0 (D18) / Tsurugi: D10 / Kunai: D1
 
 void setup() {
   Serial.begin(9600);

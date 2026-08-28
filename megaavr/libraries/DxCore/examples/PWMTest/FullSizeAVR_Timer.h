@@ -23,24 +23,26 @@ const PROGMEM_MAPPED uint8_t MyTimers[] = {
  * port, PORTA..PORTG, so the index is 6*mux + channel). The DU routes TCA0
  * only to PORTA, PORTC (WO3 = PC3 only), PORTD and PORTF; the other rows are
  * padding so that indexing matches the PORTMUX register values.
- * PC3 is deliberately excluded: it is the VBUS divider input on Tachi/Kunai
- * on Tachi/Kunai, so PWM must not be driven there (on Tsurugi PC3 = D7, a
- * plain GPIO, but TCA0 is muxed to PORTD so it is not a PWM pin anyway).
+ * PC3 (Tachi D4 / Tsurugi D7 / Kunai D0) is a plain header GPIO on every
+ * board, so the PORTC row lists it as WO3.
+ * PA0/PA1: on Tsurugi they carry the crystal; on Tachi they drive the on-board
+ * TX/RX activity LEDs (D30/D31), which the CDC stack also toggles - both are
+ * excluded here. On Kunai they are free GPIO (D4/D5).
  */
 const PROGMEM_MAPPED uint8_t TCA0pinsets[] = {
   /* PORTA (mux 0) */
-  #if defined(WAZAMONO_AVR_KUNAI)
+  #if defined(ARDUINO_AVR_KUNAI)
     PIN_PA0,   PIN_PA1,    /* D4, D5 - internal oscillator, pins are free */
   #else
-    NOT_A_PIN, NOT_A_PIN,  /* PA0/PA1 carry the 24 MHz crystal on Tachi/Tsurugi */
+    NOT_A_PIN, NOT_A_PIN,  /* PA0/PA1: crystal on Tsurugi, on-board LEDs on Tachi */
   #endif
   PIN_PA2,   PIN_PA3,   PIN_PA4,   PIN_PA5,
   /* PORTB (mux 1) - no PORTB on the DU-series */
   NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN,
-  /* PORTC (mux 2) - only WO3 = PC3 exists, and it is reserved on all boards */
-  NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN,
+  /* PORTC (mux 2) - only WO3 = PC3 exists (Tachi D4 / Tsurugi D7 / Kunai D0) */
+  NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, PIN_PC3,   NOT_A_PIN, NOT_A_PIN,
   /* PORTD (mux 3) */
-  #if defined(WAZAMONO_AVR_KUNAI)
+  #if defined(ARDUINO_AVR_KUNAI)
     NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, /* PD0-PD3 not bonded out on Kunai */
   #else
     PIN_PD0,   PIN_PD1,   PIN_PD2,   PIN_PD3,
@@ -49,7 +51,7 @@ const PROGMEM_MAPPED uint8_t TCA0pinsets[] = {
   /* PORTE (mux 4) - no PORTE on the DU-series */
   NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN,
   /* PORTF (mux 5) */
-  #if defined(WAZAMONO_AVR_KUNAI)
+  #if defined(ARDUINO_AVR_KUNAI)
     NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, NOT_A_PIN, /* PF0-PF5 not bonded out on Kunai */
   #else
     PIN_PF0,   PIN_PF1,   PIN_PF2,   PIN_PF3,   PIN_PF4,   PIN_PF5,
@@ -63,15 +65,15 @@ const PROGMEM_MAPPED uint8_t TCA0pinsets[] = {
  */
 const PROGMEM_MAPPED uint8_t TCBpinsets[] = {
   PIN_PA2,                /* TCB0 default WO (Tachi: D2 / Tsurugi: D18 / Kunai: D3) */
-  #if defined(WAZAMONO_AVR_KUNAI)
+  #if defined(ARDUINO_AVR_KUNAI)
     NOT_A_PIN,            /* TCB0 alt WO = PF4, not bonded out on Kunai */
   #else
-    PIN_PF4,              /* TCB0 alt WO (Tachi: D9 / Tsurugi: D4) */
+    PIN_PF4,              /* TCB0 alt WO (Tachi: A4 / Tsurugi: D8) */
   #endif
   PIN_PA3,                /* TCB1 default WO (Tachi: D3 / Tsurugi: D19 / Kunai: D2) */
-  #if defined(WAZAMONO_AVR_KUNAI)
+  #if defined(ARDUINO_AVR_KUNAI)
     NOT_A_PIN,            /* TCB1 alt WO = PF5, not bonded out on Kunai */
   #else
-    PIN_PF5,              /* TCB1 alt WO (Tachi: D10 / Tsurugi: D3) */
+    PIN_PF5,              /* TCB1 alt WO (Tachi: A5 / Tsurugi: D7) */
   #endif
 };

@@ -4,7 +4,7 @@
  * between - it keeps working even while your sketch is busy or sleeping.
  *
  * Output pin (fixed by hardware): PA7
- *   Tachi: D4 / Tsurugi: D8 / Kunai: D0
+ *   Tachi: D8 / Tsurugi: D2 / Kunai: D1
  *
  * Wire an LED (with a resistor) to the output pin and vary the voltage
  * on the plus input pin around 1.02 V to see it switch.

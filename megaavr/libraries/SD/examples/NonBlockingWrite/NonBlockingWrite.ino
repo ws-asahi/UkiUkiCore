@@ -12,7 +12,7 @@
 
   The circuit:
   - Wazamono board with a micro SD card module on the SPI bus
-    (CS on PIN_SPI_SS: Tachi D4 / Tsurugi D10 / Kunai D0)
+    (CS on PIN_SPI_SS: Tachi A0/D18 / Tsurugi D10 / Kunai D1)
 
   This example code is in the public domain.
 */

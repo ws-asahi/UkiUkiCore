@@ -4,7 +4,7 @@
  * no external divider needed. Here the threshold is 2.5 V: the built-in
  * LED turns on while the plus pin is above it.
  *
- * Plus input pin: Tachi A1 / Tsurugi D9 / Kunai D6
+ * Plus input pin: Tachi D9 / Tsurugi D9 / Kunai D6
  * Pass the same constants used with analogReference(): INTERNAL1V024,
  * INTERNAL2V048, INTERNAL2V5, INTERNAL4V096, VDD or EXTERNAL. An optional
  * second argument scales the threshold: Vth = Vref * level / 256.
@@ -18,7 +18,7 @@ void setup() {
 }
 
 void loop() {
-  // Note: LED_BUILTIN is active-LOW on Tachi, so "on" and "off" are swapped there.
+  // Note: LED_BUILTIN is active-LOW on Tachi/Kunai, so "on" and "off" are swapped there.
   digitalWrite(LED_BUILTIN, AnalogComp.read() ? HIGH : LOW);
   delay(10);
 }

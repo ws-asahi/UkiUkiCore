@@ -18,20 +18,22 @@
  * Units and pins (fixed by the CCL hardware):
  *                 IN0        IN1        IN2        OUT        OUT (alt)
  *   CustomLogic
- *     Tachi       A3 (PD0)   A2 (PD1)   A1 (PD2)   A0 (PD3)   D1  (PD6)
+ *     Tachi       D5 (PD0)   D6 (PD1)   D9 (PD2)   D10 (PD3)  D15 (PD6)
  *     Tsurugi     D5 (PD0)   D6 (PD1)   D9 (PD2)   D10 (PD3)  D13 (PD6)
  *     Kunai       D4 (PA0)   D5 (PA1)   D3 (PA2)   D2 (PA3)   D8  (PA6)
  *   CustomLogic1  (not available on Kunai)
- *     Tachi       D5 (PF0)   D6 (PF1)   D7 (PF2)   D8 (PF3)   -
+ *     Tachi       A1 (PF0)   A2 (PF1)   A3 (PF2)   D17 (PF3)  -
  *     Tsurugi     A0 (PF0)   A1 (PF1)   A2 (PF2)   A3 (PF3)   -
+ *   (Tachi: CustomLogic1's OUT = D17 is the on-board LED_BUILTIN, active-LOW,
+ *    with no header pin; use setOutput()/addOutput() for an external signal.)
  *
  * The result can also be sent to the event-output pins - setOutput()/
  * addOutput() take care of the event system for you. These pins are FIXED
  * per board (one pin per event output, from the pin-configuration table):
  *                 EVOUTA        EVOUTD        EVOUTF
- *     Tachi       D2  (PA2)     D0 (PD7)      D7 (PF2)
- *     Tsurugi     D8  (PA7)     D9 (PD2)      A2 (PF2)
- *     Kunai       D0  (PA7)     D7 (PD7)      -
+ *     Tachi       D8  (PA7)     D9 (PD2)      A3 (PF2)
+ *     Tsurugi     D2  (PA7)     D9 (PD2)      A2 (PF2)
+ *     Kunai       D1  (PA7)     D7 (PD7)      -
  *
  * Input pins are configured with pull-ups, so you can wire buttons
  * straight to GND; driven logic signals simply override the pull-up.
@@ -41,7 +43,7 @@
 
 #include <Arduino.h>
 
-#if !defined(WAZAMONO_AVR_TACHI) && !defined(WAZAMONO_AVR_TSURUGI) && !defined(WAZAMONO_AVR_KUNAI)
+#if !defined(ARDUINO_AVR_TACHI) && !defined(ARDUINO_AVR_TSURUGI) && !defined(ARDUINO_AVR_KUNAI)
   #error "CustomLogic supports Wazamono boards only."
 #endif
 
@@ -168,7 +170,7 @@ private:
 };
 
 extern CustomLogicClass CustomLogic;
-#if !defined(WAZAMONO_AVR_KUNAI)
+#if !defined(ARDUINO_AVR_KUNAI)
 extern CustomLogicClass CustomLogic1;
 #endif
 

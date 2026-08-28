@@ -10,7 +10,7 @@
  * This sketch: OUT = (any-pin button) AND (the unit's own IN1 button)
  *
  *              any-pin button   IN1 button      OUT (LED to GND)
- *   Tachi      D9               A2              A0
+ *   Tachi      D9               D6              D10
  *   Tsurugi    D2               D6              D10
  *   Kunai      D8               D5              D2
  *
@@ -22,11 +22,11 @@
 void setup() {
   Serial.begin(115200);
 
-  #if defined(WAZAMONO_AVR_TACHI)
+  #if defined(ARDUINO_AVR_TACHI)
   EventSystem.connect(9, EVENT_TO_LOGIC_A);   // D9 -> CustomLogic EVENT_A
-  #elif defined(WAZAMONO_AVR_TSURUGI)
+  #elif defined(ARDUINO_AVR_TSURUGI)
   EventSystem.connect(2, EVENT_TO_LOGIC_A);   // D2 -> CustomLogic EVENT_A
-  #elif defined(WAZAMONO_AVR_KUNAI)
+  #elif defined(ARDUINO_AVR_KUNAI)
   EventSystem.connect(8, EVENT_TO_LOGIC_A);   // D8 -> CustomLogic EVENT_A
   #else
   #error "This example supports Wazamono boards only."

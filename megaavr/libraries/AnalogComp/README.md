@@ -24,7 +24,7 @@ void loop() {
 
 | | +入力 | −入力 | 出力 (`enableOutput()`) |
 |---|---|---|---|
-| **Tachi** | A1 (PD2) | A0 (PD3) | D4 (PA7) |
+| **Tachi** | D9 (PD2) | D10 (PD3) | D8 (PA7) |
 | **Tsurugi** | D9 (PD2) | D10 (PD3) | D8 (PA7) |
 | **Kunai** | D6 (PD6) | D7 (PD7) | D0 (PA7) |
 

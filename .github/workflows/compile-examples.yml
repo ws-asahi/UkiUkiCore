@@ -53,6 +53,11 @@ jobs:
             fqbn: "WazamonoCore:megaavr:wazamonotsurugi:clock=24internal,usbeps=ep8"
           - board: "Wazamono Kunai (AVR32DU20)"
             fqbn: "WazamonoCore:megaavr:wazamonokunai:clock=24internal,usbeps=ep8"
+          # Clock menu coverage: the 16 MHz option is compiled once, on the
+          # Tachi, to keep the matrix small. USB stays available at 16 MHz
+          # (CLK_PER >= 12 MHz per DS40002548B 28.3.1.1).
+          - board: "Wazamono Tachi (AVR64DU32, 16 MHz)"
+            fqbn: "WazamonoCore:megaavr:wazamonotachi:clock=16internal,usbeps=ep8"
 
     steps:
       - name: Checkout repository

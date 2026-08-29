@@ -36,6 +36,23 @@
 #include "usb_standard.h"
 #include "USBCore_DU.h"
 
+
+/* Wazamono: USB clock floor check.
+ *
+ * DS40002548B 28.3.1.1: the USB peripheral needs CLK_PER >= 12 MHz for its
+ * register and SRAM interfaces, plus a nominal 48 MHz CLK_USB. CLK_USB comes
+ * from the PLL48M, which is fed by a *fixed* 4 MHz tap on the OSCHF that does
+ * not depend on the FRQSEL main-clock setting (12.3.4.1.1) - so the 16 MHz
+ * menu option leaves the USB clock intact and only CLK_PER matters here.
+ *
+ * No menu entry goes below the floor, but F_CPU can also arrive from a custom
+ * board definition or a hand-edited entry; if it ever does, say clearly at
+ * build time why USB is not going to enumerate rather than letting it fail
+ * silently at run time. */
+#if F_CPU < 12000000UL
+  #warning "F_CPU < 12 MHz: USB requires CLK_PER >= 12 MHz (DS40002548B 28.3.1.1). USB Serial will not enumerate at this clock."
+#endif
+
 /* ============================================================
  * Global state
  * ============================================================ */

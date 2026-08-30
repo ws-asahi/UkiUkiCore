@@ -127,21 +127,21 @@
 
 | ピン名 | MCU | ピン別名 | ADC ch | 主な機能 |
 |----|-----|--------------|--------|----------|
-| D0 | PA5 | A12 | AIN25 | **RX**(Serial1) / **MOSI**(SPI1)|
-| D1 | PA4 | A13 | AIN24 | **TX**(Serial1) / **MISO**(SPI1)|
-| D2 | PA2 | A14 | AIN22 | **SDA**(I2C) |
-| D3 | PA3 | A15 | AIN23 | ~PWM(TCB1 WO) / **SCL**(I2C) |
+| D0 | PA5 | A11 | AIN25 | **RX**(Serial1) / **MOSI**(SPI1)|
+| D1 | PA4 | A12 | AIN24 | **TX**(Serial1) / **MISO**(SPI1)|
+| D2 | PA2 | A13 | AIN22 | **SDA**(I2C) |
+| D3 | PA3 | A14 | AIN23 | ~PWM(TCB1 WO) / **SCL**(I2C) |
 | D4 | PC3 | A6 | AIN31 | ~PWM(TCB1 + LUT1) |
-| D5 | PD0 | A16 | AIN0 | ~PWM(TCA0 WO0) / **IN0**(CustomLogic) |
+| D5 | PD0 | A15 | AIN0 | ~PWM(TCA0 WO0) / **IN0**(CustomLogic) |
 | D6 | PD1 | A7 | AIN1 | ~PWM(TCA0 WO1) / **IN1**(CustomLogic) |
-| D7 | PA6 | A17 | AIN26 | ~PWM(TCB1 + LUT0) / **XCK**(Serial1)/ **CLK**(SPI1) |
+| D7 | PA6 | A16 | AIN26 | ~PWM(TCB1 + LUT0) / **XCK**(Serial1)/ **CLK**(SPI1) |
 | D8 | PA7 | A8 | AIN27 | **XDIR**(Serial1) / **OUT**(AnalogComp) / EVOUTA / CLKOUT |
 | D9 | PD2 | A9 | AIN2 | ~PWM(TCA0 WO2) / **IN2**(CustomLogic) / **P**(AnalogComp)|
 | D10 | PD3 | A10 | AIN3 | ~PWM(TCA0 WO3) / **OUT**(CustomLogic) / **N**(AnalogComp) |
-| D14 | PD5 | A18 | AIN5 | ~PWM(TCA0 WO5) / **MISO**(SPI) |
-| D15 | PD6 | A19 | AIN6 | **SCK**(SPI) / **TX**(Serial2) |
-| D16 | PD4 | A20 | AIN4 | ~PWM(TCA0 WO4) / SPI **MOSI** |
-| D17 | PF3 | A21 | AIN19 | **LED_BUILTIN**(基板上ユーザー LED) / **OUT**(CustomLogic1) |
+| D14 | PD5 | A17 | AIN5 | ~PWM(TCA0 WO5) / **MISO**(SPI) |
+| D15 | PD6 | A18 | AIN6 | **SCK**(SPI) / **TX**(Serial2) |
+| D16 | PD4 | A19 | AIN4 | ~PWM(TCA0 WO4) / SPI **MOSI** |
+| D17 | PF3 | A20 | AIN19 | **LED_BUILTIN**(基板上ユーザー LED) / **OUT**(CustomLogic1) |
 | A0 | PD7 | D18 | AIN7 | SPI **SS** / **RX**(Serial2) / **AREF** |
 | A1 | PF0 | D19 | AIN16 | **IN0**(CustomLogic1) |
 | A2 | PF1 | D20 | AIN17 | **IN1**(CustomLogic1) |
@@ -231,7 +231,7 @@
 
 - シルク表記の **A0–A3**(= D18–D21)
 - **A4 / A5**(= D22 / D23)は裏面テストパッド TP1 / TP2 のみ(SparkFun Pro Micro の A4 / A5 = 22 / 23 と番号互換)
-- 各デジタルピンも ADC チャネルを持ち、A6–A21 として参照可能(D30 / D31 を除く)
+- 各デジタルピンも ADC チャネルを持ち、A6–A20 として参照可能(A11 の欠番なし・連番)(D30 / D31 を除く)
 
 ---
 

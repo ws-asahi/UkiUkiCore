@@ -359,15 +359,16 @@
 /* Arduino analog aliases (rev.5). A0..A3 = D18..D21 match the Pro Micro
  * exactly. A4/A5 = D22/D23 (PF4/PF5) also match the SparkFun promicro variant
  * numerically (A4 = 22, A5 = 23); there they are unrouted 32U4 pins, here they
- * are real ADC inputs on test pads TP1/TP2 (no header). A11 = 29 is kept as a
- * pin-table gap (NOT_A_PORT) for Leonardo source compatibility: digitalWrite()
- * is a clean no-op and analogRead() returns the ADC bad-pin error.
+ * are real ADC inputs on test pads TP1/TP2 (no header).
  * A6..A10 point at the same physical pins as on the Pro Micro
  * (D4/D6/D8/D9/D10) but carry those pins' OWN numbers (4/6/8/9/10), not the
  * Leonardo duplicate numbers 24..28; analogRead(A6) etc. behave identically,
  * only the numeric value of the alias differs (documented incompatibility).
- * Extension aliases: A12..A17 continue over D0..D7 and A18..A21 over D14..D17
- * (A# = D# + 4 in that group). D30/D31 (PA0/PA1, the LEDs) have no ADC. */
+ * There is NO A11 gap: the Leonardo reserves A11 for D12, which does not
+ * exist on the Pro Micro pinout at all, so no sketch that runs on this
+ * board can rely on it. The extension aliases therefore continue densely:
+ * A11..A16 over D0/D1/D2/D3/D5/D7 and A17..A20 over D14..D17 (A# = D# + 3
+ * in that group). D30/D31 (PA0/PA1, the LEDs) have no ADC. */
 #define PIN_A0   (PIN_PD7)   // D18 (also SPI SS / Serial2 RX / VREFA)
 #define PIN_A1   (PIN_PF0)   // D19
 #define PIN_A2   (PIN_PF1)   // D20
@@ -379,17 +380,16 @@
 #define PIN_A8   (PIN_PA7)   // D8
 #define PIN_A9   (PIN_PD2)   // D9
 #define PIN_A10  (PIN_PD3)   // D10
-#define PIN_A11  (29)        // gap index (Leonardo A11 = D12; no such pin here) - safe no-op
-#define PIN_A12  (PIN_PA5)   // D0
-#define PIN_A13  (PIN_PA4)   // D1
-#define PIN_A14  (PIN_PA2)   // D2
-#define PIN_A15  (PIN_PA3)   // D3
-#define PIN_A16  (PIN_PD0)   // D5
-#define PIN_A17  (PIN_PA6)   // D7
-#define PIN_A18  (PIN_PD5)   // D14
-#define PIN_A19  (PIN_PD6)   // D15
-#define PIN_A20  (PIN_PD4)   // D16
-#define PIN_A21  (PIN_PF3)   // D17 (LED_BUILTIN)
+#define PIN_A11  (PIN_PA5)   // D0
+#define PIN_A12  (PIN_PA4)   // D1
+#define PIN_A13  (PIN_PA2)   // D2
+#define PIN_A14  (PIN_PA3)   // D3
+#define PIN_A15  (PIN_PD0)   // D5
+#define PIN_A16  (PIN_PA6)   // D7
+#define PIN_A17  (PIN_PD5)   // D14
+#define PIN_A18  (PIN_PD6)   // D15
+#define PIN_A19  (PIN_PD4)   // D16
+#define PIN_A20  (PIN_PF3)   // D17 (LED_BUILTIN)
 
 /* --- Uno R4 style number-prefixed digital pin aliases ---
  * D-number == Arduino digital pin number. Internal-only pins (PF6 RESET,
@@ -454,7 +454,7 @@ static const uint8_t A7   = PIN_A7;
 static const uint8_t A8   = PIN_A8;
 static const uint8_t A9   = PIN_A9;
 static const uint8_t A10  = PIN_A10;
-static const uint8_t A11  = PIN_A11;  // dead index 29 - compile-compat with Leonardo A11 (D12), no-op at runtime
+static const uint8_t A11  = PIN_A11;
 static const uint8_t A12  = PIN_A12;
 static const uint8_t A13  = PIN_A13;
 static const uint8_t A14  = PIN_A14;
@@ -464,7 +464,6 @@ static const uint8_t A17  = PIN_A17;
 static const uint8_t A18  = PIN_A18;
 static const uint8_t A19  = PIN_A19;
 static const uint8_t A20  = PIN_A20;
-static const uint8_t A21  = PIN_A21;
 
 /* Direct ADC channel identifiers (ADC_CH() sets the 0x80 "this is a channel" flag). */
 #define AIN0   ADC_CH(0)

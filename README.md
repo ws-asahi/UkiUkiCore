@@ -5,17 +5,17 @@ USB ネイティブな新世代 AVR(AVR DU シリーズ)を搭載した Arduino 
 
 ![platform](https://img.shields.io/badge/platform-AVR%20DU-blue)
 ![license](https://img.shields.io/badge/license-LGPL--2.1-green)
-![version](https://img.shields.io/badge/core-v0.0.6-orange)
+![version](https://img.shields.io/badge/core-v0.0.7-orange)
 ![based on](https://img.shields.io/badge/based%20on-DxCore-lightgrey)
 
->  
-> Wazamono シリーズは、定番の Arduino 互換ボードを **USB を内蔵した新世代 AVR** で置き換えることを目指したボード群です。  
-> USB-シリアル変換チップを別途搭載せず、マイコン単体で PC と直接つながります。  
-> WazamonoCore は、これらのボードを Arduino IDE で開発するための専用コアで、  
-> [DxCore](https://github.com/SpenceKonde/DxCore) をベースに **Wazamono シリーズに必要な部分だけを残して再構成** しています。  
->  
-> ⚠️ **開発版(0.0.6 系)です。** API・ボード定義・ブートローダは予告なく変更されることがあります。  
->  
+  
+Wazamono シリーズは、定番の Arduino 互換ボードを **USB を内蔵した新世代 AVR** で置き換えることを目指したボード群です。  
+USB-シリアル変換チップを別途搭載せず、マイコン単体で PC と直接つながります。  
+WazamonoCore は、これらのボードを Arduino IDE で開発するための専用コアで、  
+[DxCore](https://github.com/SpenceKonde/DxCore) をベースに **Wazamono シリーズに必要な部分だけを残して再構成** しています。  
+ 
+⚠️ **開発版(0.0.7 系)です。** API・ボード定義・ブートローダは予告なく変更されることがあります。  
+ 
 
 ---
 
@@ -25,21 +25,19 @@ USB ネイティブな新世代 AVR(AVR DU シリーズ)を搭載した Arduino 
 |--------|-----|------------------|------|
 | [**Wazamono 太刀(Tachi)**](megaavr/extras/WazamonoTachi.md) | AVR64DU32 | Pro Micro 互換 / USB-C | 🔧 試作中 |
 | [**Wazamono 剣(Tsurugi)**](megaavr/extras/WazamonoTsurugi.md) | AVR64DU32 | Uno R3 互換 / USB-C | 🔧 試作中  |
-| [**Wazamono 苦無(Kunai)**](megaavr/extras/WazamonoKunai.md) | AVR32DU20 | XIAO 互換 / USB-C | 開発中  |
+| [**Wazamono 苦無(Kunai)**](megaavr/extras/WazamonoKunai.md) | AVR32DU20 | XIAO 互換 / USB-C | 🔧 試作中  |
 
 >  
-> このコアには **Wazamono Tachi**、**Wazamono Tsurugi**、**Wazamono Kunai**の variant が含まれています。  
+> このコアには **Tachi**、**Tsurugi**、**Kunai**の variant が含まれています。  
 >  
 
 ---
 
 ## 心臓部 - AVR DU シリーズ
 
->  
-> Wazamono シリーズは全機種が USB を内蔵した新世代 AVR「**AVR DU**」を採用しています。  
-> USB-シリアル変換チップなしで PC と直接通信できることが最大の特長です。  
-> Tachi と Tsurugi は **AVR64DU32**、小型の Kunai は **AVR32DU20** を搭載します。  
->  
+Wazamono シリーズは全機種が USB を内蔵した新世代 AVR「**AVR DU**」を採用しています。  
+USB-シリアル変換チップなしで PC と直接通信できることが最大の特長です。  
+Tachi と Tsurugi は **AVR64DU32**、小型の Kunai は **AVR32DU20** を搭載します。  
 
 | 項目 | AVR64DU32 | AVR32DU20 |
 |------|------|------|

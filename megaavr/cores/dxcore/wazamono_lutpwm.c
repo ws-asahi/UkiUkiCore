@@ -85,8 +85,10 @@ void wazamono_tcb1_lutpwm_disengage(void) {
 /* Same LUT configuration bytes as the single-route block above (and the same
  * ownership-signature idea). INSEL1 = TCB selects TCB1's WO for input 1 on
  * every LUT (DS40002548A 30.2.2.1: the TCB input source of CCL input n is
- * TCBn - input 1 = TCB1 - so the byte is identical for LUT0 and LUT1; both
- * routes were verified on silicon at 44% duty, CCMPEN = 0). */
+ * TCBn - input 1 = TCB1 - so the byte is identical for every LUT index; the
+ * LUT0-ALT and LUT1-default routes were verified on silicon at 44% duty,
+ * CCMPEN = 0. Kunai additionally uses LUT2 on its ALT1 position, PD6 -
+ * DS40002548B 17.2.2, CCLROUTEA bit 2 = ALT1 - with the very same bytes). */
 #define _PWMMUX_CFG_CTRLA  (CCL_OUTEN_bm | CCL_ENABLE_bm)
 #define _PWMMUX_CFG_CTRLB  (0x0A << 4)   /* INSEL1 = TCB -> TCB1 WO */
 #define _PWMMUX_CFG_CTRLC  (0x00)
@@ -137,9 +139,11 @@ static void _pwmmux_release_others(uint8_t keep_pin) {
   if (keep_pin != WAZAMONO_TCB1_PWM_LUT1_PIN) {
     _pwmmux_lut_disengage(WAZAMONO_TCB1_PWM_LUT1, WAZAMONO_TCB1_PWM_LUT1_ALT);
   }
+  #if WAZAMONO_TCB1_PWM_HAS_WO
   if (keep_pin != WAZAMONO_TCB1_PWM_WO_PIN) {
     TCB1.CTRLB &= (uint8_t)~TCB_CCMPEN_bm;   /* WO outlet off */
   }
+  #endif
 }
 
 uint8_t wazamono_tcb1_pwm_engage(uint8_t pin) {
@@ -148,13 +152,16 @@ uint8_t wazamono_tcb1_pwm_engage(uint8_t pin) {
     okflag = _pwmmux_lut_engage(WAZAMONO_TCB1_PWM_LUT0, WAZAMONO_TCB1_PWM_LUT0_ALT);
   } else if (pin == WAZAMONO_TCB1_PWM_LUT1_PIN) {
     okflag = _pwmmux_lut_engage(WAZAMONO_TCB1_PWM_LUT1, WAZAMONO_TCB1_PWM_LUT1_ALT);
-  } else if (pin == WAZAMONO_TCB1_PWM_WO_PIN) {
+  }
+  #if WAZAMONO_TCB1_PWM_HAS_WO
+  else if (pin == WAZAMONO_TCB1_PWM_WO_PIN) {
     /* Outlet = TCB1's own WO pin. The PORTMUX position was parked by the
      * core's timer init (TCB1_PINS); CCMPEN opens the outlet. The caller
      * (analogWrite) has already verified CNTMODE == PWM8. */
     TCB1.CTRLB |= TCB_CCMPEN_bm;
     okflag = 1;
   }
+  #endif
   if (okflag) {
     _pwmmux_release_others(pin);   /* exclusive: last caller wins */
     s_pwmmux_active = pin;
@@ -167,9 +174,13 @@ void wazamono_tcb1_pwm_release(uint8_t pin) {
     _pwmmux_lut_disengage(WAZAMONO_TCB1_PWM_LUT0, WAZAMONO_TCB1_PWM_LUT0_ALT);
   } else if (pin == WAZAMONO_TCB1_PWM_LUT1_PIN) {
     _pwmmux_lut_disengage(WAZAMONO_TCB1_PWM_LUT1, WAZAMONO_TCB1_PWM_LUT1_ALT);
-  } else if (pin == WAZAMONO_TCB1_PWM_WO_PIN) {
+  }
+  #if WAZAMONO_TCB1_PWM_HAS_WO
+  else if (pin == WAZAMONO_TCB1_PWM_WO_PIN) {
     TCB1.CTRLB &= (uint8_t)~TCB_CCMPEN_bm;
-  } else {
+  }
+  #endif
+  else {
     return;
   }
   if (s_pwmmux_active == pin) s_pwmmux_active = NOT_A_PIN;

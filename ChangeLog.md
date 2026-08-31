@@ -4,6 +4,22 @@ The change history of WazamonoCore. WazamonoCore is the Arduino core for the Waz
 
 ---
 
+## Unreleased
+
+### Kunai
+
+- **Second TCB1 PWM outlet on D2**: Kunai now uses the same exclusive routing mechanism as Tachi and Tsurugi (`WAZAMONO_TCB1_PWMMUX`). `analogWrite()` delivers TCB1's 8-bit waveform to **D0** (PC3, CCL LUT1-OUT default position) or **D2** (PD6, CCL LUT2-OUT ALT1 position, DS40002548B 17.2.2); the pin most recently written takes the output (default D0), both share TCB1's frequency and duty, and `tone()` suspends both. D2 is also the Serial2 TX pin, so D2 PWM and Serial2 are alternatives. This matches the Kunai pin-configuration table, which had listed D2 as `TCB1+LUT2` while the core only implemented D0. The LUT2 ALT1 → PD6 route has not yet been measured on hardware; the LUT bytes are identical to the silicon-verified LUT0/LUT1 routes and only CCLROUTEA differs.
+
+### Core
+
+- `WAZAMONO_TCB1_PWMMUX` no longer requires a direct WO outlet: `WAZAMONO_TCB1_PWM_WO_PIN` may be left undefined (Kunai has none — TCB1's WO positions are PA3/SCL and the absent PF5), in which case the CCMPEN code paths are compiled out. Tachi and Tsurugi are unchanged.
+
+### Documentation
+
+- WazamonoKunai.md / .ja.md: D2 row, PWM section and the XIAO compatibility notes updated for the D0/D2 routing.
+
+---
+
 ## v0.0.6 — Pro Micro compatibility validation on Tachi and the fixes it produced / Tsurugi pin map rev.3
 
 Compatibility with the Pro Micro (ATmega32U4) was validated end to end on Wazamono Tachi rev.4 hardware (3.3 V and 5 V units), and the core bugs found along the way were fixed. This release also includes support for Tsurugi hardware rev.C and the switch of SerialUPDI to avrdude 8.1.

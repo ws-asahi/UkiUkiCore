@@ -129,7 +129,7 @@ AVR32DU20 には用途の異なる複数の不揮発メモリ領域がありま�
 
 Seeeduino XIAO と同じ番号付けです。  
 ただし SAMD21 とは異なり一部の GPIO は PWM や ADC の機能を持ちません。  
-PWM 非対応：D1, D2, D3, D8  
+PWM 非対応：D1, D3, D8  
 ADC 非対応：D6, D7  
 またハードウェア上の制約により独立した LED_BUILTIN がありません。  
 
@@ -137,7 +137,7 @@ ADC 非対応：D6, D7
 |----|-----|--------------|--------|----------|
 | D0 | PC3 | A0 | AIN31 | ~PWM(TCB1 + LUT1)|
 | D1 | PA7 | A1 | AIN27 | **SS**(SPI) / **OUT**(AnalogComp)/ EVOUTA / CLKOUT |
-| D2 | PD6 | A2 | AIN6 | **TX**(Serial2) / **P**(AnalogComp) |
+| D2 | PD6 | A2 | AIN6 | ~PWM(TCB1 + LUT2) / **TX**(Serial2) / **P**(AnalogComp) |
 | D3 | PD7 | A3 | AIN7 | **RX**(Serial2) / **AREF** / **N**(AnalogComp) / EVOUTD |
 | D4 | PA2 | A4 | AIN22 | **I2C SDA** / ~PWM(TCA0 WO2)/ **XCK**(Serial1) / **CLK**(SPI1) / **IN2**(CustomLogic) |
 | D5 | PA3 | A5 | AIN23 | **I2C SCL** / ~PWM(TCA0 WO3)/ **XDIR**(Serial1) / **OUT**(CustomLogic) |
@@ -150,8 +150,11 @@ ADC 非対応：D6, D7
 | D12 | PD5 | A12 | AIN5 | **LED_BUILTIN_RX**(USB-CDCと連動) |
 
 > 
-> **D0 の PWM は TCB1** の波形を CCL LUT1 経由で出力しています(Kunai で唯一の TCB PWM 出口)。  
-> tone などで TCB1 を使用する時は D0 の PWM が停止します。  
+> **D0 / D2 の PWM は択一**です。  
+> 1 本の TCB1 波形を CCL LUT1(D0)または LUT2(D2)経由でいずれかのピンに出し分ける構造のため、最後に `analogWrite()` したピンが出口になります(既定は D0)。  
+> 2 本同時に異なる PWM は出せません。周波数・デューティは 2 ピンで共通です。  
+> tone などで TCB1 を使用する時は 2 つとも PWM が無効化されます。  
+> D2 は Serial2 の TX ピンでもあるため、D2 の PWM と Serial2 は併用できません。  
 >
 > **D3 は AREFとして使用できます**。  
 > AREF として使用する時は他の用途には使用できません。  
@@ -209,11 +212,11 @@ ADC 非対応：D6, D7
 ### PWM(`analogWrite()`)
 
 - **D4, D5, D6, D7, D9, D10** - TCA0
-- **D0** - TCB1 の 8bit PWM 波形を CCL LUT1 経由で出力
+- **D0 / D2** - TCB1 の 8bit PWM 波形を CCL LUT1 / LUT2 経由で出力(排他使用)
 
 >  
-> **TCB1 PWM:** TCB1 が他の用途に使われている間、`analogWrite(D0)` は PWM をあきらめて単純な HIGH/LOW 出力(127 を閾値)に切り替わります。  
-> - `tone()` は TCB1 を使うため、実行中は D0 の PWM が停止します。  
+> **排他 PWM:** TCB1 が他の用途に使われている間、`analogWrite(D0)`(または D2)は PWM をあきらめて単純な HIGH/LOW 出力(127 を閾値)に切り替わります。  
+> - `tone()` は TCB1 を使うため、実行中は D0, D2 の PWM が停止します。  
 >  
 > Seeeduino XIAO は全ての GPIO で PWM 出力が可能ですが、Kunai では PWM出力 にいくつかの制限があります。
 >  
@@ -336,7 +339,7 @@ XIAOと比較して以下の機能が異なります。
 - **LED_BUILTIN なし** : 独立した LED が無く 代わりに TX LED が動作します。
 - **SWCLK / SWDIO なし** : USB 端子裏のパッドがSWCL, SWDIOではなく、代わりに UPDI と HV RESET (UPDI v2 用パッド) になっています。
 - **5V動作が可能** : 5V 動作時には XIAO の 3.3V 供給ピンに 5V が供給されるため、耐圧 3.3V の周辺機器は破壊される可能性があります。
-- **PWM は最大7系統** : D1, D2, D3, D8 は PWM 非対応。D0 は TCB1 を使用(`tone()` と共用)。
+- **PWM は最大7系統** : D1, D3, D8 は PWM 非対応。D0 と D2 の PWM は排他式(TCB1 の 1 波形を共用、`tone()` とも共用)。
 - **一部ピンで ADC なし** : A6, A7 ピンは ADC なし。
 - **変数サイズの不一致** : int は 4 -> 2 バイト。double は 8 -> 4バイト(long doubleは 8 バイトで一致)。 
 

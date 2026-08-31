@@ -12,9 +12,9 @@
  *
  *  ===== Pin numbering: Seeeduino XIAO compatible (NONCANONICAL) =====
  *   D#   MCU   XIAO role / notes                             A#,  AIN
- *   D0   PC3   A0 | ~PWM(TCB1 via CCL LUT1)                  A0,  AIN31
+ *   D0   PC3   A0 | ~PWM(TCB1 via CCL LUT1, default outlet)  A0,  AIN31
  *   D1   PA7   A1 | SPI SS | AC0 OUT | EVOUTA | CLKOUT       A1,  AIN27
- *   D2   PD6   A2 | Serial2 TX (USART1 ALT2) | LUT2-OUT alt  A2,  AIN6
+ *   D2   PD6   A2 | ~PWM(TCB1 via CCL LUT2 alt) | Serial2 TX  A2,  AIN6
  *   D3   PD7   A3 | Serial2 RX (USART1 ALT2) | EVOUTD        A3,  AIN7
  *   D4   PA2   A4 | SDA (TWI0 default) | ~PWM(TCA0 WO2)      A4,  AIN22
  *   D5   PA3   A5 | SCL (TWI0 default) | ~PWM(TCA0 WO3)      A5,  AIN23
@@ -34,18 +34,23 @@
  *
  *  ===== Peripheral routing (set by this variant + boards.txt) =====
  *   TCA0  -> PORTA (WO0..WO5 = PA0..PA5 = D6,D7,D4,D5,D10,D9) : TCA0_PINS below
- *   TCB1  -> D0 PWM *through CCL LUT1*: D0 is PC3 = LUT1-OUT (default position).
- *           TCB1 runs in 8-bit PWM mode and its internal WO signal feeds LUT1
- *           (INSEL1 = TCB, DS40002548A 30.2.2.1); the LUT passes it to the pin.
- *           analogWrite(D0, x) does all of this transparently (core
- *           wazamono_lutpwm.c). TCB1's own WO pin position is parked on ALT1
- *           (TCB1_PINS): ALT1 = PF5, which does not exist on the 20-pin DU -
- *           the parking spot is entirely harmless here.
+ *   TCB1  -> ONE waveform, TWO exclusive outlets (WAZAMONO_TCB1_PWMMUX):
+ *            D0 = PC3 (LUT1-OUT, default position)  - the default outlet,
+ *            D2 = PD6 (LUT2-OUT, ALT1 position).
+ *           TCB1 runs in 8-bit PWM mode and its internal WO signal feeds the
+ *           LUT (INSEL1 = TCB, DS40002548A 30.2.2.1); the LUT passes it to the
+ *           pin. analogWrite() on either pin claims the route - the pin most
+ *           recently written carries the waveform, the other returns to plain
+ *           GPIO (core wazamono_lutpwm.c). Both share TCB1's frequency/duty.
+ *           There is no direct WO outlet: TCB1's WO positions are PA3 (= D5,
+ *           SCL, default) and PF5 (ALT1, absent on the 20-pin DU); TCB1_PINS
+ *           parks it on ALT1, which is entirely harmless here.
  *   millis-> TCB0 : boards.txt passes -DMILLIS_USE_TIMERB0, so TCB1 is free.
  *   tone()-> TCB1 : Tone.cpp auto-selects TCB1 when millis is on TCB0. tone()
- *           and D0 PWM share TCB1: calling tone() suspends D0 PWM only.
- *           Likewise, taking LUT1 over (direct CCL register use) suspends D0
- *           PWM: analogWrite(D0) then falls back to plain digital output.
+ *           and D0/D2 PWM share TCB1: calling tone() suspends that PWM only.
+ *           Likewise, taking the LUT over (direct CCL register use) suspends
+ *           the PWM on its pin: analogWrite() falls back to digital output.
+ *           D2 PWM and Serial2 TX are the same pin: use one or the other.
  *   SPI0  -> DEFAULT (PA4 MOSI / PA5 MISO / PA6 SCK / PA7 SS = D10/D9/D8/D1).
  *           Board is SPI host; run with Client Select Disable (SSD=1) so D1's
  *           level cannot flip host -> client mode. D1 doubles as software CS.
@@ -56,9 +61,9 @@
  *   USART1-> user-facing "Serial2", ALT2 (PD6 TX / PD7 RX = D2/D3)
  *           (WAZAMONO_SERIAL2_IS_USART1; the only USART1 position on the DU).
  *   CCL   -> LUT0 is the CustomLogic user unit (IN0/IN1/IN2 = D6/D7/D4,
- *           OUT = D5, alt OUT = D8). LUT1 belongs to D0 PWM (above). LUT2's
- *           alternate output pin is D2 (PD6); its input pins do not exist on
- *           the DU-20. LUT3 has no pins here.
+ *           OUT = D5, alt OUT = D8). LUT1 (-> D0) and LUT2 (ALT1 -> D2) carry
+ *           TCB1 PWM (above); LUT2's input pins do not exist on the DU-20.
+ *           LUT3 has no pins here.
  *   LED   -> PD4 (D11) is LED_BUILTIN and doubles as the USB-CDC TX activity
  *           LED; PD5 (D12) is the USB-CDC RX activity LED (XIAO numbering:
  *           TX = 11, RX = 12; weak hooks in usb_cdc.c, overridden in
@@ -91,9 +96,9 @@
 #define NONCANONICAL_PIN_NUMBERS
 
 /* ---- Digital pin number for each MCU pin (XIAO layout, D0..D10 + D13/D14) ---- */
-#define PIN_PC3 (0)   // D0  A0 / ~PWM(TCB1 via CCL LUT1)
+#define PIN_PC3 (0)   // D0  A0 / ~PWM(TCB1 via CCL LUT1, default outlet)
 #define PIN_PA7 (1)   // D1  A1 / SPI SS / AC0 OUT / EVOUTA / CLKOUT
-#define PIN_PD6 (2)   // D2  A2 / Serial2 TX (USART1 ALT2) / LUT2-OUT (alt)
+#define PIN_PD6 (2)   // D2  A2 / ~PWM(TCB1 via CCL LUT2 alt) / Serial2 TX (USART1 ALT2)
 #define PIN_PD7 (3)   // D3  A3 / Serial2 RX (USART1 ALT2) / EVOUTD
 #define PIN_PA2 (4)   // D4  A4 / SDA (TWI0 default) / TCA0 WO2 / USART0 XCK
 #define PIN_PA3 (5)   // D5  A5 / SCL (TWI0 default) / TCA0 WO3 / LUT0-OUT / USART0 XDIR
@@ -151,18 +156,22 @@
 
 /* ---- PWM ----
  * millis lives on TCB0 (boards.txt -DMILLIS_USE_TIMERB0), leaving TCB1 free for
- * D0 PWM and for tone(). D0 (PC3) is not a TCB WO pin: it is LUT1's output, and
- * analogWrite(D0) delivers TCB1's 8-bit PWM waveform through LUT1 (see the
- * WAZAMONO_TCB1_LUTPWM_* block below and cores/dxcore/wazamono_lutpwm.h).
+ * PWM and for tone(). Neither D0 (PC3) nor D2 (PD6) is a TCB WO pin: they are
+ * LUT1's and LUT2's output pins, and analogWrite() delivers TCB1's 8-bit PWM
+ * waveform through the LUT (see the WAZAMONO_TCB1_PWMMUX block below and
+ * cores/dxcore/wazamono_lutpwm.h). ONE waveform, TWO exclusive outlets: the
+ * pin most recently written with analogWrite() carries it (default D0).
  * tone(): Tone.cpp routes tone to TCB1 whenever millis is on TCB0, so tone
- * shares TCB1 with D0 PWM - calling tone() suspends D0 PWM only.
+ * shares TCB1 with D0/D2 PWM - calling tone() suspends that PWM only.
  * TCA0 -> PORTA: WO0..WO5 = PA0..PA5 = D6,D7,D4,D5,D10,D9. */
 #if defined(MILLIS_USE_TIMERB1)
   #define digitalPinHasPWMTCB(p) (0)                   /* TCB1 is millis; no TCB PWM */
 #elif defined(MILLIS_USE_TIMERB0)
-  #define digitalPinHasPWMTCB(p) ((p) == PIN_PC3)      /* TCB0=millis -> TCB1 free -> D0 PWM (via LUT1) */
+  /* TCB0 = millis -> TCB1 free. ONE waveform, TWO selectable outlets:
+   * D0 (LUT1 default), D2 (LUT2 alt). Exclusive - last analogWrite() wins. */
+  #define digitalPinHasPWMTCB(p) ((p) == PIN_PC3 || (p) == PIN_PD6)
 #else
-  #define digitalPinHasPWMTCB(p) ((p) == PIN_PC3)
+  #define digitalPinHasPWMTCB(p) ((p) == PIN_PC3 || (p) == PIN_PD6)
 #endif
 #define digitalPinHasPWMTCA(p) ( \
     (p) == PIN_PA0 || (p) == PIN_PA1 || (p) == PIN_PA2 || \
@@ -178,25 +187,39 @@
 
 #define PIN_TCA0_WO0_INIT               (PIN_PA0)
 #define PIN_TCB0_WO_INIT                (PIN_PA2)   // TCB0 = millis; not enabled for PWM
-#define PIN_TCB1_WO_INIT                (NOT_A_PIN) // parked on ALT1/PF5 (absent on DU-20); PWM leaves via LUT1/D0
+#define PIN_TCB1_WO_INIT                (NOT_A_PIN) // parked on ALT1/PF5 (absent on DU-20); PWM leaves via LUT1/D0 or LUT2/D2
 
-/* ---- D0 PWM: TCB1 through CCL LUT1 (core mechanism, wazamono_lutpwm.{h,c}) ----
+/* ---- D0 / D2 PWM: TCB1 through CCL LUT1 / LUT2 (core mechanism, wazamono_lutpwm.{h,c}) ----
  * analogWrite(D0, x) makes TCB1's PWM8 waveform reach D0 = PC3 = LUT1-OUT:
  *   TCB1 WO (internal) -> LUT1 INSEL1 = TCB -> TRUTH 0xCC -> PC3.
- * The digital_pin_to_timer[] entry for D0 is TIMERB1, which sends analogWrite()
- * down the standard TCB path; the macros below tell the core hook which LUT
- * carries the waveform. Conflicts disable D0 analogWrite automatically:
- * tone()/TCB1 reconfiguration (CNTMODE check) and LUT1 use by other code
- * (signature check in wazamono_lutpwm.c). LUT1 is not offered by the
- * CustomLogic library on the Kunai (its user unit is LUT0), so in practice
- * only direct CCL register use competes for it.
- * CCMPEN stays 0: the CCL taps the internal WO signal, which was measured on
- * silicon to run regardless of that bit (see wazamono_lutpwm.h). The exact
- * LUT1 -> PC3 path used here was part of that measurement. */
-#define WAZAMONO_TCB1_LUTPWM_PIN        (PIN_PC3)   /* D0 */
-#define WAZAMONO_TCB1_LUTPWM_LUT        (1)         /* LUT1 */
-#define WAZAMONO_TCB1_LUTPWM_LUT_ALT    (0)         /* CCLROUTEA: LUT1-OUT default = PC3 */
-#define WAZAMONO_TCB1_LUTPWM_CCMPEN     (0)         /* verified on silicon; leave at 0 */
+ * analogWrite(D2, x) does the same through LUT2 on its ALT1 output position:
+ *   TCB1 WO (internal) -> LUT2 INSEL1 = TCB -> TRUTH 0xCC -> PD6
+ *   (DS40002548B 17.2.2: CCLROUTEA.LUT2 = 1 -> LUT2-OUT on PD6).
+ * The digital_pin_to_timer[] entries for D0 and D2 are TIMERB1, which sends
+ * analogWrite() down the standard TCB path; the macros below tell the core
+ * hook which LUT carries the waveform for which pin. The two outlets are
+ * exclusive: engaging one releases the other (last analogWrite() wins), and
+ * both share TCB1's frequency and duty. Conflicts disable analogWrite on the
+ * affected pin automatically: tone()/TCB1 reconfiguration (CNTMODE check) and
+ * LUT use by other code (signature check in wazamono_lutpwm.c). Neither LUT1
+ * nor LUT2 is offered by the CustomLogic library on the Kunai (its user unit
+ * is LUT0), so in practice only direct CCL register use competes for them.
+ * D2 is also Serial2's TX pin (USART1 ALT2): while Serial2 is active the USART
+ * drives PD6, so D2 PWM and Serial2 are alternatives, not companions.
+ * There is no direct WO outlet (TCB1 WO = PA3/SCL or PF5/absent), so
+ * WAZAMONO_TCB1_PWM_WO_PIN is left undefined; the core drops that path.
+ * CCMPEN therefore stays 0: the CCL taps the internal WO signal, which was
+ * measured on silicon to run regardless of that bit (see wazamono_lutpwm.h).
+ * The LUT1 -> PC3 path was part of that measurement; the LUT2 ALT1 -> PD6
+ * path uses identical LUT bytes and differs only in CCLROUTEA. */
+#define WAZAMONO_TCB1_PWMMUX            (1)         /* exclusive D0/D2 routing (default D0) */
+#define WAZAMONO_TCB1_PWM_LUT0_PIN      (PIN_PC3)   /* outlet A = D0: LUT1-OUT, default position */
+#define WAZAMONO_TCB1_PWM_LUT0          (1)         /*   (LUT index 1) */
+#define WAZAMONO_TCB1_PWM_LUT0_ALT      (0)
+#define WAZAMONO_TCB1_PWM_LUT1_PIN      (PIN_PD6)   /* outlet B = D2: LUT2-OUT, ALT1 position */
+#define WAZAMONO_TCB1_PWM_LUT1          (2)         /*   (LUT index 2) */
+#define WAZAMONO_TCB1_PWM_LUT1_ALT      (1)
+/* WAZAMONO_TCB1_PWM_WO_PIN intentionally undefined: no direct WO outlet. */
 
 #define digitalPinHasPWM(p)             (digitalPinHasPWMTCB(p) || digitalPinHasPWMTCA(p))
 
@@ -303,7 +326,7 @@
 #undef D12
 static const uint8_t D0  = PIN_PC3;  // A0 / ~PWM(TCB1 via CCL LUT1)
 static const uint8_t D1  = PIN_PA7;  // A1 / SS
-static const uint8_t D2  = PIN_PD6;  // A2 / Serial2 TX
+static const uint8_t D2  = PIN_PD6;  // A2 / ~PWM(TCB1 via CCL LUT2 alt, exclusive with D0) / Serial2 TX
 static const uint8_t D3  = PIN_PD7;  // A3 / Serial2 RX
 static const uint8_t D4  = PIN_PA2;  // A4 / SDA
 static const uint8_t D5  = PIN_PA3;  // A5 / SCL
@@ -347,7 +370,7 @@ static const uint8_t A12  = PIN_A12;
   const uint8_t digital_pin_to_port[] = {
     PC,         //  0 PC3  D0  A0 / TCB1 PWM via CCL LUT1
     PA,         //  1 PA7  D1  A1 / SS / AC0 OUT / EVOUTA
-    PD,         //  2 PD6  D2  A2 / Serial2 TX
+    PD,         //  2 PD6  D2  A2 / TCB1 PWM via CCL LUT2 (alt) / Serial2 TX
     PD,         //  3 PD7  D3  A3 / Serial2 RX / EVOUTD
     PA,         //  4 PA2  D4  A4 / SDA / TCA0 WO2
     PA,         //  5 PA3  D5  A5 / SCL / TCA0 WO3
@@ -405,12 +428,12 @@ static const uint8_t A12  = PIN_A12;
   };
 
   /* TCA0 PWM is resolved dynamically from PORTMUX, so TCA0 pins are NOT_ON_TIMER
-   * here. D0 (PC3) is marked TIMERB1: it carries TCB1's PWM through CCL LUT1
-   * (see WAZAMONO_TCB1_LUTPWM_* above). millis = TCB0. */
+   * here. D0 (PC3) and D2 (PD6) are marked TIMERB1: they carry TCB1's PWM
+   * through CCL LUT1 / LUT2 (see WAZAMONO_TCB1_PWMMUX above). millis = TCB0. */
   const uint8_t digital_pin_to_timer[] = {
-    TIMERB1,      //  0 PC3  D0  (TCB1 PWM delivered via CCL LUT1)
+    TIMERB1,      //  0 PC3  D0  (TCB1 PWM via CCL LUT1 - default outlet)
     NOT_ON_TIMER, //  1 PA7  D1
-    NOT_ON_TIMER, //  2 PD6  D2
+    TIMERB1,      //  2 PD6  D2  (TCB1 PWM via CCL LUT2 alt - exclusive with D0)
     NOT_ON_TIMER, //  3 PD7  D3
     NOT_ON_TIMER, //  4 PA2  D4  (TCA0 WO2, dynamic; TCB0 WO = millis)
     NOT_ON_TIMER, //  5 PA3  D5  (TCA0 WO3, dynamic)

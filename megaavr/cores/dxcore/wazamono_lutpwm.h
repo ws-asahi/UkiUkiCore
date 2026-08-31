@@ -92,15 +92,22 @@
 #endif
 
 /* =====================================================================
- * Multi-route variant (WAZAMONO_TCB1_PWMMUX): ONE TCB1 waveform, THREE
- * selectable outlets, exclusively routed (used by Wazamono Tsurugi):
+ * Multi-route variant (WAZAMONO_TCB1_PWMMUX): ONE TCB1 waveform, up to
+ * THREE selectable outlets, exclusively routed (Tachi, Tsurugi, Kunai):
  *   - a LUT-OUT pin "A"    (WAZAMONO_TCB1_PWM_LUT0_PIN / _LUT0 / _LUT0_ALT)
  *   - a LUT-OUT pin "B"    (WAZAMONO_TCB1_PWM_LUT1_PIN / _LUT1 / _LUT1_ALT)
  *   - TCB1's own WO pin    (WAZAMONO_TCB1_PWM_WO_PIN; PORTMUX position is
- *                           set by TCB1_PINS as usual; outlet = CCMPEN)
- * analogWrite() on any of the three pins claims the route (last caller
+ *                           set by TCB1_PINS as usual; outlet = CCMPEN).
+ *                           OPTIONAL: leave it undefined (or define it as
+ *                           NOT_A_PIN) on boards whose TCB1 WO positions are
+ *                           all taken or absent - Kunai: default = PA3 (SCL),
+ *                           ALT1 = PF5 (not bonded out on the 20-pin part).
+ *   The "_LUT0"/"_LUT1" in the macro names label the two LUT outlets A and
+ *   B; the LUT index actually used is the value of _LUT0 / _LUT1 (Kunai
+ *   routes outlet A through LUT1 and outlet B through LUT2).
+ * analogWrite() on any of the outlet pins claims the route (last caller
  * wins); the previously active outlet is released first, so at most one
- * pin ever carries the waveform. All three pins share TCB1's frequency
+ * pin ever carries the waveform. All outlet pins share TCB1's frequency
  * and duty. Foreign LUT configurations are never clobbered: engaging a
  * LUT outlet fails (returns 0 -> caller falls back to digital output)
  * if the LUT is enabled with a configuration other than ours.
@@ -110,20 +117,41 @@
   #if defined(WAZAMONO_TCB1_LUTPWM_ENABLED)
     #error "WAZAMONO_TCB1_PWMMUX and WAZAMONO_TCB1_LUTPWM_PIN are mutually exclusive."
   #endif
-  #if !defined(WAZAMONO_TCB1_PWM_LUT0_PIN) || !defined(WAZAMONO_TCB1_PWM_LUT1_PIN) || !defined(WAZAMONO_TCB1_PWM_WO_PIN)
-    #error "WAZAMONO_TCB1_PWMMUX requires _LUT0_PIN, _LUT1_PIN and _WO_PIN."
+  #if !defined(WAZAMONO_TCB1_PWM_LUT0_PIN) || !defined(WAZAMONO_TCB1_PWM_LUT1_PIN)
+    #error "WAZAMONO_TCB1_PWMMUX requires _LUT0_PIN and _LUT1_PIN."
+  #endif
+  #if !defined(WAZAMONO_TCB1_PWM_LUT0) || !defined(WAZAMONO_TCB1_PWM_LUT0_ALT) || \
+      !defined(WAZAMONO_TCB1_PWM_LUT1) || !defined(WAZAMONO_TCB1_PWM_LUT1_ALT)
+    #error "WAZAMONO_TCB1_PWMMUX requires _LUT0/_LUT0_ALT and _LUT1/_LUT1_ALT."
+  #endif
+  #if !defined(WAZAMONO_TCB1_PWM_WO_PIN)
+    #define WAZAMONO_TCB1_PWM_WO_PIN (0xFF)   /* NOT_A_PIN: no direct WO outlet */
+  #endif
+  /* 1 when the board has a usable TCB1 WO outlet (Tachi D3, Tsurugi D7);
+   * 0 when only the two LUT outlets exist (Kunai). Evaluated by the
+   * preprocessor, so the WO code paths vanish entirely on Kunai. */
+  #if (WAZAMONO_TCB1_PWM_WO_PIN) != 0xFF
+    #define WAZAMONO_TCB1_PWM_HAS_WO 1
+  #else
+    #define WAZAMONO_TCB1_PWM_HAS_WO 0
   #endif
   #define WAZAMONO_TCB1_PWMMUX_ENABLED 1
-  #define WAZAMONO_TCB1_PWM_IS_ROUTED_PIN(p) \
-      ((p) == WAZAMONO_TCB1_PWM_LUT0_PIN || \
-       (p) == WAZAMONO_TCB1_PWM_LUT1_PIN || \
-       (p) == WAZAMONO_TCB1_PWM_WO_PIN)
+  #if WAZAMONO_TCB1_PWM_HAS_WO
+    #define WAZAMONO_TCB1_PWM_IS_ROUTED_PIN(p) \
+        ((p) == WAZAMONO_TCB1_PWM_LUT0_PIN || \
+         (p) == WAZAMONO_TCB1_PWM_LUT1_PIN || \
+         (p) == WAZAMONO_TCB1_PWM_WO_PIN)
+  #else
+    #define WAZAMONO_TCB1_PWM_IS_ROUTED_PIN(p) \
+        ((p) == WAZAMONO_TCB1_PWM_LUT0_PIN || \
+         (p) == WAZAMONO_TCB1_PWM_LUT1_PIN)
+  #endif
 
   #ifdef __cplusplus
   extern "C" {
   #endif
 
-  /* Claim the route for `pin` (one of the three outlets). Releases whichever
+  /* Claim the route for `pin` (one of the outlet pins). Releases whichever
    * outlet was active before. Returns 1 on success, 0 when a needed LUT is
    * owned by someone else (caller falls back to plain digital output). */
   uint8_t wazamono_tcb1_pwm_engage(uint8_t pin);

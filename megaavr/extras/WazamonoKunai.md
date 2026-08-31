@@ -129,7 +129,7 @@ Benchmark results against other compatible boards.
 
 The numbering matches the Seeeduino XIAO.  
 Unlike the SAMD21, however, some GPIOs lack PWM or ADC.  
-No PWM: D1, D2, D3, D8  
+No PWM: D1, D3, D8  
 No ADC: D6, D7  
 Due to hardware constraints there is also no independent LED_BUILTIN.  
 
@@ -137,7 +137,7 @@ Due to hardware constraints there is also no independent LED_BUILTIN.
 |-----|-----|-------|--------|----------------|
 | D0 | PC3 | A0 | AIN31 | ~PWM (TCB1 + LUT1) |
 | D1 | PA7 | A1 | AIN27 | **SS** (SPI) / **OUT** (AnalogComp) / EVOUTA / CLKOUT |
-| D2 | PD6 | A2 | AIN6 | **TX** (Serial2) / **P** (AnalogComp) |
+| D2 | PD6 | A2 | AIN6 | ~PWM (TCB1 + LUT2) / **TX** (Serial2) / **P** (AnalogComp) |
 | D3 | PD7 | A3 | AIN7 | **RX** (Serial2) / **AREF** / **N** (AnalogComp) / EVOUTD |
 | D4 | PA2 | A4 | AIN22 | **I2C SDA** / ~PWM (TCA0 WO2) / **XCK** (Serial1) / **CLK** (SPI1) / **IN2** (CustomLogic) |
 | D5 | PA3 | A5 | AIN23 | **I2C SCL** / ~PWM (TCA0 WO3) / **XDIR** (Serial1) / **OUT** (CustomLogic) |
@@ -150,8 +150,11 @@ Due to hardware constraints there is also no independent LED_BUILTIN.
 | D12 | PD5 | A12 | AIN5 | **LED_BUILTIN_RX** (driven by USB-CDC activity) |
 
 > 
-> **PWM on D0 comes from TCB1** (routed through CCL LUT1), the only TCB PWM output on Kunai.  
-> When TCB1 is taken by `tone()` or similar, PWM on D0 is suspended.  
+> **PWM on D0 / D2 is mutually exclusive.**  
+> A single TCB1 waveform is routed to one of these pins through CCL LUT1 (D0) or LUT2 (D2), so the pin most recently written with `analogWrite()` becomes the output (default: D0).  
+> Two different PWM signals cannot be produced at once; frequency and duty are shared by both pins.  
+> When TCB1 is taken by `tone()` or similar, PWM is disabled on both.  
+> D2 is also the Serial2 TX pin, so D2 PWM and Serial2 cannot be used together.  
 >
 > **D3 can be used as AREF.**  
 > While it serves as AREF it cannot be used for anything else.  
@@ -211,11 +214,11 @@ Due to hardware constraints there is also no independent LED_BUILTIN.
 ### PWM (`analogWrite()`)
 
 - **D4, D5, D6, D7, D9, D10** - TCA0
-- **D0** - The 8-bit PWM waveform of TCB1, output via CCL LUT1
+- **D0 / D2** - The 8-bit PWM waveform of TCB1, output via CCL LUT1 / LUT2 (mutually exclusive)
 
 >  
-> **TCB1 PWM:** While TCB1 is in use for something else, `analogWrite(D0)` gives up PWM and falls back to a plain HIGH/LOW output (threshold 127).  
-> - `tone()` uses TCB1, so PWM on D0 stops while it is running.  
+> **Exclusive PWM:** While TCB1 is in use for something else, `analogWrite(D0)` (or D2) gives up PWM and falls back to a plain HIGH/LOW output (threshold 127).  
+> - `tone()` uses TCB1, so PWM on D0 and D2 stops while it is running.  
 >  
 > The Seeeduino XIAO can output PWM on every GPIO; Kunai has some restrictions on PWM output.
 >  
@@ -338,7 +341,7 @@ The following differ from the XIAO.
 - **No LED_BUILTIN**: There is no independent LED; the TX LED serves in its place.
 - **No SWCLK / SWDIO**: The pads behind the USB connector are not SWCLK / SWDIO but UPDI and HV RESET (pads for UPDI v2).
 - **5 V operation possible**: When running at 5 V, the XIAO's 3.3 V supply pin carries 5 V, which can destroy peripherals rated for 3.3 V.
-- **PWM on up to 7 pins**: D1, D2, D3, and D8 have no PWM. D0 uses TCB1 (shared with `tone()`).
+- **PWM on up to 7 pins**: D1, D3, and D8 have no PWM. PWM on D0 and D2 is mutually exclusive (one TCB1 waveform, shared with `tone()`).
 - **No ADC on some pins**: A6 and A7 have no ADC.
 - **Different variable sizes**: `int` is 2 bytes instead of 4. `double` is 4 bytes instead of 8 (`long double` is 8 bytes, matching). 
 

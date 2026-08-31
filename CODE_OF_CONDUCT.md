@@ -1,19 +1,19 @@
-# 行動規範（Code of Conduct）
+# Code of Conduct
 
-WazamonoCore は Workshop Asahi が提供する Wazamono シリーズ専用の Arduino コアです。本リポジトリの Issue・ディスカッション等に参加されるすべての方に、相互の敬意をお願いします。
+WazamonoCore is the Arduino core provided by Workshop Asahi for the Wazamono series. We ask everyone taking part in the Issues, discussions, and other activity of this repository to treat each other with respect.
 
-## お願い
+## Requests
 
-- 他者への嫌がらせ、個人攻撃、差別的な言動はご遠慮ください。
-- 不具合報告・質問・提案は、再現手順や環境（ボード、IDE バージョン、スケッチ等）を添えて具体的にお寄せください。
-- スパムや本筋と無関係な投稿はお控えください。
+- Please refrain from harassment, personal attacks, and discriminatory language or behavior.
+- When reporting bugs, asking questions, or making suggestions, please be specific and include reproduction steps and your environment (board, IDE version, sketch, etc.).
+- Please avoid spam and off-topic posts.
 
-## 連絡先
+## Contact
 
-不適切な行為を見かけた場合や、本リポジトリに関するお問い合わせは、Issue または下記までご連絡ください。
+If you notice inappropriate behavior, or have any inquiry about this repository, please open an Issue or contact us at:
 
 - Workshop Asahi: asahi.00@ws-asahi.net
 
 ---
 
-本ドキュメントは製品リポジトリ向けの簡易版です。
+This document is a simplified version for a product repository.

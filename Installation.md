@@ -1,56 +1,56 @@
-# WazamonoCore のインストール
+# Installing WazamonoCore
 
-WazamonoCore は、Wazamono シリーズ（AVR DU 搭載ボード）を Arduino IDE で開発するための専用コアです。
+WazamonoCore is the dedicated core for developing the Wazamono series (boards based on the AVR DU) in the Arduino IDE.
 
-## 対応 IDE
+## Supported IDEs
 
-- **Arduino IDE 1.8.13 以降**（推奨）
+- **Arduino IDE 1.8.13 or later** (recommended)
 - **Arduino IDE 2.x**
 
-> **Linux をお使いの場合:** Arduino IDE は必ず [arduino.cc](https://www.arduino.cc) の配布版を使用してください。ディストリビューションのパッケージマネージャ版は改変されており、サードパーティのボードパッケージが正常に動作しないことが知られています。
+> **On Linux:** Always use the Arduino IDE distributed by [arduino.cc](https://www.arduino.cc). The versions in distribution package managers are modified and are known not to work correctly with third-party board packages.
 
-## 対応 OS（ツールチェーン）
+## Supported hosts (toolchain)
 
-ボードマネージャ経由のインストールは、現在以下のホストに対応しています。
+Installation via the Board Manager currently supports the following hosts.
 
-| ホスト | 状態 |
-|--------|------|
-| Windows x64 | ✅ 対応 |
-| Linux x64 | ✅ 対応 |
-| macOS (Intel / Apple Silicon)・Linux ARM64 | 🚧 準備中 |
+| Host | Status |
+|------|--------|
+| Windows x64 | ✅ Supported |
+| Linux x64 | ✅ Supported |
+| macOS (Intel / Apple Silicon), Linux ARM64 | 🚧 In preparation |
 
 ---
 
-## ボードマネージャ経由（推奨）
+## Via Board Manager (recommended)
 
-1. Arduino IDE の **ファイル > 基本設定** を開き、**追加のボードマネージャの URL** に以下を追加します。
+1. Open **File > Preferences** in the Arduino IDE and add the following to **Additional boards manager URLs**:
 
    ```
    https://wazamono.ws-asahi.net/package_wazamono_index.json
    ```
 
-2. **ツール > ボード > ボードマネージャ** を開き、「**Wazamono**」で検索します。
+2. Open **Tools > Board > Boards Manager** and search for "**Wazamono**".
 
-3. **Wazamono Boards (AVR DU series)** を選んで **インストール** します。
-   コア本体に加えて、専用ツールチェーン wazamono-toolchain（avr-gcc 15.2.0 / avrdude 8.1）が自動的にダウンロード・設定されます。
+3. Select **Wazamono Boards (AVR DU series)** and click **Install**.
+   Along with the core itself, the dedicated toolchain wazamono-toolchain (avr-gcc 15.2.0 / avrdude 8.1) is downloaded and configured automatically.
 
-4. 「ツール > ボード > WazamonoCore」に **Wazamono Tachi / Tsurugi / Kunai** が表示されればインストール完了です。
+4. Installation is complete when **Wazamono Tachi / Tsurugi / Kunai** appear under **Tools > Board > WazamonoCore**.
 
-> ツールチェーンを含めて数百 MB のダウンロードが発生します。インストール先は
-> Arduino IDE の標準パッケージフォルダ（Windows: `%LOCALAPPDATA%\Arduino15\packages\WazamonoCore\`）です。
+> Several hundred MB will be downloaded, including the toolchain. The installation location is
+> the Arduino IDE's standard package folder (Windows: `%LOCALAPPDATA%\Arduino15\packages\WazamonoCore\`).
 
 ---
 
-## 手動インストール（開発者向け・hardware フォルダ）
+## Manual installation (for developers; hardware folder)
 
-コア自体を開発・改造する場合のインストール方法です。**通常の利用にはボードマネージャ経由を推奨します。**
+This is how to install when developing or modifying the core itself. **For normal use, installation via the Board Manager is recommended.**
 
-1. このリポジトリを `git clone` するか、ZIP をダウンロードして展開します。
+1. `git clone` this repository, or download and extract the ZIP.
 
-2. スケッチブックの `hardware` フォルダに、フォルダ名を **`WazamonoCore`** として配置します。階層は以下のようになります。
+2. Place it in the `hardware` folder of your sketchbook with the folder name **`WazamonoCore`**. The layout should look like this:
 
    ```
-   <スケッチブック>/
+   <sketchbook>/
      └─ hardware/
           └─ WazamonoCore/
                └─ megaavr/
@@ -61,46 +61,46 @@ WazamonoCore は、Wazamono シリーズ（AVR DU 搭載ボード）を Arduino 
                     └─ ...
    ```
 
-   スケッチブックの場所は、Arduino IDE の「ファイル > 環境設定 > スケッチブックの保存場所」で確認できます。
+   The sketchbook location is shown under **File > Preferences > Sketchbook location** in the Arduino IDE.
 
-   - Windows 例: `ドキュメント\Arduino\hardware\WazamonoCore\`
-   - macOS 例: `~/Documents/Arduino/hardware/WazamonoCore/`
-   - Linux 例: `~/Arduino/hardware/WazamonoCore/`
+   - Windows example: `Documents\Arduino\hardware\WazamonoCore\`
+   - macOS example: `~/Documents/Arduino/hardware/WazamonoCore/`
+   - Linux example: `~/Arduino/hardware/WazamonoCore/`
 
-3. **ツールチェーンを設定します（手動インストールでは必須）。**
-   手動インストールでは IDE がツールチェーンを自動解決しないため、そのままでは
-   IDE 標準の avr-gcc 7.3.0（AVR DU 非対応）が使われてビルドに失敗します。
-   `megaavr\make_platform_local.bat` を実行して、ローカルの avr-gcc 15.x を指す
-   `platform.local.txt` を生成してください（詳細はバッチファイル冒頭のコメント参照）。
+3. **Configure the toolchain (required for manual installation).**
+   With a manual installation the IDE does not resolve the toolchain automatically, so
+   the IDE's stock avr-gcc 7.3.0 (which does not support the AVR DU) would be used and the build would fail.
+   Run `megaavr\make_platform_local.bat` to generate a `platform.local.txt` that points at
+   your local avr-gcc 15.x (see the comments at the top of the batch file for details).
 
-4. Arduino IDE を再起動します。
+4. Restart the Arduino IDE.
 
-> **ボードマネージャ版と手動版を併用する場合:** 両方が存在するときは
-> スケッチブック（hardware フォルダ）側が優先されます。ボードマネージャ版の
-> 動作を確認したいときは、hardware フォルダ側を一時的にリネームしてください。
-> どちらが使われているかは、ビルドログ冒頭の `Using board ... from platform in folder:` で確認できます。
-
----
-
-## 初回のブートローダ書き込み（必要な場合）
-
-Wazamono の製品ボードは出荷時に USB ブートローダが書き込まれているため、通常は USB 接続するだけでスケッチを書き込めます。
-
-自作・修理などでブートローダの書き込みが必要な場合は、UPDI プログラマを使用します。
-
-- 対応プログラマ: PICkit 4 / 5、Atmel-ICE、SerialUPDI アダプタ、jtag2updi など
-- 接続先: UPDI ピン / パッド
-- 手順: 「ツール > 書き込み装置」でプログラマを選択し、「ブートローダを書き込む」を実行
+> **If both the Board Manager and manual installations are present:** the sketchbook
+> (hardware folder) copy takes precedence. To test the Board Manager copy, temporarily
+> rename the hardware folder copy. You can tell which one is in use from the line
+> `Using board ... from platform in folder:` at the start of the build log.
 
 ---
 
-## 動作確認
+## Flashing the bootloader for the first time (if needed)
 
-インストール後、以下のスケッチで動作を確認できます。
+Wazamono production boards ship with the USB bootloader already programmed, so normally you can upload sketches simply by connecting over USB.
+
+If you need to program the bootloader (for a self-built or repaired board), use a UPDI programmer.
+
+- Supported programmers: PICkit 4 / 5, Atmel-ICE, SerialUPDI adapters, jtag2updi, etc.
+- Connection: the UPDI pin / pad
+- Procedure: select the programmer under **Tools > Programmer**, then run **Burn Bootloader**
+
+---
+
+## Verifying the installation
+
+After installation, the following sketch can be used to confirm that everything works.
 
 ```cpp
 void setup() {
-  Serial.begin(115200);          // Serial = USB CDC（変換チップ不要）
+  Serial.begin(115200);          // Serial = USB CDC (no converter chip)
   pinMode(LED_BUILTIN, OUTPUT);
 }
 void loop() {
@@ -110,4 +110,4 @@ void loop() {
 }
 ```
 
-ボードを選択して書き込み、シリアルモニタ（115200 bps）に値が表示され、オンボード LED が点滅すれば成功です。
+Select the board and upload. If values appear in the Serial Monitor (115200 bps) and the on-board LED blinks, the installation is working.

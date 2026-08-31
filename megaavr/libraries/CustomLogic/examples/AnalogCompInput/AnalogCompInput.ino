@@ -11,11 +11,11 @@
  *
  * Wiring:
  *   the voltage to watch -> the AnalogComp + pin
- *                           Tachi: D9 / Tsurugi: D9 / Kunai: D6
+ *                           Tachi: D9 / Tsurugi: D9 / Kunai: D2
  *   a push button        -> the CustomLogic IN1 pin, to GND
- *                           Tachi: D6 / Tsurugi: D6 / Kunai: D5
+ *                           Tachi: D6 / Tsurugi: D6 / Kunai: D7
  *   an LED (+ resistor)  -> the CustomLogic OUT pin, to GND
- *                           Tachi: D10 / Tsurugi: D10 / Kunai: D2
+ *                           Tachi: D10 / Tsurugi: D10 / Kunai: D5
  *
  * The inputs are pulled up, so the LED lights while the voltage is above
  * 2.5 V and the button is NOT pressed; pressing the button puts it out.

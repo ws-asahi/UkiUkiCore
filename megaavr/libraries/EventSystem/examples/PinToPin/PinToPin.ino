@@ -9,7 +9,7 @@
  * OUT - only the board's fixed event-output pins (one per event output):
  *   Tachi      D8, D9, A3
  *   Tsurugi    D2, D9, A2
- *   Kunai      D1, D7
+ *   Kunai      D1, D3
  *
  * IN - any pin, but AT MOST TWO PER PORT at the same time (the hardware has
  * two event generators per port, shared by all EventSystem connections).
@@ -18,12 +18,13 @@
  *              PORTC: D4
  *              PORTD: D5  D6  D9  D10 D14 D15 D16 A0
  *              PORTF: A1  A2  A3  A4  A5  D17
- *   Tsurugi    PORTA: D0  D1  D2  D8  A4  A5
- *              PORTC: D7
- *              PORTD: D5  D6  D9  D10 D11 D12 D13
- *              PORTF: D3  D4  A0  A1  A2  A3
- *   Kunai      PORTA: D0  D2  D3  D4  D5  D8  D9  D10
- *              PORTD: D1  D6  D7  D13
+ *   Tsurugi    PORTA: D0  D1  D2  D3  A4  A5
+ *              PORTC: D4
+ *              PORTD: D5  D6  D9  D10 D11 D12 D13 AREF
+ *              PORTF: D7  D8  A0  A1  A2  A3
+ *   Kunai      PORTA: D1  D4  D5  D6  D7  D8  D9  D10
+ *              PORTC: D0
+ *              PORTD: D2  D3  D11 D12
  * Example: on Kunai, D8 and D9 as sources works; adding D10 (a third PORTA
  * pin) makes that connect() return false.
  *

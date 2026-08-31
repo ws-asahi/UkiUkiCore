@@ -109,7 +109,7 @@ so you do not need the EventSystem library for this.
 |---|---|---|---|
 | **Tachi** | D8 (PA7) | D9 (PD2) | A3 (PF2) |
 | **Tsurugi** | D2 (PA7) | D9 (PD2) | A2 (PF2) |
-| **Kunai** | D0 (PA7) | D7 (PD7) | — |
+| **Kunai** | D1 (PA7) | D3 (PD7) | — |
 
 ```cpp
 CustomLogic.begin(AND);

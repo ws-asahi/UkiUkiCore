@@ -10,7 +10,7 @@
  *                   OUT           OUT (alt)     event outputs
  *   Tachi           D10 (PD3)     D15 (PD6)     D8, D9, A3
  *   Tsurugi         D10 (PD3)     D13 (PD6)     D2, D9, A2
- *   Kunai           D2  (PA3)     D8  (PA6)     D1, D7
+ *   Kunai           D5  (PA3)     D8  (PA6)     D1, D3
  *
  * setOutput(pin)  - the result appears on that pin only
  * addOutput(pin)  - ...and on this one too (dedicated pin + one pin per port)

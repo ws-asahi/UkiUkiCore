@@ -12,7 +12,7 @@
  *              any-pin button   IN1 button      OUT (LED to GND)
  *   Tachi      D9               D6              D10
  *   Tsurugi    D2               D6              D10
- *   Kunai      D8               D5              D2
+ *   Kunai      D8               D7              D5
  *
  * Buttons go to GND (inputs are pulled up, so unpressed = HIGH).
  */

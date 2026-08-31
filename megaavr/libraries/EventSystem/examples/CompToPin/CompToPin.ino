@@ -6,7 +6,7 @@
  *
  * Wiring:
  *   the voltage to watch -> AnalogComp + input
- *                           Tachi: D9* / Tsurugi: D9* / Kunai: D6
+ *                           Tachi: D9* / Tsurugi: D9* / Kunai: D2
  *   an LED (+ resistor)  -> the event-output pin, to GND
  *                           Tachi: D8 / Tsurugi: D2 / Kunai: D1
  *

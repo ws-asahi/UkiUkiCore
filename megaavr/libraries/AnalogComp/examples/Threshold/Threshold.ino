@@ -4,7 +4,7 @@
  * no external divider needed. Here the threshold is 2.5 V: the built-in
  * LED turns on while the plus pin is above it.
  *
- * Plus input pin: Tachi D9 / Tsurugi D9 / Kunai D6
+ * Plus input pin: Tachi D9 / Tsurugi D9 / Kunai D2
  * Pass the same constants used with analogReference(): INTERNAL1V024,
  * INTERNAL2V048, INTERNAL2V5, INTERNAL4V096, VDD or EXTERNAL. An optional
  * second argument scales the threshold: Vth = Vref * level / 256.

@@ -8,7 +8,7 @@
  *            IN0        IN1        OUT
  *   Tachi    D5         D6         D10
  *   Tsurugi  D5         D6         D10
- *   Kunai    D4         D5         D2
+ *   Kunai    D6         D7         D5
  *
  * The inputs have pull-ups, so for a quick test just wire two push
  * buttons from IN0/IN1 to GND and an LED (with a resistor) from OUT to

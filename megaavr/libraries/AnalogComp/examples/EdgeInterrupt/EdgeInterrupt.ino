@@ -3,7 +3,7 @@
  * Runs a function the instant the plus input crosses the threshold,
  * just like attachInterrupt() on a digital pin - but for an analog level.
  *
- * Plus input pin: Tachi D9 / Tsurugi D9 / Kunai D6
+ * Plus input pin: Tachi D9 / Tsurugi D9 / Kunai D2
  * Modes: RISING (crosses upward), FALLING (crosses downward), CHANGE.
  * The threshold here is half the supply: begin(VDD, 128) -> VDD * 128/256.
  */

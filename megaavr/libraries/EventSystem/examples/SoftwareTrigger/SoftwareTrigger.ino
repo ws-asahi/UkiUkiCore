@@ -6,9 +6,9 @@
  * The sketch decides WHEN (in code); everything after that is hardware.
  *
  *   IN0 = the software pulse   (via EVENT_TO_LOGIC_A)
- *   IN1 = RESET button          Tachi: D6 / Tsurugi: D6 / Kunai: D5
+ *   IN1 = RESET button          Tachi: D6 / Tsurugi: D6 / Kunai: D7
  *   IN2 = the latch's own output
- *   OUT = LED (+ resistor)      Tachi: D10 / Tsurugi: D10 / Kunai: D2
+ *   OUT = LED (+ resistor)      Tachi: D10 / Tsurugi: D10 / Kunai: D5
  *
  * Truth table (bit i = output for inputs spelling i, IN2 = bit 2):
  *   RESET pressed (IN1 = 0)          -> 0          (indices 0,1,4,5)

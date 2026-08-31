@@ -5,8 +5,8 @@ AnalogCompClass AnalogComp;
 
 /* ---- board default inputs ------------------------------------------- */
 #if defined(ARDUINO_AVR_KUNAI)
-  #define AC_DEFAULT_PLUS_PIN   PIN_PD6   /* D6, AINP3 */
-  #define AC_DEFAULT_MINUS_PIN  PIN_PD7   /* D7, AINN2 */
+  #define AC_DEFAULT_PLUS_PIN   PIN_PD6   /* Kunai D2, AINP3 */
+  #define AC_DEFAULT_MINUS_PIN  PIN_PD7   /* Kunai D3, AINN2 */
 #else /* Tachi / Tsurugi */
   #define AC_DEFAULT_PLUS_PIN   PIN_PD2   /* Tachi D9  / Tsurugi D9,  AINP0 */
   #define AC_DEFAULT_MINUS_PIN  PIN_PD3   /* Tachi D10 / Tsurugi D10, AINN0 */

@@ -8,7 +8,7 @@
  *   CustomLogic
  *     Tachi       D5    D6    D10
  *     Tsurugi     D5    D6    D10
- *     Kunai       D4    D5    D2
+ *     Kunai       D6    D7    D5
  *   CustomLogic1
  *     Tachi       A1    A2    D17 (= on-board LED_BUILTIN, active-LOW)
  *     Tsurugi     A0    A1    A3

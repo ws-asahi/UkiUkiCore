@@ -25,8 +25,8 @@ void loop() {
 | | + input | − input | Output (`enableOutput()`) |
 |---|---|---|---|
 | **Tachi** | D9 (PD2) | D10 (PD3) | D8 (PA7) |
-| **Tsurugi** | D9 (PD2) | D10 (PD3) | D8 (PA7) |
-| **Kunai** | D6 (PD6) | D7 (PD7) | D0 (PA7) |
+| **Tsurugi** | D9 (PD2) | D10 (PD3) | D2 (PA7) |
+| **Kunai** | D2 (PD6) | D3 (PD7) | D1 (PA7) |
 
 `setInputs(plus, minus)` switches to other supported pins
 (+: PD2/PD6, −: PD3/PD0/PD7, whichever exist on the board).

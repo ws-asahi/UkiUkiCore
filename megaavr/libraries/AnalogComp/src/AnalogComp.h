@@ -21,7 +21,7 @@
  *              plus (+)             minus (-)
  *   Tachi      D9  (PD2, AINP0)     D10 (PD3, AINN0)
  *   Tsurugi    D9  (PD2, AINP0)     D10 (PD3, AINN0)
- *   Kunai      D6  (PD6, AINP3)     D7  (PD7, AINN2)
+ *   Kunai      D2  (PD6, AINP3)     D3  (PD7, AINN2)
  *
  * The comparator output can be driven onto PA7 with enableOutput()
  * (Tachi: D8 / Tsurugi: D2 / Kunai: D1).

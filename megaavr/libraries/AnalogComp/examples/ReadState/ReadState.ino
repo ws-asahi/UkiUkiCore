@@ -8,7 +8,7 @@
  *            plus (+)         minus (-)
  *   Tachi    D9  (PD2)        D10 (PD3)
  *   Tsurugi  D9  (PD2)        D10 (PD3)
- *   Kunai    D6  (PD6)        D7  (PD7)
+ *   Kunai    D2  (PD6)        D3  (PD7)
  *
  * Try: connect the minus pin to a potentiometer wiper (or a resistor
  * divider) and the plus pin to the voltage you want to watch.

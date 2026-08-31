@@ -87,24 +87,24 @@ There are, however, a few areas where the AVR64DU32 comes out ahead.
 
 | Item | Wazamono Tsurugi (AVR64DU32) | Arduino Uno R4 (RA4M1) |
 |------|------------------------------|------------------------------|
-| Core | 8-bit AVRxt | 32-bit Arm Cortex-M4 (with FPU) |
+| Core | 8-bit AVRxt | 32-bit Arm Cortex-M4 |
 | Max. clock | 24 MHz | 48 MHz |
 | Operating voltage | 1.8–5.5 V | 1.6–5.5 V |
 | USB | Built into the MCU (no converter chip) | Built into the MCU (no converter chip) |
 | Flash | 64 KB | 256 KB |
 | SRAM | 8 KB | 32 KB |
 | EEPROM | 256 B | None (8 KB data flash, emulated by the core) |
-| ADC | 10-bit 170 ksps, 21 ch | 14-bit, 18 ch (64-pin package) |
+| ADC | 10-bit 170 ksps, 21 ch | 14-bit, 18 ch |
 | DAC | None | 12-bit × 1 |
 | Timers | 16-bit × 3 (TCA0 + TCB × 2) | 32-bit × 2 + 16-bit × 6 (GPT) + 16-bit × 2 (AGT) |
 | USART | 2 | 4 (SCI) |
-| SPI | 2 (one can act as client) | 2 (both can act as client) + simple SPI on 4 SCI |
-| I2C | 1 | 2 + simple I2C (master only) on 4 SCI |
-| External interrupts | **All pins** | 12 IRQ lines (64-pin package, multiplexed onto pins) |
+| SPI | 2 (1 can act as client) | 2 (both can act as client) + 4 (SCI) |
+| I2C | 1 | 2 + 4 (SCI) |
+| External interrupts | **All pins** | 12 |
 | CCL (LUT) | **4** | None |
 | Event system | 6 ch | Yes (ELC) |
 | Analog comparator (AC) | 1 | 2 (ACMPLP) |
-| GPIO drive capability | **20 mA** | 4–8 mA (20 mA on P408/P409 only) |
+| GPIO drive capability | **20 mA** | 4–8 mA / only part 20mA |
 
 <sub>RA4M1 figures are from the Renesas RA4M1 Group Datasheet (R01DS0355) for the 64-pin R7FA4M1AB3CFM used on the Uno R4.</sub>
 

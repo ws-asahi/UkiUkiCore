@@ -71,7 +71,7 @@ This page is the documentation for Wazamono Tsurugi. For an overview of the core
 | EEPROM | 256 B | 1 KB | 1 KB |
 | USERROW | 512 B | - | - |
 | ADC | 10-bit 170 ksps, 21 ch | 10-bit 9.6 ksps, 6 ch | 10-bit 9.6 ksps, 12 ch |
-| Timers | 16-bit × 1 + 8-bit × 2 | 16-bit × 1 + 8-bit × 2 | 16-bit × 2 + 8-bit × 1 + 10-bit × 1 |
+| Timers | 16-bit × 3 (TCA0 + TCB × 2) | 16-bit × 1 + 8-bit × 2 | 16-bit × 2 + 8-bit × 1 + 10-bit × 1 |
 | USART | 2 | 1 | 1 |
 | SPI | 2 (one can act as client) | 1 (no client mode) | 1 (no client mode) |
 | I2C | 1 | 1 | 1 |
@@ -152,7 +152,7 @@ The layout therefore differs considerably from the Leonardo.
 | D6 | PD1 | A12 | AIN1 | ~PWM (TCA0 WO1) / **IN1** (CustomLogic) |
 | D7 | PF5 | A13 | AIN21 | ~PWM (**TCB1 WO direct**, exclusive) |
 | D8 | PF4 | A14 | AIN20 | - |
-| D9 | PD2 | A15 | AIN2 | ~PWM (TCA0 WO2) / **IN2** (CustomLogic) / **P** (AnalogComp) |
+| D9 | PD2 | A15 | AIN2 | ~PWM (TCA0 WO2) / **IN2** (CustomLogic) / **P** (AnalogComp) / EVOUTD |
 | D10 | PD3 | A16 | AIN3 | ~PWM (TCA0 WO3) / **OUT** (CustomLogic) / **N** (AnalogComp) |
 | D11 | PD4 | A17 | AIN4 | ~PWM (TCA0 WO4) / **MOSI** (SPI) |
 | D12 | PD5 | A18 | AIN5 | ~PWM (TCA0 WO5) / **MISO** (SPI) |

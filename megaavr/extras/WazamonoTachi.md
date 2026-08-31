@@ -66,8 +66,8 @@ It can also **switch between 5 V and 3.3 V operation on the same board**.
 | SRAM | 8 KB | 2.5 KB |
 | EEPROM | 256 B | 1 KB |
 | USERROW | 512 B | - |
-| ADC | 10-bit 170 ksps, 12 ch | 10-bit 9.6 ksps, 12 ch |
-| Timers | 16-bit × 1 + 8-bit × 2 | 16-bit × 2 + 8-bit × 1 + 10-bit × 1 |
+| ADC | 10-bit 170 ksps, 21 ch | 10-bit 9.6 ksps, 12 ch |
+| Timers | 16-bit × 3 (TCA0 + TCB × 2) | 16-bit × 2 + 8-bit × 1 + 10-bit × 1 |
 | USART | 2 | 1 |
 | SPI | 2 (one can act as client) | 1 (no client mode) |
 | I2C | 1 | 1 |
@@ -145,7 +145,7 @@ Basic pin numbers are identical to the Pro Micro; pins that originally lacked an
 | D6 | PD1 | A7 | AIN1 | ~PWM (TCA0 WO1) / **IN1** (CustomLogic) |
 | D7 | PA6 | A16 | AIN26 | ~PWM (TCB1 + LUT0) / **XCK** (Serial1) / **CLK** (SPI1) |
 | D8 | PA7 | A8 | AIN27 | **XDIR** (Serial1) / **OUT** (AnalogComp) / EVOUTA / CLKOUT |
-| D9 | PD2 | A9 | AIN2 | ~PWM (TCA0 WO2) / **IN2** (CustomLogic) / **P** (AnalogComp) |
+| D9 | PD2 | A9 | AIN2 | ~PWM (TCA0 WO2) / **IN2** (CustomLogic) / **P** (AnalogComp) / EVOUTD |
 | D10 | PD3 | A10 | AIN3 | ~PWM (TCA0 WO3) / **OUT** (CustomLogic) / **N** (AnalogComp) |
 | D14 | PD5 | A17 | AIN5 | ~PWM (TCA0 WO5) / **MISO** (SPI) |
 | D15 | PD6 | A18 | AIN6 | **SCK** (SPI) / **TX** (Serial2) |

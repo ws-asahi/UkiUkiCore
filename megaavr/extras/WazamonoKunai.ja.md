@@ -129,7 +129,7 @@ AVR32DU20 には用途の異なる複数の不揮発メモリ領域がありま�
 
 Seeeduino XIAO と同じ番号付けです。  
 ただし SAMD21 とは異なり一部の GPIO は PWM や ADC の機能を持ちません。  
-PWM 非対応：D1, D3  
+PWM 非対応：D1, D2, D3, D8  
 ADC 非対応：D6, D7  
 またハードウェア上の制約により独立した LED_BUILTIN がありません。  
 
@@ -137,23 +137,21 @@ ADC 非対応：D6, D7
 |----|-----|--------------|--------|----------|
 | D0 | PC3 | A0 | AIN31 | ~PWM(TCB1 + LUT1)|
 | D1 | PA7 | A1 | AIN27 | **SS**(SPI) / **OUT**(AnalogComp)/ EVOUTA / CLKOUT |
-| D2 | PD6 | A2 | AIN6 | **TX**(Serial2) / ~PWM(TCB1 + LUT2)/ **SCK**(SPI)/ **OUT**(AnalogComp)|
-| D3 | PD7 | A3 | AIN7 | **RX**(Serial2) / **AREF** / **SS**(SPI) / EVOUTD |
+| D2 | PD6 | A2 | AIN6 | **TX**(Serial2) / **P**(AnalogComp) |
+| D3 | PD7 | A3 | AIN7 | **RX**(Serial2) / **AREF** / **N**(AnalogComp) / EVOUTD |
 | D4 | PA2 | A4 | AIN22 | **I2C SDA** / ~PWM(TCA0 WO2)/ **XCK**(Serial1) / **CLK**(SPI1) / **IN2**(CustomLogic) |
-| D5 | PA3 | A5 | AIN23 | **I2C SCL** / ~PWM(TCA0 WO3)/ **XDIR**(Serial1) / **OUT**(CustomLogic)/ **OUT**(AnalogComp) / EVOUTA / CLKOUT |
+| D5 | PA3 | A5 | AIN23 | **I2C SCL** / ~PWM(TCA0 WO3)/ **XDIR**(Serial1) / **OUT**(CustomLogic) |
 | D6 | PA0 | — | — | **TX**(Serial1) / ~PWM(TCA0 WO0) / **MISO**(SPI1) / **IN0**(CustomLogic)|
 | D7 | PA1 | — | — | **RX**(Serial1) / ~PWM(TCA0 WO1) / **MOSI**(SPI1) / **IN1**(CustomLogic)|
-| D8 | PA6 | A8 | AIN26 | ~PWM(TCB1 WO) / **SCK**(SPI) |
+| D8 | PA6 | A8 | AIN26 | **SCK**(SPI) |
 | D9 | PA5 | A9 | AIN25 | ~PWM(TCA0 WO5) / **MISO**(SPI) |
 | D10 | PA4 | A10 | AIN24 | ~PWM(TCA0 WO4) / **MOSI**(SPI)  |
 | D11 | PD4 | A11 | AIN4 | **LED_BUILTIN** / **LED_BUILTIN_TX**(USB-CDCと連動)|
 | D12 | PD5 | A12 | AIN5 | **LED_BUILTIN_RX**(USB-CDCと連動) |
 
 > 
-> **D0 / D2 / D8 の PWM は択一**です。  
-> 1 本の TCB1 波形をいずれかのピンに出し分ける構造のため、最後に `analogWrite()` したピンが出口になります(既定は D0)。  
-> 3 本同時に異なる PWM は出せません。周波数・デューティは 3 ピンで共通です。  
-> tone などで TCB1 を使用する時は 3 つとも PWM が無効化されます。  
+> **D0 の PWM は TCB1** の波形を CCL LUT1 経由で出力しています(Kunai で唯一の TCB PWM 出口)。  
+> tone などで TCB1 を使用する時は D0 の PWM が停止します。  
 >
 > **D3 は AREFとして使用できます**。  
 > AREF として使用する時は他の用途には使用できません。  
@@ -186,12 +184,12 @@ ADC 非対応：D6, D7
 | MOSI | D10 | D7 |
 | MISO | D9 | D6 |
 | SCK | D8 | D4 |
-| SS | D3 | なし |
+| SS | D1 | なし |
 
 >  
-> **クライアント(受信側)動作:** ハードウェア SS(D3) が実ピンにあるため、  
+> **クライアント(受信側)動作:** ハードウェア SS(D1) が実ピンにあるため、  
 > 付属の **SPISlave ライブラリ**（ESP8266 互換 API）で SPI スレーブとしても動作できます。  
-> その間 D3 ピンは SS 入力となり、外部基準電圧(`analogReference(EXTERNAL)`)・Serial2 とは排他です。
+> その間 D1 ピンは SS 入力となり、AC0 出力・EVOUTA・CLKOUT(ClockOut)とは排他です。
 >  
 > 詳細は [libraries/SPISlave](../libraries/SPISlave/README.md) を参照。  
 >  
@@ -211,11 +209,11 @@ ADC 非対応：D6, D7
 ### PWM(`analogWrite()`)
 
 - **D4, D5, D6, D7, D9, D10** - TCA0
-- **D0 / D2 / D8** - TCB1 の 8bit PWM 波形を直接または LUT 経由で出力(排他使用)
+- **D0** - TCB1 の 8bit PWM 波形を CCL LUT1 経由で出力
 
 >  
-> **排他 PWM:** TCB1 が他の用途に使われている間、`analogWrite(D0)`(またはD2, D8) は PWM をあきらめて単純な HIGH/LOW 出力(127 を閾値)に切り替わります。  
-> - `tone()` は TCB1 を使うため、実行中は D0, D2, D8 の PWM が停止します。  
+> **TCB1 PWM:** TCB1 が他の用途に使われている間、`analogWrite(D0)` は PWM をあきらめて単純な HIGH/LOW 出力(127 を閾値)に切り替わります。  
+> - `tone()` は TCB1 を使うため、実行中は D0 の PWM が停止します。  
 >  
 > Seeeduino XIAO は全ての GPIO で PWM 出力が可能ですが、Kunai では PWM出力 にいくつかの制限があります。
 >  
@@ -338,7 +336,7 @@ XIAOと比較して以下の機能が異なります。
 - **LED_BUILTIN なし** : 独立した LED が無く 代わりに TX LED が動作します。
 - **SWCLK / SWDIO なし** : USB 端子裏のパッドがSWCL, SWDIOではなく、代わりに UPDI と HV RESET (UPDI v2 用パッド) になっています。
 - **5V動作が可能** : 5V 動作時には XIAO の 3.3V 供給ピンに 5V が供給されるため、耐圧 3.3V の周辺機器は破壊される可能性があります。
-- **PWM は最大7系統** : D1, D3 は PWM に完全非対応。D0, D2, D8 の PWM は排他式。
+- **PWM は最大7系統** : D1, D2, D3, D8 は PWM 非対応。D0 は TCB1 を使用(`tone()` と共用)。
 - **一部ピンで ADC なし** : A6, A7 ピンは ADC なし。
 - **変数サイズの不一致** : int は 4 -> 2 バイト。double は 8 -> 4バイト(long doubleは 8 バイトで一致)。 
 

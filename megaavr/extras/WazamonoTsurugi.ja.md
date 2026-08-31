@@ -69,7 +69,7 @@ AVR64DU32 は新世代の **AVRxt コア**で、USB 内蔵・クロック・メ�
 | EEPROM | 256 B | 1 KB | 1 KB |
 | USERROW | 512 B | - | - |
 | ADC | 10-bit 170ksps 21ch| 10-bit 9.6ksps 6ch | 10-bit 9.6ksps 12ch |
-| タイマ | 16-bit ×1 + 8-bit ×2 | 16bit ×1 + 8-bit ×2 | 16bit ×2 + 8-bit ×1 + 10-bit ×1 |
+| タイマ | 16-bit ×3(TCA0 + TCB ×2) | 16bit ×1 + 8-bit ×2 | 16bit ×2 + 8-bit ×1 + 10-bit ×1 |
 | USART | 2 | 1 | 1 |
 | SPI | 2(1つはスレーブ可) | 1(スレーブ不可) | 1(スレーブ不可) |
 | I2C | 1 | 1 | 1 |
@@ -177,7 +177,7 @@ Arduino Uno R3 と同じ番号付けです。
 | D6 | PD1 | A12 | AIN1 | ~PWM(TCA0 WO1) / **IN1**(CustomLogic) |
 | D7 | PF5 | A13 | AIN21 | ~PWM(**TCB1 WO 直結**・択一) |
 | D8 | PF4 | A14 | AIN20 | - |
-| D9 | PD2 | A15 | AIN2 | ~PWM(TCA0 WO2) / **IN2**(CustomLogic) / **P**(AnalogComp)|
+| D9 | PD2 | A15 | AIN2 | ~PWM(TCA0 WO2) / **IN2**(CustomLogic) / **P**(AnalogComp) / EVOUTD |
 | D10 | PD3 | A16 | AIN3 | ~PWM(TCA0 WO3) / **OUT**(CustomLogic) / **N**(AnalogComp) |
 | D11 | PD4 | A17 | AIN4 | ~PWM(TCA0 WO4) / **MOSI**(SPI) |
 | D12 | PD5 | A18 | AIN5 | ~PWM(TCA0 WO5) / **MISO**(SPI) |

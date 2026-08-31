@@ -66,8 +66,8 @@ Pro Micro は USB 内蔵 AVR ですが、AVR64DU32 は新世代の **AVRxt コ�
 | SRAM | 8 KB | 2.5 KB |
 | EEPROM | 256 B | 1 KB |
 | USERROW | 512 B | - |
-| ADC | 10-bit 170ksps 12ch | 10-bit 9.6ksps 12ch |
-| タイマ | 16-bit ×1 + 8-bit ×2 | 16bit ×2 + 8-bit ×1 + 10-bit ×1 |
+| ADC | 10-bit 170ksps 21ch | 10-bit 9.6ksps 12ch |
+| タイマ | 16-bit ×3(TCA0 + TCB ×2) | 16bit ×2 + 8-bit ×1 + 10-bit ×1 |
 | USART | 2 | 1 |
 | SPI | 2(1つはスレーブ可) | 1(スレーブ不可) |
 | I2C | 1 | 1 |
@@ -145,7 +145,7 @@ SparkFun Pro Micro と同じ番号付けです。
 | D6 | PD1 | A7 | AIN1 | ~PWM(TCA0 WO1) / **IN1**(CustomLogic) |
 | D7 | PA6 | A16 | AIN26 | ~PWM(TCB1 + LUT0) / **XCK**(Serial1)/ **CLK**(SPI1) |
 | D8 | PA7 | A8 | AIN27 | **XDIR**(Serial1) / **OUT**(AnalogComp) / EVOUTA / CLKOUT |
-| D9 | PD2 | A9 | AIN2 | ~PWM(TCA0 WO2) / **IN2**(CustomLogic) / **P**(AnalogComp)|
+| D9 | PD2 | A9 | AIN2 | ~PWM(TCA0 WO2) / **IN2**(CustomLogic) / **P**(AnalogComp) / EVOUTD |
 | D10 | PD3 | A10 | AIN3 | ~PWM(TCA0 WO3) / **OUT**(CustomLogic) / **N**(AnalogComp) |
 | D14 | PD5 | A17 | AIN5 | ~PWM(TCA0 WO5) / **MISO**(SPI) |
 | D15 | PD6 | A18 | AIN6 | **SCK**(SPI) / **TX**(Serial2) |

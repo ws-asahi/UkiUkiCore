@@ -55,11 +55,9 @@ Uno R3 が別チップ(USB-シリアル変換)を必要としたのに対し、T
 
 ## ATmega328P(Arduino Uno R3)および ATmega32U4(Arduino Leonardo)との比較
 
->  
-> Wazamono Tsurugi が置き換える Arduino Uno R3 は **ATmega328P**(ネイティブ USB なし / 8-bit MCU )を搭載しています。  
-> ここでは性能として近い **ATmega32U4**(ネイティブ USB あり / 8-bit MCU )とも比較します。  
-> AVR64DU32 は新世代の **AVRxt コア**で、USB 内蔵・クロック・メモリ・周辺機能のすべてが強化されています。  
->  
+Wazamono Tsurugi が置き換える Arduino Uno R3 は **ATmega328P**(ネイティブ USB なし / 8-bit MCU )を搭載しています。  
+ここでは性能として近い **ATmega32U4**(ネイティブ USB あり / 8-bit MCU )とも比較します。  
+AVR64DU32 は新世代の **AVRxt コア**で、USB 内蔵・クロック・メモリ・周辺機能のすべてが強化されています。  
 
 | 項目 | Wazamono Tsurugi (AVR64DU32) | Arduino Uno R3 (ATmega328P) | Arduino Leonardo (ATmega32U4) |
 |------|------------------------------|------------------------------|------------------------------|
@@ -79,6 +77,33 @@ Uno R3 が別チップ(USB-シリアル変換)を必要としたのに対し、T
 | CCL(LUT) | 4 | なし | なし |
 | イベントシステム | 6 ch | なし | なし |
 | アナログコンパレータ(AC) | 1 | なし | なし |
+
+---
+
+## R4MA1(Arduino Uno R4)との比較
+
+Uno R4 が搭載するルネサス R4MA1 と比較すると多くの点でAVR64DU32は下回ります。  
+ただし一部AVR64DU32が勝る点もあります。  
+
+| 項目 | Wazamono Tsurugi (AVR64DU32) | Arduino Uno R4 (R4MA1) |
+|------|------------------------------|------------------------------|
+| コア | AVRxt | Arm Cortex-M4 |
+| 最大クロック | 24 MHz | 48 MHz |
+| USB | マイコン内蔵(変換チップ不要) | マイコン内蔵(変換チップ不要) |
+| Flash | 64 KB | 256 KB |
+| SRAM | 8 KB | 32 KB |
+| EEPROM | 256 B | 8 KB(FLASHエミュレーション) |
+| ADC | 10-bit 170ksps 21ch | 10-bit 1.85 Msps 25ch |
+| タイマ | 16-bit ×1 + 8-bit ×2 | 32bit ×7 + 16-bit ×2 |
+| USART | 2 | 4 |
+| SPI | 2(1つはスレーブ可) | 4(3つはスレーブ可) |
+| I2C | 1 | 4 |
+| DAC | なし | 1 |
+| 外部割り込み | **全ピン** | 14 |
+| CCL(LUT) | **4** | なし |
+| イベントシステム | **6 ch** | なし |
+| アナログコンパレータ(AC) | **1** | なし |
+| GPIO出力能力 | **20mA** | 8mA |
 
 ---
 

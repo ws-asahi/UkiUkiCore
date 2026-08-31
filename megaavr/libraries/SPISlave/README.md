@@ -1,74 +1,74 @@
-# SPISlave — SPI クライアント（受信側）ライブラリ
+# SPISlave — SPI client (receiver) library
 
-Wazamono ボードを **SPI のクライアント（従来呼称: スレーブ）** として動作させ、ホストからの送信を受け取り、応答を返すためのライブラリです。
+A library that lets a Wazamono board operate as an **SPI client (traditionally called a slave)**, receiving transmissions from a host and returning responses.
 
-API は **ESP8266 Arduino コアに同梱されている SPISlave ライブラリ**と同じフォーマットを採用しており、ESP8266 向けに書かれたスケッチを最小限の変更で移植できます。
+The API follows the same format as the **SPISlave library bundled with the ESP8266 Arduino core**, so sketches written for the ESP8266 can be ported with minimal changes.
 
-## 対応ボード
+## Supported boards
 
-| ボード | SS ピン | SPI 位置 |
-|--------|---------|----------|
-| Wazamono Tachi | A0 / D18（PD7） | SPI0 ALT4（MOSI=D16 / MISO=D14 / SCK=D15） |
-| Wazamono Tsurugi | **AREF** / D20（PD7） | SPI0 ALT4（MOSI=D11 / MISO=D12 / SCK=D13） |
-| Wazamono Kunai | D1（PA7） | SPI0 既定（MOSI=D10 / MISO=D9 / SCK=D8） |
+| Board | SS pin | SPI position |
+|-------|--------|--------------|
+| Wazamono Tachi | A0 / D18 (PD7) | SPI0 ALT4 (MOSI = D16 / MISO = D14 / SCK = D15) |
+| Wazamono Tsurugi | **AREF** / D20 (PD7) | SPI0 ALT4 (MOSI = D11 / MISO = D12 / SCK = D13) |
+| Wazamono Kunai | D1 (PA7) | SPI0 default (MOSI = D10 / MISO = D9 / SCK = D8) |
 
-SS は各ボードの SPI0 位置が持つ**ハードウェア SS ピン**（variant の `PIN_SPI_SS_HARDWARE`）です。ホストモード用の `PIN_SPI_SS`（Tsurugi では D10 のソフトウェア CS）とは異なる場合があります。
+SS is the **hardware SS pin** of the board's SPI0 position (`PIN_SPI_SS_HARDWARE` in the variant). It may differ from `PIN_SPI_SS` used in host mode (a software CS on D10 for Tsurugi).
 
-> **Tsurugi の注意:** ハードウェア SS は **AREF ヘッダピン**です。SPISlave 動作中は AREF が SS 入力になるため、外部基準電圧（`analogReference(EXTERNAL)` / シールドからの AREF 供給）、GPIO/アナログとしての D20/A20、および Serial2（RX=PD7、TX=PD6=SCK）とは**排他**です。`begin()` は AREF にプルアップを有効にします。ホストの CS 線を AREF ピンに接続してください。
+> **Note for Tsurugi:** The hardware SS is the **AREF header pin**. While SPISlave is active, AREF becomes the SS input and is therefore **mutually exclusive** with the external reference (`analogReference(EXTERNAL)` / AREF supplied from a shield), D20/A20 as GPIO/analog, and Serial2 (RX = PD7, TX = PD6 = SCK). `begin()` enables the pull-up on AREF. Connect the host's CS line to the AREF pin.
 
-## 使い方
+## Usage
 
 ```cpp
 #include <SPISlave.h>
 
 void setup() {
-  // ホストからの受信（SS が High に戻った時点で 1 トランザクション分）
+  // Received from the host (one transaction, delivered when SS returns High)
   SPISlave.onData([](uint8_t *data, size_t len) {
-    // data/len はコールバック内でのみ有効。必要な分をコピーする
-    SPISlave.setData("Hello Master!");   // 次にホストが読み出す応答を用意
+    // data/len are valid only inside the callback; copy what you need
+    SPISlave.setData("Hello Master!");   // Prepare the response the host reads next
   });
 
-  // ホストが setData() の応答を最後まで読み出した
+  // The host has read the setData() response to the end
   SPISlave.onDataSent([]() { });
 
-  SPISlave.begin();          // SPI モード 0（省略時）、MSB ファースト
-  SPISlave.setData("boot");  // 最初の読み出しに対する応答
+  SPISlave.begin();          // SPI mode 0 (default), MSB first
+  SPISlave.setData("boot");  // Response to the first read
 }
 ```
 
-ホスト側は通常の SPI ライブラリで、CS を Low → 送信/受信 → CS を High とするだけです（サンプル `SPISlave_Host` 参照）。
+On the host side, use the ordinary SPI library: pull CS Low → send/receive → pull CS High (see the `SPISlave_Host` example).
 
 ## API
 
-| メソッド | 説明 |
-|----------|------|
-| `begin(dataMode = 0)` | クライアントモード開始。`dataMode` は SPI モード番号 0–3（ホストの `SPISettings` と一致させる）。ビット順は MSB ファースト固定 |
-| `end()` | 停止（MISO を入力に戻す） |
-| `setData(uint8_t *data, size_t len)` / `setData(const char *)` | 次のトランザクションでホストが読み出す応答をセット（内部にコピー、最大 `SPISLAVE_BUFFER_SIZE` バイト）。新しい `setData()` まで同じ応答が先頭から繰り返し送られる |
-| `onData(cb)` | `void cb(uint8_t *data, size_t len)`。**SS が High に戻った時点**で、そのトランザクションで受信した全バイトを渡す |
-| `onDataSent(cb)` | `void cb()`。ホストが応答を最後まで読み出したトランザクションの終端で呼ばれる |
+| Method | Description |
+|--------|-------------|
+| `begin(dataMode = 0)` | Start client mode. `dataMode` is the SPI mode number 0–3 (match the host's `SPISettings`). Bit order is fixed to MSB first |
+| `end()` | Stop (returns MISO to input) |
+| `setData(uint8_t *data, size_t len)` / `setData(const char *)` | Set the response the host will read in the next transaction (copied internally, up to `SPISLAVE_BUFFER_SIZE` bytes). The same response is sent from the beginning on every transaction until the next `setData()` |
+| `onData(cb)` | `void cb(uint8_t *data, size_t len)`. Delivers all bytes received in the transaction **when SS returns High** |
+| `onDataSent(cb)` | `void cb()`. Called at the end of a transaction in which the host read the response to the end |
 
-- コールバックは**割り込みコンテキスト**で実行されます。処理は短く、loop() と共有する変数は `volatile` にしてください。
-- 応答が `setData()` の長さを超えて読まれた分は **0x00** で埋められます（ESP8266 版と同じ挙動）。
-- バッファ長は既定 32 バイト。`#include <SPISlave.h>` の前に `#define SPISLAVE_BUFFER_SIZE 64` のように定義すると変更できます（最大 255）。
+- Callbacks run in **interrupt context**. Keep them short, and declare variables shared with loop() as `volatile`.
+- Bytes read beyond the length set by `setData()` are padded with **0x00** (same behavior as the ESP8266 version).
+- The buffer length defaults to 32 bytes. It can be changed by defining e.g. `#define SPISLAVE_BUFFER_SIZE 64` before `#include <SPISlave.h>` (maximum 255).
 
-## ESP8266 版との違い
+## Differences from the ESP8266 version
 
-| 項目 | ESP8266 | 本ライブラリ |
+| Item | ESP8266 | This library |
 |------|---------|--------------|
-| トランザクション長 | 32 バイト固定（ハード仕様） | **可変長**（SS Low の間の全バイト、`len` は実受信数） |
-| `setStatus()` / `onStatus()` / `onStatusSent()` | あり（ESP8266 固有のステータスレジスタ） | **なし** |
-| `begin()` の引数 | なし | SPI モード番号 0–3（省略時 0） |
+| Transaction length | Fixed 32 bytes (hardware limitation) | **Variable length** (all bytes while SS is Low; `len` is the actual count received) |
+| `setStatus()` / `onStatus()` / `onStatusSent()` | Present (ESP8266-specific status register) | **Not present** |
+| `begin()` argument | None | SPI mode number 0–3 (default 0) |
 
-## 実装メモ（DS40002548A 26章）
+## Implementation notes (DS40002548A chapter 26)
 
-- クライアントモード（MASTER=0）＋バッファモード（BUFEN=1, **BUFWR=1**）。SS High 中の DATA 書き込みはシフトレジスタへ直行するため（26.3.2.2.1）、応答の先頭バイトはトランザクション開始前に装填済みです
-- 応答の後続バイトは RXC 割り込みで「受信 1 バイトごとに 1 バイト補給」します。送信バッファは 1 段のため、この規律で上書きロスが起きません
-- トランザクションの区切りは **SS ピンの立ち上がり**（`attachInterrupt`）で検出します。SPI 自体の SSIF はホストモード降格の検知専用（26.5.6）でこの用途には使えません
-- 表 26-1 のとおり、クライアントモードで方向設定が必要なのは MISO のみ（`begin()` が設定）。SS が High の間 MISO はハードウェアが自動開放するため、バス上に複数クライアントを接続できます
-- ホスト用の SPI ライブラリ（`SPI.h`）と同一スケッチでの併用は可能ですが、`SPI.begin()` と `SPISlave.begin()` は同じ SPI0 を設定するため**同時に有効にはできません**
+- Client mode (MASTER = 0) + buffer mode (BUFEN = 1, **BUFWR = 1**). A DATA write while SS is High goes straight to the shift register (26.3.2.2.1), so the first byte of the response is already loaded before the transaction starts
+- Subsequent response bytes are topped up "one byte per byte received" from the RXC interrupt. The transmit buffer is single-stage, and this discipline prevents overwrite loss
+- Transaction boundaries are detected on the **rising edge of the SS pin** (`attachInterrupt`). The SPI's own SSIF is only for detecting demotion from host mode (26.5.6) and cannot be used for this purpose
+- As in Table 26-1, the only pin whose direction must be set in client mode is MISO (done by `begin()`). While SS is High, the hardware releases MISO automatically, so several clients can share the bus
+- The host-side SPI library (`SPI.h`) can be used in the same sketch, but `SPI.begin()` and `SPISlave.begin()` both configure SPI0, so they **cannot be active at the same time**
 
-## 制限・注意
+## Limitations and notes
 
-- 1 バイトごとに割り込みが走るため、ホスト側の SCK は控えめに（まずは 1 MHz 程度から）。連続バイト間にすき間のない高速クロックでは `BUFOVF`（受信 2 段バッファあふれ）により取りこぼしが生じ得ます。実機での上限確認を推奨します
-- `onData` で `setData()` を呼ぶ運用（質問→応答）では、ホストは送信と読み出しを**別トランザクション**にし、間に短い待ち（1 ms 程度）を入れてください（サンプル参照）
+- Because an interrupt runs for every byte, keep the host's SCK modest (start around 1 MHz). With fast clocks and no gap between consecutive bytes, `BUFOVF` (receive two-stage buffer overflow) can drop data. Verify the upper limit on real hardware
+- When calling `setData()` from `onData` (request → response), have the host send and read in **separate transactions** with a short wait (about 1 ms) between them (see the example)

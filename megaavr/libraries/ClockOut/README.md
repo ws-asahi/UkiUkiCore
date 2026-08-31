@@ -1,77 +1,77 @@
-# ClockOut — メインクロック出力（CLKOUT）ライブラリ
+# ClockOut — Main clock output (CLKOUT) library
 
-Wazamono ボードの **CLK_PER（周辺/CPU クロック）を CLKOUT ピンへ出力**するライブラリです。`Serial` などと同じく `begin()` で出力開始、`end()` で停止します。
+A library that **outputs CLK_PER (the peripheral/CPU clock) on the CLKOUT pin** of a Wazamono board. As with `Serial`, `begin()` starts the output and `end()` stops it.
 
 ```cpp
 #include <ClockOut.h>
 
 void setup() {
-  ClockOut.begin();                        // CLK_PER の出力開始
-  Serial.println(ClockOut.frequency());    // 24000000（24MHz 動作時）
+  ClockOut.begin();                        // Start outputting CLK_PER
+  Serial.println(ClockOut.frequency());    // 24000000 (when running at 24 MHz)
 }
 ```
 
-## CLKOUT ピン
+## CLKOUT pin
 
-CLKOUT は **PA7 固定**で代替位置がありません。
+CLKOUT is **fixed to PA7** and has no alternate position.
 
-| ボード | CLKOUT ピン |
-|--------|-------------|
+| Board | CLKOUT pin |
+|-------|------------|
 | Wazamono Tachi | **D8** |
 | Wazamono Tsurugi | **D2** |
 | Wazamono Kunai | **D1** |
 
-## 主な用途
+## Typical uses
 
-- **外部 IC へのクロック供給** — コーデック / ADC / ロジック IC に系のクロックを分配し、2 個目の水晶や発振器を省く
-- **他 MCU との同期** — 相手の外部クロック入力（XTALHF1）へ入れて同期動作させる
-- **実クロックの実測** — オシロや周波数カウンタで系のクロックを確認。特に**水晶を持たない Kunai** は OSCHF を USB フレーム信号に対して自動チューニングするため、チューニングが効いているかの確認手段として実用的です
-- **生産時検査** — 内蔵オシレータの精度を基準器と比較する検査ポイント
+- **Clocking external ICs** — Distribute the system clock to a codec / ADC / logic IC and omit a second crystal or oscillator
+- **Synchronizing with another MCU** — Feed it into the other device's external clock input (XTALHF1) for synchronous operation
+- **Measuring the actual clock** — Check the system clock with a scope or frequency counter. This is especially useful on **Kunai, which has no crystal**, since it auto-tunes OSCHF against the USB frame signal and CLKOUT is a practical way to confirm that the tuning is working
+- **Production test** — A test point for comparing the internal oscillator's accuracy against a reference
 
 ## API
 
-| メソッド | 説明 |
-|----------|------|
-| `bool begin()` | CLKOUT 出力開始。PA7 が他の周辺機能に取られている場合は**何も変更せず `false` を返す** |
-| `void end()` | 出力停止。PA7 を入力に戻す |
-| `bool isRunning()` | 実際に出力中かどうか。レジスタの CLKOUT ビットを直接読むため、**CFD（クロック故障検出）によるハードウェア自動停止も検出**できます |
-| `uint32_t frequency()` | 出力周波数 [Hz]（= CLK_PER = `F_CPU`） |
-| `uint8_t pin()` | CLKOUT の Arduino ピン番号（Tachi=8 / Tsurugi=2 / Kunai=1） |
+| Method | Description |
+|--------|-------------|
+| `bool begin()` | Start CLKOUT output. If PA7 is taken by another peripheral, **changes nothing and returns `false`** |
+| `void end()` | Stop the output. Returns PA7 to input |
+| `bool isRunning()` | Whether output is actually active. Reads the CLKOUT bit in the register directly, so **it also detects the automatic hardware stop caused by CFD (Clock Failure Detection)** |
+| `uint32_t frequency()` | Output frequency [Hz] (= CLK_PER = `F_CPU`) |
+| `uint8_t pin()` | Arduino pin number of CLKOUT (Tachi = 8 / Tsurugi = 2 / Kunai = 1) |
 
-## 分周指定が無い理由
+## Why there is no divider argument
 
-CLKOUT が出すのは **CLK_PER そのもの**です。この経路にある分周器は CLK_MAIN プリスケーラ（`CLKCTRL.MCLKCTRLB`）だけで、これは **CPU クロックも同時に変えてしまいます**（`millis()`・USB・UART ボーレートがすべてずれます）。
+What CLKOUT produces is **CLK_PER itself**. The only divider in this path is the CLK_MAIN prescaler (`CLKCTRL.MCLKCTRLB`), and it **changes the CPU clock at the same time** (`millis()`, USB, and UART baud rates would all shift).
 
-したがって本ライブラリは分周引数を提供しません。**任意の周波数をピンに出したい場合は CLKOUT ではなく TCA/TCB の PWM 出力**（`analogWrite()` / `tone()`）**や CCL** を使ってください。
+The library therefore provides no divider argument. **To output an arbitrary frequency on a pin, use TCA/TCB PWM** (`analogWrite()` / `tone()`) **or the CCL** instead of CLKOUT.
 
-## PA7 の競合
+## PA7 conflicts
 
-PA7 には次の機能が集中しています。
+Several functions converge on PA7.
 
-| 機能 | 検出 | 備考 |
-|------|------|------|
-| AC0 コンパレータ出力 | **`begin()` が拒否** | `AC0.CTRLA` の OUTEN を確認 |
-| イベント出力 EVOUTA | **`begin()` が拒否** | EVSYS のユーザ割当と PORTMUX 位置を確認 |
-| SPI SS（**Kunai のみ**） | **`begin()` が拒否** | SPI0 が有効なら拒否（`SPISlave` 使用中を含む） |
-| USART0 XDIR（ALT1 位置） | 検出しない | RS-485 用 DIR。使用時は手動で排他管理してください |
-| スケッチによる通常の GPIO 使用 | 検出不可 | `pin()` で番号を取得して自分で管理してください |
+| Function | Detection | Notes |
+|----------|-----------|-------|
+| AC0 comparator output | **`begin()` refuses** | Checks OUTEN in `AC0.CTRLA` |
+| Event output EVOUTA | **`begin()` refuses** | Checks the EVSYS user assignment and PORTMUX position |
+| SPI SS (**Kunai only**) | **`begin()` refuses** | Refuses if SPI0 is enabled (including while `SPISlave` is in use) |
+| USART0 XDIR (ALT1 position) | Not detected | The DIR line for RS-485. Manage the exclusion yourself when using it |
+| Ordinary GPIO use by the sketch | Cannot be detected | Get the pin number with `pin()` and manage it yourself |
 
-## EMI・消費電流に関する注意
+## EMI and current consumption
 
-24MHz の連続した矩形波は**強い EMI 源**であり、ピンドライバの消費電流も増えます。製品では以下を推奨します。
+A continuous 24 MHz square wave is a **strong EMI source**, and the pin driver's current consumption increases. The following is recommended in products.
 
-- 配線は最短に。長いパターンやヘッダへ引き出したままの常時出力は VCCI 対応の観点で不利です
-- 必要な期間だけ `begin()` / `end()` で開閉する（サンプル `ClockOut_OnDemand` 参照）
-- 未使用時は有効化しない（リセット既定値は無効）
+- Keep the trace as short as possible. Long traces, or leaving the output running on a header, are unfavorable from a VCCI compliance standpoint
+- Turn it on only while needed with `begin()` / `end()` (see the `ClockOut_OnDemand` example)
+- Do not enable it when unused (the reset default is disabled)
 
-## 実装メモ（DS40002548A 12章）
+## Implementation notes (DS40002548A chapter 12)
 
-- 出力信号は **CLK_PER**（12.2.2 信号説明: `CLKOUT — Digital output — CLK_PER output`）
-- 制御は `CLKCTRL.MCLKCTRLA` の bit7（CLKOUT）。このレジスタは **CCP 保護**付きのため、書き込み値を事前にレジスタへロードしてから CCP キーを書き、さらに割り込みを止めて保護ウィンドウを守っています（保護ウィンドウ内でのリード・モディファイ・ライトは完了しません）
-- **CFD（クロック故障検出）**でメインクロックの CLKSEL がオーバーライドされると、**CLKOUT ビットはハードウェアが自動的にクリア**します。`isRunning()` はこれを反映します
-- データシートは CLKOUT の override がピン方向まで設定するかを明記していないため、`begin()` は明示的に `pinMode(OUTPUT)` を実行します（どちらの挙動でも無害）
+- The output signal is **CLK_PER** (12.2.2 Signal Description: `CLKOUT — Digital output — CLK_PER output`)
+- Control is bit 7 (CLKOUT) of `CLKCTRL.MCLKCTRLA`. This register is **CCP protected**, so the value to write is loaded into a register beforehand, then the CCP key is written, and interrupts are disabled to stay within the protection window (a read-modify-write does not complete inside the window)
+- When **CFD (Clock Failure Detection)** overrides the main clock's CLKSEL, **the hardware automatically clears the CLKOUT bit**. `isRunning()` reflects this
+- The datasheet does not state whether the CLKOUT override also sets the pin direction, so `begin()` calls `pinMode(OUTPUT)` explicitly (harmless either way)
 
-## サンプル
+## Examples
 
-- **ClockOut_Basic** — 出力開始、周波数とピン番号の表示、CFD による停止の監視
-- **ClockOut_OnDemand** — 外部デバイスが必要とする期間だけ出力する EMI 配慮の使い方
+- **ClockOut_Basic** — Start output, print the frequency and pin number, monitor for a CFD stop
+- **ClockOut_OnDemand** — EMI-conscious use: output only while an external device needs it

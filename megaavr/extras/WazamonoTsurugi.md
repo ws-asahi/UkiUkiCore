@@ -55,11 +55,9 @@ This page is the documentation for Wazamono Tsurugi. For an overview of the core
 
 ## Comparison with the ATmega328P (Arduino Uno R3) and ATmega32U4 (Arduino Leonardo)
 
->  
-> The Arduino Uno R3 that Wazamono Tsurugi replaces uses the **ATmega328P** (no native USB / 8-bit MCU).  
-> The **ATmega32U4** (native USB / 8-bit MCU), which is close in performance, is included for comparison as well.  
-> The AVR64DU32 is a new-generation **AVRxt core** with built-in USB and stronger clock, memory, and peripherals across the board.  
->  
+The Arduino Uno R3 that Wazamono Tsurugi replaces uses the **ATmega328P** (no native USB / 8-bit MCU).  
+The **ATmega32U4** (native USB / 8-bit MCU), which is close in performance, is included for comparison as well.  
+The AVR64DU32 is a new-generation **AVRxt core** with built-in USB and stronger clock, memory, and peripherals across the board.  
 
 | Item | Wazamono Tsurugi (AVR64DU32) | Arduino Uno R3 (ATmega328P) | Arduino Leonardo (ATmega32U4) |
 |------|------------------------------|------------------------------|------------------------------|
@@ -79,6 +77,36 @@ This page is the documentation for Wazamono Tsurugi. For an overview of the core
 | CCL (LUT) | 4 | None | None |
 | Event system | 6 ch | None | None |
 | Analog comparator (AC) | 1 | None | None |
+
+---
+
+## Comparison with the RA4M1 (Arduino Uno R4)
+
+Compared with the Renesas RA4M1 in the Uno R4, the AVR64DU32 falls short in most respects.  
+There are, however, a few areas where the AVR64DU32 comes out ahead.  
+
+| Item | Wazamono Tsurugi (AVR64DU32) | Arduino Uno R4 (RA4M1) |
+|------|------------------------------|------------------------------|
+| Core | 8-bit AVRxt | 32-bit Arm Cortex-M4 (with FPU) |
+| Max. clock | 24 MHz | 48 MHz |
+| Operating voltage | 1.8–5.5 V | 1.6–5.5 V |
+| USB | Built into the MCU (no converter chip) | Built into the MCU (no converter chip) |
+| Flash | 64 KB | 256 KB |
+| SRAM | 8 KB | 32 KB |
+| EEPROM | 256 B | None (8 KB data flash, emulated by the core) |
+| ADC | 10-bit 170 ksps, 21 ch | 14-bit, 18 ch (64-pin package) |
+| DAC | None | 12-bit × 1 |
+| Timers | 16-bit × 3 (TCA0 + TCB × 2) | 32-bit × 2 + 16-bit × 6 (GPT) + 16-bit × 2 (AGT) |
+| USART | 2 | 4 (SCI) |
+| SPI | 2 (one can act as client) | 2 (both can act as client) + simple SPI on 4 SCI |
+| I2C | 1 | 2 + simple I2C (master only) on 4 SCI |
+| External interrupts | **All pins** | 12 IRQ lines (64-pin package, multiplexed onto pins) |
+| CCL (LUT) | **4** | None |
+| Event system | 6 ch | Yes (ELC) |
+| Analog comparator (AC) | 1 | 2 (ACMPLP) |
+| GPIO drive capability | **20 mA** | 4–8 mA (20 mA on P408/P409 only) |
+
+<sub>RA4M1 figures are from the Renesas RA4M1 Group Datasheet (R01DS0355) for the 64-pin R7FA4M1AB3CFM used on the Uno R4.</sub>
 
 ---
 

@@ -80,30 +80,33 @@ AVR64DU32 は新世代の **AVRxt コア**で、USB 内蔵・クロック・メ�
 
 ---
 
-## R4MA1(Arduino Uno R4)との比較
+## RA4M1(Arduino Uno R4)との比較
 
-Uno R4 が搭載するルネサス R4MA1 と比較すると多くの点でAVR64DU32は下回ります。  
-ただし一部AVR64DU32が勝る点もあります。  
+Uno R4 が搭載するルネサス RA4M1 と比較すると多くの点で AVR64DU32 は下回ります。  
+ただし一部 AVR64DU32 が勝る点もあります。  
 
-| 項目 | Wazamono Tsurugi (AVR64DU32) | Arduino Uno R4 (R4MA1) |
+| 項目 | Wazamono Tsurugi (AVR64DU32) | Arduino Uno R4 (RA4M1) |
 |------|------------------------------|------------------------------|
-| コア | AVRxt | Arm Cortex-M4 |
+| コア | 8-bit AVRxt | 32-bit Arm Cortex-M4(FPU 付き) |
 | 最大クロック | 24 MHz | 48 MHz |
+| 動作電圧 | 1.8–5.5 V | 1.6–5.5 V |
 | USB | マイコン内蔵(変換チップ不要) | マイコン内蔵(変換チップ不要) |
 | Flash | 64 KB | 256 KB |
 | SRAM | 8 KB | 32 KB |
-| EEPROM | 256 B | 8 KB(FLASHエミュレーション) |
-| ADC | 10-bit 170ksps 21ch | 10-bit 1.85 Msps 25ch |
-| タイマ | 16-bit ×1 + 8-bit ×2 | 32bit ×7 + 16-bit ×2 |
-| USART | 2 | 4 |
-| SPI | 2(1つはスレーブ可) | 4(3つはスレーブ可) |
-| I2C | 1 | 4 |
-| DAC | なし | 1 |
-| 外部割り込み | **全ピン** | 14 |
+| EEPROM | 256 B | なし(8 KB データフラッシュをコアがエミュレーション) |
+| ADC | 10-bit 170ksps 21ch | 14-bit 18ch(64 ピン品) |
+| DAC | なし | 12-bit ×1 |
+| タイマ | 16-bit ×3(TCA0 + TCB ×2) | 32-bit ×2 + 16-bit ×6(GPT)+ 16-bit ×2(AGT) |
+| USART | 2 | 4(SCI) |
+| SPI | 2(1つはスレーブ可) | 2(いずれもスレーブ可)+ SCI 簡易 SPI ×4 |
+| I2C | 1 | 2 + SCI 簡易 I2C(マスタのみ)×4 |
+| 外部割り込み | **全ピン** | IRQ 12 系統(64 ピン品、割当ピンは多重化) |
 | CCL(LUT) | **4** | なし |
-| イベントシステム | **6 ch** | なし |
-| アナログコンパレータ(AC) | **1** | なし |
-| GPIO出力能力 | **20mA** | 8mA |
+| イベントシステム | 6 ch | あり(ELC) |
+| アナログコンパレータ(AC) | 1 | 2(ACMPLP) |
+| GPIO出力能力 | **20mA** | 4〜8mA(P408/P409 の 2 ピンのみ 20mA) |
+
+<sub>RA4M1 の諸元は Renesas RA4M1 Group Datasheet(R01DS0355)の 64 ピン品 R7FA4M1AB3CFM(Uno R4 搭載品)に基づく。</sub>
 
 ---
 

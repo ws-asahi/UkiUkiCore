@@ -1,373 +1,375 @@
-# Wazamono 太刀(Tachi)
+# Wazamono Tachi (太刀)
 
-**Pro Micro 互換機 — AVR64DU32 / USB-C**
+**English** | [日本語](WazamonoTachi.ja.md)
 
-Wazamono Tachi は、SparkFun Pro Micro と同じフォームファクタを USB ネイティブな AVR `AVR64DU32` で再設計したボードです。  
-USB-シリアル変換チップを搭載せず、マイコン単体で USB-C により PC と直接つながります。  
+**Pro Micro compatible — AVR64DU32 / USB-C**
+
+Wazamono Tachi is a redesign of the SparkFun Pro Micro form factor around the `AVR64DU32`, an AVR with native USB.  
+There is no USB-to-serial converter chip; the microcontroller itself connects directly to the PC over USB-C.  
   
-このページは Wazamono Tachi 専用のドキュメントです。コア全体の概要は [README](../../README.md) を参照してください。  
-**状態: 試作中** ピン定義・ブートローダは変更される可能性があります。確定 BOM/回路図は準備中です。  
+This page is the documentation for Wazamono Tachi. For an overview of the core as a whole, see the [README](../../README.md).  
+**Status: prototype.** Pin definitions and the bootloader may change. The final BOM and schematic are in preparation.  
 
 ---
 
-## 概要
+## Overview
 
-| 項目 | 内容 |
-|------|------|
+| Item | Detail |
+|------|--------|
 | MCU | AVR64DU32 |
-| フォームファクタ | SparkFun Pro Micro 互換 |
-| USB | USB-C(USB 2.0 Full-Speed、マイコン内蔵) |
-| クロック | 24 MHz 内蔵発振 |
-| 電源 | USB 5V / VIN 入力 6.5-12V (駆動電源は JP1 で 5V / 3.3V を選択) |
-| 書き込み | USB CDC ブートローダ(STK500v1) |
+| Form factor | SparkFun Pro Micro compatible |
+| USB | USB-C (USB 2.0 Full-Speed, built into the MCU) |
+| Clock | 24 MHz internal oscillator |
+| Power | USB 5 V / VIN input 6.5–12 V (operating voltage selectable between 5 V and 3.3 V with JP1) |
+| Upload | USB CDC bootloader (STK500v1) |
 
 ---
 
-## ボード諸元(AVR64DU32)
+## Board specifications (AVR64DU32)
 
-| 項目 | 値 |
-|------|----|
-| Flash | 64 KB(うちスケッチ用 60 KB/USB ブートローダ 4 KB) |
+| Item | Value |
+|------|-------|
+| Flash | 64 KB (60 KB for sketches / 4 KB USB bootloader) |
 | SRAM | 8 KB |
 | EEPROM | 256 B |
 | USERROW | 512 B |
-| 最大動作周波数 | 24 MHz |
-| USB | USB 2.0 Full-Speed デバイス |
-| USB-EP | IN16 / OUT16 (合計32) |
+| Max. operating frequency | 24 MHz |
+| USB | USB 2.0 Full-Speed device |
+| USB endpoints | IN 16 / OUT 16 (32 total) |
 | ADC | 10-bit 170 ksps × 1 |
-| タイマ | TCA0 ×1 / TCB ×2 |
+| Timers | TCA0 × 1 / TCB × 2 |
 | USART | 2 |
 | SPI | 2 |
 | I2C | 1 |
-| 外部割り込み | 全ピン |
-| CCL(LUT) | 4 |
-| イベントシステム | 6 チャネル |
-| アナログコンパレータ(AC) | 1 |
+| External interrupts | All pins |
+| CCL (LUT) | 4 |
+| Event system | 6 channels |
+| Analog comparator (AC) | 1 |
 
-<sub>各領域の仕様・耐久回数はデータシート DS40002548A(§8 Memories/§11 NVMCTRL/電気的特性)に基づく。</sub>
+<sub>Memory specifications and endurance figures are from datasheet DS40002548A (§8 Memories / §11 NVMCTRL / Electrical Characteristics).</sub>
 
 ---
 
-## ATmega32U4(Pro Micro)との比較
+## Comparison with the ATmega32U4 (Pro Micro)
 
-Wazamono Tachi が置き換える Pro Micro は **ATmega32U4** を搭載しています。  
-Pro Micro は USB 内蔵 AVR ですが、AVR64DU32 は新世代の **AVRxt コア**で、  
-クロック・メモリ・周辺機能が大きく強化されています。  
-また**同一基板上で 5V と 3.3V の動作電圧切り替え**が可能です。   
+The Pro Micro that Wazamono Tachi replaces uses the **ATmega32U4**.  
+The Pro Micro is also a USB-native AVR, but the AVR64DU32 is a new-generation **AVRxt core**  
+with substantially stronger clock, memory, and peripherals.  
+It can also **switch between 5 V and 3.3 V operation on the same board**.   
 
-| 項目 | Wazamono Tachi (AVR64DU32) | Pro Micro (ATmega32U4) |
-|------|----------------------------|----------------------------|
-| コア | AVRxt(命令タイミング改善) | 旧来 AVR |
-| 最大クロック | 24 MHz(1.8–5.5V 全域) | 16 MHz(4.5V 以上)/3.3V では通常 8 MHz |
-| 動作電圧 | 5V / 3.3V(部品変更不要) | 5V / 3.3V(部品変更が必要) |
+| Item | Wazamono Tachi (AVR64DU32) | Pro Micro (ATmega32U4) |
+|------|----------------------------|------------------------|
+| Core | AVRxt (improved instruction timing) | Classic AVR |
+| Max. clock | 24 MHz (over the full 1.8–5.5 V range) | 16 MHz (≥ 4.5 V) / typically 8 MHz at 3.3 V |
+| Operating voltage | 5 V / 3.3 V (no component change) | 5 V / 3.3 V (component change required) |
 | Flash | 64 KB | 32 KB |
 | SRAM | 8 KB | 2.5 KB |
 | EEPROM | 256 B | 1 KB |
 | USERROW | 512 B | - |
-| ADC | 10-bit 170ksps 12ch | 10-bit 9.6ksps 12ch |
-| タイマ | 16-bit ×1 + 8-bit ×2 | 16bit ×2 + 8-bit ×1 + 10-bit ×1 |
+| ADC | 10-bit 170 ksps, 12 ch | 10-bit 9.6 ksps, 12 ch |
+| Timers | 16-bit × 1 + 8-bit × 2 | 16-bit × 2 + 8-bit × 1 + 10-bit × 1 |
 | USART | 2 | 1 |
-| SPI | 2(1つはスレーブ可) | 1(スレーブ不可) |
+| SPI | 2 (one can act as client) | 1 (no client mode) |
 | I2C | 1 | 1 |
-| 外部割り込み | 全ピン | 4 | 
-| CCL(LUT) | 4 | なし |
-| イベントシステム | 6 ch | なし |
-| アナログコンパレータ(AC) | 1 | なし |
+| External interrupts | All pins | 4 | 
+| CCL (LUT) | 4 | None |
+| Event system | 6 ch | None |
+| Analog comparator (AC) | 1 | None |
 
 ---
 
-### 性能上の主な利点
+### Main performance advantages
 
-- **クロックと処理速度** — 24 MHz 動作(ATmega32U4は 16 MHz)に加え、  
-  AVRxt コアは一部命令のタイミングが改善されており、ベンチマークでは同一クロックでも約 12% 高速です。  
-- **メモリ** — Flash 2 倍(64 KB)、SRAM 約 3.2 倍(8 KB)。大きなバッファ、USB 複合デバイス、ライブラリを多用するスケッチで余裕が生まれます。  
-- **新世代の周辺機能** — CCL(4 論理ブロック)とイベントシステム(6 チャネル)により、CPU を介さないハードウェア信号処理が可能。  
-- **アナログ入力** — ADC チャネルが 21 に増加し全 GPIO がアナログ入力に対応します。  
-- **ピンあたりの駆動能力** — AVR の堅牢な I/O により、20mA クラスの出力が可能です。  
-- **追加の UART** — 2 系統の UART シリアル通信を利用可能です。  
-- **RS-422/485 への対応** — USARTを使用して RS-485 通信が可能(外部の追加チップが必要)。  
-- **複数電圧への対応** — AVRxtのコア特性を活かして 5V または 3.3V の切り替えを**周辺部品の変更なしに可能**です。  
-
----
-
-### 留意点
-
-- **EEPROM 容量は ATmega32U4 のほうが大きい**(1 KB 対 256 B)。
-- 多くの不揮発データを保存する用途では保存方法の見直し(User Row やフラッシュの活用)が必要になる場合があります(後述「データ記憶領域」参照)。
+- **Clock and processing speed** — 24 MHz operation (vs. 16 MHz on the ATmega32U4), and  
+  the AVRxt core has improved timing on some instructions, giving roughly 12% higher benchmark scores at the same clock.  
+- **Memory** — 2× the Flash (64 KB), about 3.2× the SRAM (8 KB). More headroom for large buffers, USB composite devices, and library-heavy sketches.  
+- **New-generation peripherals** — CCL (4 logic blocks) and the event system (6 channels) allow hardware signal processing without the CPU.  
+- **Analog input** — ADC channels increase to 21, so every GPIO supports analog input.  
+- **Drive capability per pin** — The robust AVR I/O can source/sink in the 20 mA class.  
+- **Additional UART** — Two hardware UARTs are available.  
+- **RS-422/485** — RS-485 communication is possible using the USART (an external transceiver chip is required).  
+- **Multiple operating voltages** — Thanks to the AVRxt core, 5 V or 3.3 V can be selected **without changing any peripheral components**.  
 
 ---
 
-## データ記憶領域
+### Points to note
 
-AVR64DU32 には用途の異なる複数の不揮発メモリ領域があります。  
-ATmega と比べて EEPROM は小さくなりましたが(256 B)、代わりに **USERROW(使用者列)** などの新しい領域が使えます。   
-
-| 領域 | 容量 | 消去単位 | 書き換え耐久 | チップ消去(再書き込み)で | 対応ライブラリ |
-|------|------|----------|--------------|----------------------------|----------------|
-| EEPROM | 256 B | バイト(1–32 B) | 10 万回 | 消える(EESAVE ヒューズで保持可) | `EEPROM.h` |
-| USERROW | 512 B | 512 B ページ一括 | 1,000 回 | **残る** | `USERSIG.h` |
-| Flash(APPDATA) | スケッチ領域の空き | 512 B ページ | 1,000 回 | 消える | `Flash.h` |
-| SIGROW | 読み取り専用 | — | — | — | 工場書き込みの 16 B 個体シリアル番号を含む |
-
-<sub>各領域の仕様・耐久回数はデータシート DS40002548A(§8 Memories/§11 NVMCTRL/電気的特性)に基づく。</sub>
+- **The ATmega32U4 has more EEPROM** (1 KB vs. 256 B).
+- Applications that store a lot of non-volatile data may need to revisit their storage strategy (User Row or Flash; see "Data storage areas" below).
 
 ---
 
-## ベンチマークテスト
+## Data storage areas
 
-他互換機種とのベンチマークテストの結果です。  
+The AVR64DU32 has several non-volatile memory areas for different purposes.  
+EEPROM is smaller than on the ATmega (256 B), but new areas such as **USERROW (user row)** are available instead.   
 
-| 機種 | MCU | Clock(MHz) | Dhrystone 2.1(5回平均) | CoreMark 1.0 Iterations/Sec(5回平均) |
-|------|------|------|------|------|
-| Tachi (5.0V) | AVR64DU32 | 24.0 | 28931.556 | 14.18 |
-| Tachi (3.3V) | AVR64DU32 | 24.0 | 28931.850 | 14.18 |
-| Pro Micro (5.0V) | ATmega32U4 | 16.0 | 17208.020 | -(動作せず) |
-| Pro Micro (3.3V) | ATmega32U4 | 8.0 | (未検証) | -(動作せず) |
+| Area | Size | Erase unit | Endurance | On chip erase (re-upload) | Library |
+|------|------|------------|-----------|---------------------------|---------|
+| EEPROM | 256 B | Byte (1–32 B) | 100,000 cycles | Erased (can be preserved with the EESAVE fuse) | `EEPROM.h` |
+| USERROW | 512 B | Whole 512 B page | 1,000 cycles | **Preserved** | `USERSIG.h` |
+| Flash (APPDATA) | Free space in the sketch area | 512 B page | 1,000 cycles | Erased | `Flash.h` |
+| SIGROW | Read-only | — | — | — | Contains the factory-programmed 16-byte unique serial number |
+
+<sub>Memory specifications and endurance figures are from datasheet DS40002548A (§8 Memories / §11 NVMCTRL / Electrical Characteristics).</sub>
 
 ---
 
-## ピンマッピング
+## Benchmarks
 
-SparkFun Pro Micro と同じ番号付けです。  
-全ての外部ピンが ADC に接続されています。  
-基本的なピン番号は Pro Micro と同一で、元々 ADC を持たなかったピンには新たなピン番号が割り当てられています。  
+Benchmark results against other compatible boards.  
 
-| ピン名 | MCU | ピン別名 | ADC ch | 主な機能 |
-|----|-----|--------------|--------|----------|
-| D0 | PA5 | A11 | AIN25 | **RX**(Serial1) / **MOSI**(SPI1)|
-| D1 | PA4 | A12 | AIN24 | **TX**(Serial1) / **MISO**(SPI1)|
-| D2 | PA2 | A13 | AIN22 | **SDA**(I2C) |
-| D3 | PA3 | A14 | AIN23 | ~PWM(TCB1 WO) / **SCL**(I2C) |
-| D4 | PC3 | A6 | AIN31 | ~PWM(TCB1 + LUT1) |
-| D5 | PD0 | A15 | AIN0 | ~PWM(TCA0 WO0) / **IN0**(CustomLogic) |
-| D6 | PD1 | A7 | AIN1 | ~PWM(TCA0 WO1) / **IN1**(CustomLogic) |
-| D7 | PA6 | A16 | AIN26 | ~PWM(TCB1 + LUT0) / **XCK**(Serial1)/ **CLK**(SPI1) |
-| D8 | PA7 | A8 | AIN27 | **XDIR**(Serial1) / **OUT**(AnalogComp) / EVOUTA / CLKOUT |
-| D9 | PD2 | A9 | AIN2 | ~PWM(TCA0 WO2) / **IN2**(CustomLogic) / **P**(AnalogComp)|
-| D10 | PD3 | A10 | AIN3 | ~PWM(TCA0 WO3) / **OUT**(CustomLogic) / **N**(AnalogComp) |
-| D14 | PD5 | A17 | AIN5 | ~PWM(TCA0 WO5) / **MISO**(SPI) |
-| D15 | PD6 | A18 | AIN6 | **SCK**(SPI) / **TX**(Serial2) |
-| D16 | PD4 | A19 | AIN4 | ~PWM(TCA0 WO4) / SPI **MOSI** |
-| D17 | PF3 | A20 | AIN19 | **LED_BUILTIN**(基板上ユーザー LED) / **OUT**(CustomLogic1) |
-| D30 | PA0 | - | - | **LED_BUILTIN_TX**(USB-CDC と連動) |
-| D31 | PA1 | - | - | **LED_BUILTIN_RX**(USB-CDC と連動) |
-| A0 | PD7 | D18 | AIN7 | **SS**(SPI) / **RX**(Serial2) / **AREF** |
-| A1 | PF0 | D19 | AIN16 | **IN0**(CustomLogic1) |
-| A2 | PF1 | D20 | AIN17 | **IN1**(CustomLogic1) |
-| A3 | PF2 | D21 | AIN18 | **IN2**(CustomLogic1) / EVOUTF |
-| A4 | PF4 | D22 | AIN20 | テストパッド TP1(ヘッダなし) |
-| A5 | PF5 | D23 | AIN21 | テストパッド TP2(ヘッダなし) |
+| Board | MCU | Clock (MHz) | Dhrystone 2.1 (avg. of 5) | CoreMark 1.0 Iterations/Sec (avg. of 5) |
+|-------|-----|-------------|---------------------------|-----------------------------------------|
+| Tachi (5.0 V) | AVR64DU32 | 24.0 | 28931.556 | 14.18 |
+| Tachi (3.3 V) | AVR64DU32 | 24.0 | 28931.850 | 14.18 |
+| Pro Micro (5.0 V) | ATmega32U4 | 16.0 | 17208.020 | - (did not run) |
+| Pro Micro (3.3 V) | ATmega32U4 | 8.0 | (not tested) | - (did not run) |
+
+---
+
+## Pin mapping
+
+The numbering matches the SparkFun Pro Micro.  
+Every external pin is connected to the ADC.  
+Basic pin numbers are identical to the Pro Micro; pins that originally lacked an ADC channel have been given new analog pin numbers.  
+
+| Pin | MCU | Alias | ADC ch | Main functions |
+|-----|-----|-------|--------|----------------|
+| D0 | PA5 | A11 | AIN25 | **RX** (Serial1) / **MOSI** (SPI1) |
+| D1 | PA4 | A12 | AIN24 | **TX** (Serial1) / **MISO** (SPI1) |
+| D2 | PA2 | A13 | AIN22 | **SDA** (I2C) |
+| D3 | PA3 | A14 | AIN23 | ~PWM (TCB1 WO) / **SCL** (I2C) |
+| D4 | PC3 | A6 | AIN31 | ~PWM (TCB1 + LUT1) |
+| D5 | PD0 | A15 | AIN0 | ~PWM (TCA0 WO0) / **IN0** (CustomLogic) |
+| D6 | PD1 | A7 | AIN1 | ~PWM (TCA0 WO1) / **IN1** (CustomLogic) |
+| D7 | PA6 | A16 | AIN26 | ~PWM (TCB1 + LUT0) / **XCK** (Serial1) / **CLK** (SPI1) |
+| D8 | PA7 | A8 | AIN27 | **XDIR** (Serial1) / **OUT** (AnalogComp) / EVOUTA / CLKOUT |
+| D9 | PD2 | A9 | AIN2 | ~PWM (TCA0 WO2) / **IN2** (CustomLogic) / **P** (AnalogComp) |
+| D10 | PD3 | A10 | AIN3 | ~PWM (TCA0 WO3) / **OUT** (CustomLogic) / **N** (AnalogComp) |
+| D14 | PD5 | A17 | AIN5 | ~PWM (TCA0 WO5) / **MISO** (SPI) |
+| D15 | PD6 | A18 | AIN6 | **SCK** (SPI) / **TX** (Serial2) |
+| D16 | PD4 | A19 | AIN4 | ~PWM (TCA0 WO4) / SPI **MOSI** |
+| D17 | PF3 | A20 | AIN19 | **LED_BUILTIN** (on-board user LED) / **OUT** (CustomLogic1) |
+| D30 | PA0 | - | - | **LED_BUILTIN_TX** (driven by USB-CDC activity) |
+| D31 | PA1 | - | - | **LED_BUILTIN_RX** (driven by USB-CDC activity) |
+| A0 | PD7 | D18 | AIN7 | **SS** (SPI) / **RX** (Serial2) / **AREF** |
+| A1 | PF0 | D19 | AIN16 | **IN0** (CustomLogic1) |
+| A2 | PF1 | D20 | AIN17 | **IN1** (CustomLogic1) |
+| A3 | PF2 | D21 | AIN18 | **IN2** (CustomLogic1) / EVOUTF |
+| A4 | PF4 | D22 | AIN20 | Test pad TP1 (no header) |
+| A5 | PF5 | D23 | AIN21 | Test pad TP2 (no header) |
 
 > 
-> **D3 / D4 / D7 の PWM は択一**です。  
-> 1 本の TCB1 波形をいずれかのピンに出し分ける構造のため、最後に `analogWrite()` したピンが出口になります(既定は D3)。  
-> 3 本同時に異なる PWM は出せません。周波数・デューティは 3 ピンで共通です。  
-> tone などで TCB1 を使用する時は 3 つとも PWM が無効化されます。  
+> **PWM on D3 / D4 / D7 is mutually exclusive.**  
+> A single TCB1 waveform is routed to one of these pins, so the pin most recently written with `analogWrite()` becomes the output (default: D3).  
+> Three different PWM signals cannot be produced at once; frequency and duty are shared by all three pins.  
+> When TCB1 is taken by `tone()` or similar, PWM is disabled on all three.  
 > 
-> **A0 は AREF または SPI SS (スレーブ側) として使用できます**。  
-> それぞれの機能は排他利用です。  
+> **A0 can be used as AREF or as the SPI SS (client side).**  
+> These functions are mutually exclusive.  
 > 
-> D17 / D30 / D31 は物理ピンを持ちません。
-> A4 / A5 はヘッダに出ておらず、裏面テストパッドのみです。 
+> D17 / D30 / D31 have no physical pin.
+> A4 / A5 are not brought out to the header; they are only available as test pads on the back. 
 > 
 
 ---
 
-### シリアルポート
+### Serial ports
 
-| オブジェクト | 実体 | ピン | 備考 |
-|--------------|------|------|------|
-| `Serial` | USB CDC | USB-C | シリアルモニタ(仮想 COM) |
-| `Serial1` | USART0 | D0(RX) / D1(TX) | Pro Micro 互換ハードウェア UART |
-| `Serial2` | USART1 | A0(RX) / D15(TX) | 追加 UART |
+| Object | Hardware | Pins | Notes |
+|--------|----------|------|-------|
+| `Serial` | USB CDC | USB-C | Serial monitor (virtual COM) |
+| `Serial1` | USART0 | D0 (RX) / D1 (TX) | Pro Micro compatible hardware UART |
+| `Serial2` | USART1 | A0 (RX) / D15 (TX) | Additional UART |
 
 > 
-> Serial1は XCK(D7) / XDIR(D8) と併用して **RS-485 の方向制御や SPI ホストモードにも対応**。  
+> Serial1 can be combined with XCK (D7) / XDIR (D8) for **RS-485 direction control or SPI host mode**.  
 >  
-> `Serial` は `USBSerial` の別名として定義されており USB-CDC を利用します。  
+> `Serial` is defined as an alias of `USBSerial` and uses USB-CDC.  
 > 
 
 ---
 
 ### SPI
 
-| オブジェクト | SPI | SPI1 |
-| 信号 | ピン(スレーブ可) | ピン(ホストのみ) |
-|------|------|------|
+| Object | SPI | SPI1 |
+| Signal | Pin (client capable) | Pin (host only) |
+|--------|------|------|
 | MOSI | D16 | D0 |
 | MISO | D14 | D1 |
 | SCK | D15 | D7 |
-| SS | A0 | なし |
+| SS | A0 | None |
 
 >  
-> **クライアント(受信側)動作:** ハードウェア SS(A0) が実ピンにあるため、  
-> 付属の **SPISlave ライブラリ**（ESP8266 互換 API）で SPI スレーブとしても動作できます。  
-> その間 A0 ピンは SS 入力となり、外部基準電圧(`analogReference(EXTERNAL)`)・Serial2 とは排他です。 
+> **Client (receiver) operation:** Because the hardware SS (A0) is on a real pin,  
+> the bundled **SPISlave library** (ESP8266-compatible API) lets the board act as an SPI client.  
+> While it does, A0 becomes the SS input and is mutually exclusive with the external reference (`analogReference(EXTERNAL)`) and Serial2. 
 >  
-> 詳細は [libraries/SPISlave](../libraries/SPISlave/README.md) を参照。  
+> See [libraries/SPISlave](../libraries/SPISlave/README.md) for details.  
 >  
 
 ---
 
-### I2C(Wire)
+### I2C (Wire)
 
-| 信号 | ピン |
-|------|------|
+| Signal | Pin |
+|--------|-----|
 | SDA | D2 |
 | SCL | D3 |
 
 > 
-> Pro Micro と同じ D2/D3 に配置されています。  
-> 通常の `Wire.begin()` でそのまま使えます。  
+> Located on D2/D3, the same as the Pro Micro.  
+> A plain `Wire.begin()` works as-is.  
 > 
 
 ---
 
-### PWM(`analogWrite()`)
+### PWM (`analogWrite()`)
 
 - **D5 / D6 / D9 / D10 / D14 / D16** - TCA0
-- **D3 / D4 / D7** - TCB1 の 8bit PWM 波形を直接または LUT 経由で出力(排他使用)
-- Pro Micro に対して D14 / D16 へ PWM 機能が追加されています。
+- **D3 / D4 / D7** - The 8-bit PWM waveform of TCB1, output directly or via a LUT (mutually exclusive)
+- Compared with the Pro Micro, PWM has been added on D14 / D16.
 
 > 
-> **排他 PWM:** TCB1 が他の用途に使われている間、`analogWrite(D3)`(または D4, D7) は PWM をあきらめて単純な HIGH/LOW 出力(127 を閾値)に切り替わります。  
-> `tone()` は TCB1 を使うため、実行中は D3, D4, D7 の PWM が停止します。  
-> これは Pro Micro の Timer3(`tone()` 実行中は D5 が停止)に相当する挙動です。  
+> **Exclusive PWM:** While TCB1 is in use for something else, `analogWrite(D3)` (or D4, D7) gives up PWM and falls back to a plain HIGH/LOW output (threshold 127).  
+> `tone()` uses TCB1, so PWM on D3, D4, and D7 stops while it is running.  
+> This corresponds to Timer3 on the Pro Micro (D5 stops while `tone()` is running).  
 > 
 
 ---
 
-### アナログ入力
+### Analog input
 
-- シルク表記の **A0–A3**(= D18–D21)
-- **A4 / A5**(= D22 / D23)はテストパッドのみ
-- 各デジタルピンも ADC チャネルを持ち、A6–A20 として参照可能(A11 の欠番なし・連番)(D30 / D31 を除く)
+- **A0–A3** as printed on the silkscreen (= D18–D21)
+- **A4 / A5** (= D22 / D23) are test pads only
+- Every digital pin also has an ADC channel and can be referenced as A6–A20 (contiguous, no gap at A11), except D30 / D31
 
 ---
 
-### クロック出力(CLKOUT)
+### Clock output (CLKOUT)
 
-- メインクロック(CLK_PER)を **D8** へ出力できます。外部 IC へのクロック供給、他 MCU との同期、実クロックの測定に使えます。
-- 付属の **ClockOut ライブラリ**で `ClockOut.begin()` / `ClockOut.end()` により開閉します(詳細は [libraries/ClockOut](../libraries/ClockOut/README.md))。
+- The main clock (CLK_PER) can be output on **D8**. Useful for clocking external ICs, synchronizing with another MCU, or measuring the actual clock.
+- The bundled **ClockOut library** turns it on and off with `ClockOut.begin()` / `ClockOut.end()` (see [libraries/ClockOut](../libraries/ClockOut/README.md)).
 
 >  
-> 24MHz の連続矩形波は EMI 源になるため、必要な期間だけ有効化する運用を推奨します。  
-> D8 は AC0 出力・EVOUTA と共用のため、それらが使用中は `begin()` が `false` を返します。  
->  
-
----
-
-## クロック
-
-
-- Tachi は **水晶を搭載しない**設計で、システムクロックは内蔵 OSCHF から生成します(既定 **24 MHz**。下記の選択肢参照)。
-- USB 用の 48 MHz(CLK_USB)は内蔵 PLL48M が生成し、USB の SOF に同期して自動調整されるため水晶なしでも USB は仕様通りに機能します。
-
-> 
-> USB ホスト切断時は動作クロックの精度が内蔵オシレータ単体の精度になります。  
-> 
-
----
-
-### クロック速度の選択肢
-
-Arduino IDE の「ツール > Clock Speed」で次の 2 つを選べます。
-
-| メニュー | F_CPU | 主な用途 |
-|---------|-------|---------|
-| 24 MHz internal(既定) | 24 MHz | 通常はこちら |
-| 16 MHz internal | 16 MHz | classic AVR(16 MHz)とのタイミング互換、省電力 |
-
->  
-> PWM の周波数と `delayMicroseconds()` などの時間処理は F_CPU に追従します。  
-> `millis()` / `micros()` はどちらの選択肢でも正しく動作します。  
+> A continuous 24 MHz square wave is an EMI source; enable it only for as long as needed.  
+> D8 is shared with the AC0 output and EVOUTA, so `begin()` returns `false` while either of those is in use.  
 >  
 
 ---
 
-## 電源
+## Clock
 
-- **USB-C(5V):** 理想ダイオードで逆流保護し、外部電源との併用時もホストを破損させません。
-- **VIN 入力(6.5-12V):** 基板上の高耐圧 LDO で 5V を生成します。  
-  ドロップアウトを考慮した**実用最低入力は約 6.5V**で**耐圧は 36V** ですが、  
-  発熱を考慮した**推奨電圧 6.5–12V**です。  
-- **出力能力:** 5V は **最大460mA / 連続定格300mA**です。3.3Vもほぼ同等です。  
-  Pro Microが採用するLDOは最大500mA / 連続定格200mAです。  
-- **電圧切替:** ジャンパパッド **JP1** で VCC を 5V / 3.3V から選択します。  
-  AVR64DU32 は 3.3 / 5V の全範囲で 24 MHz 動作が可能です。  
-- Pro Micro(ATmega32U4) では 3.3V 動作時に 8MHz 動作を強制されますがその制約はありません。
+
+- Tachi has **no crystal**; the system clock is generated from the internal OSCHF (default **24 MHz**; see the options below).
+- The 48 MHz USB clock (CLK_USB) is generated by the internal PLL48M and is automatically trimmed against USB SOF, so USB works to specification without a crystal.
 
 > 
-> 電圧選択のために裏面の JP1 のパッドを望む電圧側とはんだ付けします。  
-> 
-> Tachi には RAW 端子は無く VIN 端子に置き換わっています。
-> USB バスパワーや VCC 電圧が LDO を逆流するため VIN 非接続時にも電圧が現れますが
-> VIN端子から大電流の取り出しは避けてください。
+> When the USB host is disconnected, clock accuracy falls back to that of the internal oscillator alone.  
 > 
 
 ---
 
-## LED とスイッチ
+### Clock speed options
 
-| 部品 | 色 | 接続 | 用途 |
-|------|----|----|------|
-| 電源 LED | 緑 | 電源ライン | 通電表示 |
-| LED_BUILTIN | 白 | D17(Active-LOW) | ユーザー LED(コアは触りません) |
-| LED_BUILTIN_TX | 赤 | D30(Active-LOW) | USB-CDC 送信アクティビティ |
-| LED_BUILTIN_RX | 赤 | D31(Active-LOW) | USB-CDC 受信アクティビティ |
-| リセット | RESET | タクトスイッチ |
+Two settings are available under **Tools > Clock Speed** in the Arduino IDE.
 
-> 
-> Rx / Tx LED は CDC 送受信の瞬間に約 100ms のパルスで点灯し、スケッチからの `digitalWrite(D30, ...)` / `digitalWrite(D31, ...)` と共存します。  
+| Menu | F_CPU | Typical use |
+|------|-------|-------------|
+| 24 MHz internal (default) | 24 MHz | Normal use |
+| 16 MHz internal | 16 MHz | Timing compatibility with classic AVR (16 MHz), lower power |
+
 >  
-> Pro Micro 系スケッチ互換の `TXLED1`/`TXLED0`/`RXLED1`/`RXLED0` マクロ(1=点灯、0=消灯)も定義済みです。  
-> USB-CDC の通信中は約 100ms のアクティビティパルスが variant 側から上書きされる点も 32U4 コアと同じ挙動です。  
+> PWM frequency and timing functions such as `delayMicroseconds()` follow F_CPU.  
+> `millis()` / `micros()` work correctly with either option.  
+>  
+
+---
+
+## Power
+
+- **USB-C (5 V):** Protected against reverse current by an ideal diode, so the host is not damaged even when an external supply is connected at the same time.
+- **VIN input (6.5–12 V):** An on-board high-voltage LDO generates 5 V.  
+  Allowing for dropout, the **practical minimum input is about 6.5 V** and the **absolute maximum is 36 V**, but  
+  the **recommended range is 6.5–12 V** on thermal grounds.  
+- **Output capability:** The 5 V rail is rated **460 mA peak / 300 mA continuous**. The 3.3 V rail is roughly the same.  
+  For reference, the LDO on the Pro Micro is rated 500 mA peak / 200 mA continuous.  
+- **Voltage selection:** Jumper pad **JP1** selects VCC as 5 V or 3.3 V.  
+  The AVR64DU32 runs at 24 MHz across the full 3.3–5 V range.  
+- The Pro Micro (ATmega32U4) is forced to 8 MHz at 3.3 V; Tachi has no such restriction.
+
+> 
+> To select the voltage, bridge the JP1 pad on the back to the desired voltage side with solder.  
+> 
+> Tachi has no RAW pin; it is replaced by VIN.
+> Because USB bus power and VCC leak back through the LDO, a voltage appears on VIN even when nothing is connected to it,
+> but do not draw significant current from the VIN pin.
 > 
 
 ---
 
-## 書き込み
+## LEDs and switches
 
-1. ボードを USB で接続します。
-2. Arduino IDE からスケッチを書き込みます。書き込み開始時に **1200bps タッチ**が行われ、USB CDC ブートローダへ自動遷移します。
-3. 自動遷移しない場合は、**リセットパッドをジャンパ線でダブルタップ**することでブートローダに入れます。
-
-初回のみ、または USB ブートローダを書き込み直す場合は、UPDI プログラマ(PICkit 4/5、Atmel-ICE、jtag2updi 等)を UPDI パッドに接続して書き込みます。
-
-<sub>開発用 VID/PID は pid.codes のテスト範囲(アプリ `0x1209:0x0006` / ブートローダ `0x1209:0x0005`)を使用しています。</sub>
-
----
-
-## ボード / MCU 識別マクロ
-
-| マクロ |  用途 |
-|--------|------|
-| `ARDUINO_AVR_TACHI` | ボード識別用 |
-| `__AVR_AVR64DU32__` | MCU 識別用 |
-| `__AVR_DU__` | 製品グループ `"DU"` 識別用 |
-
----
-
-## ソフトウェア互換性(Pro Micro)
-
-- Tachi は Pro Micro からの移植の手間を最小化することを目指しています。
-- 基本的には旧 megaAVR とほぼ同一の命令を持ちます。
+| Part | Color | Connection | Purpose |
+|------|-------|------------|---------|
+| Power LED | Green | Power rail | Power indicator |
+| LED_BUILTIN | White | D17 (active-LOW) | User LED (untouched by the core) |
+| LED_BUILTIN_TX | Red | D30 (active-LOW) | USB-CDC transmit activity |
+| LED_BUILTIN_RX | Red | D31 (active-LOW) | USB-CDC receive activity |
+| Reset | RESET | Tactile switch |
 
 > 
-> レジスタ構成は大幅に変化しているため、レジスタを直接操作するプログラムの移植は難易度が高くなります。
+> The RX / TX LEDs flash with a ~100 ms pulse on CDC transmit/receive and coexist with `digitalWrite(D30, ...)` / `digitalWrite(D31, ...)` from the sketch.  
+>  
+> The `TXLED1`/`TXLED0`/`RXLED1`/`RXLED0` macros from Pro Micro sketches (1 = on, 0 = off) are also defined.  
+> As on the 32U4 core, the ~100 ms activity pulse from the variant overrides the pin during USB-CDC traffic.  
 > 
 
 ---
 
-## 主要部品
+## Uploading
+
+1. Connect the board over USB.
+2. Upload the sketch from the Arduino IDE. A **1200 bps touch** is performed at the start of the upload and the board enters the USB CDC bootloader automatically.
+3. If it does not enter the bootloader automatically, **double-tap the reset pad with a jumper wire**.
+
+For the first flash, or to rewrite the USB bootloader, connect a UPDI programmer (PICkit 4/5, Atmel-ICE, jtag2updi, etc.) to the UPDI pad.
+
+<sub>The development VID/PID is from the pid.codes test range (application `0x1209:0x0006` / bootloader `0x1209:0x0005`).</sub>
+
+---
+
+## Board / MCU identification macros
+
+| Macro | Purpose |
+|-------|---------|
+| `ARDUINO_AVR_TACHI` | Board identification |
+| `__AVR_AVR64DU32__` | MCU identification |
+| `__AVR_DU__` | Product group `"DU"` identification |
+
+---
+
+## Software compatibility (Pro Micro)
+
+- Tachi aims to minimize the effort of porting from the Pro Micro.
+- The instruction set is essentially the same as the classic megaAVR.
 
 > 
-> Tachi の確定 BOM・回路図は現在準備中です。確定次第このページに追記します。
+> The register layout has changed substantially, so porting code that manipulates registers directly is considerably harder.
 > 
 
 ---
 
-## 公式ドキュメント
+## Main components
 
-- AVR64DU32 製品ページ: <https://www.microchip.com/en-us/product/AVR64DU32>
-- データシート: DS40002548B(AVR64DU32)
+> 
+> The final BOM and schematic for Tachi are in preparation and will be added to this page once fixed.
+> 
+
+---
+
+## Official documentation
+
+- AVR64DU32 product page: <https://www.microchip.com/en-us/product/AVR64DU32>
+- Datasheet: DS40002548B (AVR64DU32)

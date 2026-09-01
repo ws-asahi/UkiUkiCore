@@ -133,6 +133,27 @@ static void initISR() {
 static void finISR() {
   // Disable interrupt
   _timer->INTCTRL = 0;
+  #if defined(ENABLE_TCB_PWM) && ENABLE_TCB_PWM == 1
+    /* Wazamono: put the timer back into PWM mode.
+     *
+     * initISR() switched this TCB to Periodic Interrupt mode, which is also
+     * what takes away the analogWrite() pin it drives. Clearing INTCTRL stops
+     * the servo pulses but leaves the timer in that mode, so the pin stays
+     * dead for the rest of the run - measured on a Tachi, where this TCB is
+     * TCB1 and the pin is D3:
+     *
+     *   before Servo   D3 PWM present
+     *   during Servo   D3 PWM stopped   (expected - the timer is in use)
+     *   after detach   D3 PWM still gone
+     *
+     * Tone.cpp already restores it this way in disableTimer(); Servo did not.
+     * Same registers, same order - CCMPL must be written before CCMPH per the
+     * silicon errata. */
+    _timer->CTRLB = (TCB_CNTMODE_PWM8_gc);
+    _timer->CCMPL = PWM_TIMER_PERIOD;
+    _timer->CCMPH = PWM_TIMER_COMPARE;
+    _timer->CTRLA = (TCB_CLKSEL_CLKTCA_gc) | (TCB_ENABLE_bm);
+  #endif
 }
 
 static boolean isTimerActive(timer16_Sequence_t timer) {

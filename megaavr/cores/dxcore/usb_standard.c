@@ -50,32 +50,31 @@ static void handle_get_descriptor(const usb_setup_t *s) {
 
     uint8_t  type  = (s->wValue >> 8) & 0xFF;
     uint8_t  index = s->wValue & 0xFF;
-    const uint8_t *p = NULL;
-    uint16_t len = 0;
 
     switch (type) {
     case DESC_TYPE_DEVICE:
-        /* Stage from PROGMEM into s_acc; ep0_start_data_in() reads from RAM. */
-        usbcore_acc_reset();
-        usbcore_acc_load_P(g_device_descriptor, sizeof(g_device_descriptor));
-        p   = usbcore_acc_buf();
-        len = usbcore_acc_len();
-        break;
+        /* Static PROGMEM descriptor: stream straight from flash, chunked
+         * through g_ep0_data_buf - no RAM staging buffer involved. */
+        ep0_start_data_in_P(g_device_descriptor, sizeof(g_device_descriptor),
+                            s->wLength);
+        return;
 
-    case DESC_TYPE_CONFIG:
-        /* Phase 2: build descriptor on the fly so PluggableUSB modules
-         * (HID Keyboard, Mouse, etc., when present) can append their
-         * interfaces/endpoints after the CDC IFs. With no modules
-         * registered the result is byte-identical to the Phase 1 static
-         * descriptor (75 B CDC-only). */
-        usbcore_build_config_descriptor();
-        p   = usbcore_acc_buf();
-        len = usbcore_acc_len();
-        break;
+    case DESC_TYPE_CONFIG: {
+        /* CDC-only builds (weak hook): the complete config descriptor is
+         * the static PROGMEM g_config_descriptor, streamed from flash.
+         * With PluggableUSB modules linked (strong hook in the dynamic
+         * TU): the composite is built at run time into the accumulator
+         * and sent from RAM - interface/endpoint numbers, wTotalLength
+         * and bNumInterfaces only exist at run time there. */
+        usbcore_desc_src_t d;
+        usbcore_get_config_descriptor(&d);
+        if (d.pgm) ep0_start_data_in_P(d.ptr, d.len, s->wLength);
+        else       ep0_start_data_in  (d.ptr, d.len, s->wLength);
+        return;
+    }
 
     case DESC_TYPE_STRING: {
-        /* Stage the requested string descriptor from PROGMEM into s_acc.
-         * Each USB string descriptor is small (<=30 B) so this trivially fits. */
+        /* Static PROGMEM string descriptors: stream straight from flash. */
         const uint8_t *src = NULL;
         uint16_t       sz  = 0;
         switch (index) {
@@ -85,32 +84,25 @@ static void handle_get_descriptor(const usb_setup_t *s) {
         case 3: src = g_string_serial;        sz = g_string_serial_len;            break;
         default: ep0_stall(); return;
         }
-        usbcore_acc_reset();
-        usbcore_acc_load_P(src, sz);
-        p   = usbcore_acc_buf();
-        len = usbcore_acc_len();
-        break;
+        ep0_start_data_in_P(src, sz, s->wLength);
+        return;
     }
 
-    default:
-        /* Phase 2: legacy DESC_TYPE_HID / DESC_TYPE_HID_REPORT branches
-         * (which sliced into the static g_config_descriptor) have been
-         * removed. HID modules now own those descriptors via PluggableUSB.
-         *
-         * Ask the registered PluggableUSB modules (HID report descriptors
-         * come in as wValue[H]=0x22 here). */
-        usbcore_acc_reset();
-        if (usbcore_try_plugged_get_descriptor(s)) {
-            p   = usbcore_acc_buf();
-            len = usbcore_acc_len();
+    default: {
+        /* Ask the registered PluggableUSB modules (HID report descriptors
+         * come in as wValue[H]=0x22 here). The strong hook (dynamic TU)
+         * stages the module's answer into the accumulator and describes
+         * it in *out; the weak default just returns false. */
+        usbcore_desc_src_t d;
+        if (usbcore_try_plugged_get_descriptor(s, &d)) {
+            if (d.pgm) ep0_start_data_in_P(d.ptr, d.len, s->wLength);
+            else       ep0_start_data_in  (d.ptr, d.len, s->wLength);
         } else {
             ep0_stall();
-            return;
         }
-        break;
+        return;
     }
-
-    ep0_start_data_in(p, len, s->wLength);
+    }
 }
 
 /* ============================================================
@@ -295,16 +287,18 @@ void usb_handle_class_request(const usb_setup_t *s) {
      * either calls USB_SendControl to push response bytes into the
      * accumulator (which we then ship as a control-IN), or just consumes
      * the SETUP and we ZLP. */
-    if (usbcore_try_plugged_setup(s)) {
-        uint16_t n = usbcore_acc_len();
-        if (n > 0) {
-            ep0_start_data_in(usbcore_acc_buf(), n, s->wLength);
-            usbcore_acc_reset();
+    {
+        usbcore_desc_src_t d;
+        if (usbcore_try_plugged_setup(s, &d)) {
+            if (d.len > 0) {
+                if (d.pgm) ep0_start_data_in_P(d.ptr, d.len, s->wLength);
+                else       ep0_start_data_in  (d.ptr, d.len, s->wLength);
+            } else {
+                ep0_send_zlp();
+            }
         } else {
-            ep0_send_zlp();
+            ep0_stall();
         }
-    } else {
-        ep0_stall();
     }
 }
 

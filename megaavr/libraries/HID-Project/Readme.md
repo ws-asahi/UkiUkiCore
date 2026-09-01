@@ -47,7 +47,7 @@ www.nicohood.de
 
 
 
-## WazamonoCore bundling note / 同梱に関する注記
+## WazamonoCore bundling note
 
 This copy is bundled with WazamonoCore from the fork
 https://github.com/ws-asahi/HID (branch feat/avr-without-uedatx-support,

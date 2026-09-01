@@ -62,7 +62,28 @@ extern "C" {
 #define HID_MOUSE_REPORT_SIZE    4
 #define HID_GAMEPAD_REPORT_SIZE  7
 
-#define USB_MAXEP               6       /* Highest endpoint number used */
+/* --- Endpoint-address budget -------------------------------------------- *
+ * USB_EP_SLOTS is the number of endpoint ADDRESSES the peripheral serves
+ * (EP0..EP{SLOTS-1}); it programs CTRLA.MAXEP = SLOTS-1. DS40002548A 28.5.1:
+ * incoming packets with an endpoint number above MAXEP are discarded, and the
+ * endpoint descriptor table at EPPTR spans (MAXEP+1) x 16 bytes. g_ep_table
+ * (usb_core.h) is sized from this same knob, so table size, CTRLA.MAXEP and
+ * the PluggableUSB bridge always agree.
+ *
+ * Selectable from the IDE ("USB Endpoints" menu -> -DUSB_EP_SLOTS=16);
+ * default is 8 (EP0-EP7: EP0 control, EP1-3 CDC, EP4-7 PluggableUSB).
+ *
+ * NOTE: this replaces the old fixed "#define USB_MAXEP 6", which contradicted
+ * the PluggableUSB bridge's totalEP (EP7 could be allocated by plug() but the
+ * hardware discarded its packets). MAXEP now derives from the same knob as
+ * the bridge, so they cannot drift apart again.                             */
+#ifndef USB_EP_SLOTS
+  #define USB_EP_SLOTS          8
+#endif
+#if (USB_EP_SLOTS != 8) && (USB_EP_SLOTS != 16)
+  #error "USB_EP_SLOTS must be 8 or 16 (CTRLA.MAXEP is a 4-bit field; g_ep_table covers 16 EPs)"
+#endif
+#define USB_MAXEP               (USB_EP_SLOTS - 1)  /* Highest endpoint number used */
 #define USB_NUM_EP              (USB_MAXEP + 1)
 
 /* ============================================================

@@ -83,9 +83,14 @@
     }
   #endif
 
+  /* Wazamono: on boards where the Pro Micro-style D0/D1 UART is USART0, expose
+   * the user-facing name Serial1 as a linker alias of the Serial0 object defined
+   * at the bottom of this TU. (C++ global *variables* are not name-mangled, so
+   * the plain symbol name is valid as the alias target.) USART1's object is then
+   * renamed to Serial2 in UART1.cpp, avoiding a duplicate Serial1 symbol. */
   #if defined(WAZAMONO_SERIAL1_IS_USART0)
-  extern HardwareSerial Serial1 __attribute__((alias("Serial0")));
-#endif
+    extern HardwareSerial Serial1 __attribute__((alias("Serial0")));
+  #endif
 
   #if !(defined(USE_ASM_RXC) && (USE_ASM_RXC == 1 || USE_ASM_RXC == 2) && \
        (SERIAL_RX_BUFFER_SIZE == 256 || SERIAL_RX_BUFFER_SIZE == 128 || SERIAL_RX_BUFFER_SIZE == 64 || SERIAL_RX_BUFFER_SIZE == 32 || SERIAL_RX_BUFFER_SIZE == 16) /* && defined(USART1)*/)

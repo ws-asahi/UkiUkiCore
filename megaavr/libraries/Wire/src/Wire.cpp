@@ -633,7 +633,7 @@ uint8_t TwoWire::specialConfig( __attribute__ ((unused)) bool smbuslvl, __attrib
  */
 
 
-uint8_t TwoWire::masterReceive(auto *length, uint8_t *buffer, uint8_t addr, uint8_t sendStop) {
+uint8_t TwoWire::masterReceive(twi_buf_index_t *length, uint8_t *buffer, uint8_t addr, uint8_t sendStop) {
   TWI_t *module = _module;
   __asm__ __volatile__("\n\t" : "+z"(module));
 
@@ -829,7 +829,7 @@ uint8_t TwoWire::endTransmission(bool sendStop) {
  *@return     uint8_t
  *@retval     errors (see endTransmission)
  */
-uint8_t TwoWire::masterTransmit(auto *length, uint8_t *buffer, uint8_t addr, uint8_t sendStop) {
+uint8_t TwoWire::masterTransmit(twi_buf_index_t *length, uint8_t *buffer, uint8_t addr, uint8_t sendStop) {
   TWI_t* module = _module;
   __asm__ __volatile__("\n\t" : "+z"(module));
 

@@ -24,11 +24,32 @@ void           usbcore_acc_reset(void);
 const uint8_t *usbcore_acc_buf(void);
 uint16_t       usbcore_acc_len(void);
 
+/* Where a descriptor / control-IN response lives. pgm=true means ptr is
+ * a flash address to be streamed via ep0_start_data_in_P(); pgm=false
+ * means ptr is RAM (the accumulator). */
+typedef struct {
+    const uint8_t *ptr;
+    uint16_t       len;
+    bool           pgm;
+} usbcore_desc_src_t;
+
+/* Fill *out with the CONFIGURATION descriptor to send. Weak default
+ * (CDC only): the static PROGMEM g_config_descriptor. Strong override
+ * (dynamic TU): builds the composite into the accumulator (RAM). */
+void usbcore_get_config_descriptor(usbcore_desc_src_t *out);
+
 /* --- Dynamic CONFIGURATION descriptor builder --------------------------- *
  * Resets the accumulator, emits the CDC interfaces (always present), then
  * iterates the PluggableUSB modules' getInterface() to append the rest.
  * Fixes up wTotalLength and bNumInterfaces in the accumulator header.     */
+/* (Internal to the dynamic TU: accumulator-based composite builder that
+ * backs the strong usbcore_get_config_descriptor().) */
 void usbcore_build_config_descriptor(void);
+
+/* Hook used by the builder to append plugged modules' interface
+ * descriptors. Weak no-op in USBCore_DU.cpp (CDC only); strong override
+ * in USBCore_DU_dyn.cpp iterates PluggableUSB().getInterface().          */
+void usbcore_plugged_get_interfaces(uint8_t *ifCount);
 
 /* --- PluggableUSB dispatch hooks (called from usb_standard.c) ----------- *
  * `try_setup`        - non-CDC class / vendor requests
@@ -36,8 +57,10 @@ void usbcore_build_config_descriptor(void);
  * Both return true if a registered PluggableUSB module handled it.        *
  * On true return, send accumulator buffer (which the module filled via    *
  * USB_SendControl) as the control-IN response; on false, STALL.           */
-bool usbcore_try_plugged_setup(const usb_setup_t *s);
-bool usbcore_try_plugged_get_descriptor(const usb_setup_t *s);
+bool usbcore_try_plugged_setup(const usb_setup_t *s,
+                               usbcore_desc_src_t *out);
+bool usbcore_try_plugged_get_descriptor(const usb_setup_t *s,
+                                        usbcore_desc_src_t *out);
 
 /* --- Endpoint configuration ---------------------------------------------- *
  * Iterate the epBuffer[] entries (filled by PluggableUSB.plug at static    *

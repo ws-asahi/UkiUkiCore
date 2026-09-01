@@ -13,7 +13,22 @@
 #include "UART.h"
 #include "UART_private.h"
 
-#if defined(USART1) && !defined(WAZAMONO_SERIAL1_IS_USART0)
+/* Wazamono: two variant-defined controls interact here.
+ * - WAZAMONO_NO_USART1: this board exposes no usable USART1 pin position
+ *   (Wazamono Tsurugi: ALT2 = PD6/PD7 are SCK/LED and AREF). Compile the
+ *   whole USART1 support out to save flash and avoid a pinless object.
+ * - WAZAMONO_SERIAL2_IS_USART1: on boards where the Pro Micro-style D0/D1
+ *   UART is USART0 (exposed to users as Serial1 via an alias emitted in
+ *   UART0.cpp), USART1's object takes the user-facing name Serial2 instead.
+ *   The rename below applies to this translation unit only: every "Serial1"
+ *   token after this point (the object definition at the bottom and the ISR
+ *   references) becomes "Serial2". The matching extern declaration lives in
+ *   HardwareSerial.h. */
+#if defined(WAZAMONO_SERIAL2_IS_USART1)
+  #define Serial1 Serial2
+#endif
+
+#if defined(USART1) && !defined(WAZAMONO_NO_USART1)
   #if USE_ASM_TXC == 1
     ISR(USART1_TXC_vect, ISR_NAKED) {
       __asm__ __volatile__(

@@ -64,8 +64,8 @@
  *           default so D0/D1 behave like the classic Uno UART.
  *   USART1-> exists on the AVR DU but has NO usable pin position on UkiUkiduino
  *           (DU USART1 is only PD6/PD7, which are SPI SCK / AREF here). Its
- *           object is omitted and "Serial1" is a linker alias of Serial0
- *           (WAZAMONO_SERIAL1_IS_USART0, set in boards.txt; see below).
+ *           object is omitted (WAZAMONO_NO_USART1) and "Serial1" is a linker
+ *           alias of Serial0 (WAZAMONO_SERIAL1_IS_USART0; both defined below).
  *   AREF  -> PD7 = VREFA is wired to the Uno R3 AREF header pin, so
  *           analogReference(EXTERNAL) IS supported on this board.
  *   LED   -> on-board LED is a WS2812D-F5-12mA-C1 addressable RGB LED, data-in on PA0.
@@ -298,14 +298,25 @@ void setBLEDColor(LEDColorName color, uint8_t brightness = BLED_DEFAULT_BRIGHTNE
 #define PIN_HWSERIAL0_XCK_PINSWAP_3     (PIN_PD6)
 #define PIN_HWSERIAL0_XDIR_PINSWAP_3    (PIN_PD7)
 
-/* ---- USART1: NO usable pin position on UkiUkiduino (DU USART1 is only PD6/PD7
- *   (ALT2) = SPI SCK / AREF here). boards.txt therefore builds with
- *   -DWAZAMONO_SERIAL1_IS_USART0 (mechanism inherited from WazamonoCore):
- *   UART1.cpp skips the USART1 object entirely and UART0.cpp emits
+/* ---- USART0 -> user-facing "Serial1" (Uno R4 naming), USART1 compiled out.
+ *   WAZAMONO_SERIAL1_IS_USART0 (mechanism inherited from WazamonoCore; since
+ *   the 2026-09 upstream sync it is defined HERE, not in boards.txt):
+ *   UART0.cpp emits
  *       extern HardwareSerial Serial1 __attribute__((alias("Serial0")));
  *   so "Serial1" IS the USART0 object (a true linker alias, not a macro) and
  *   the Uno R3 D0/D1 hardware UART is reachable as "Serial1" (Uno-family
- *   convention). "Serial0" remains a valid name for the same object. ---- */
+ *   convention). "Serial0" remains a valid name for the same object.
+ *   USART1 has NO usable pin position on UkiUkiduino (DU USART1 is only
+ *   PD6/PD7 = SPI SCK / AREF here); WAZAMONO_NO_USART1 makes UART1.cpp skip
+ *   the object entirely. (Upstream Tsurugi instead exposes USART1 on PD6/PD7
+ *   as "Serial2" via WAZAMONO_SERIAL2_IS_USART1 - to be evaluated for the
+ *   UkiUkiduino in the Tsurugi-based variant re-port.) ---- */
+#ifndef WAZAMONO_SERIAL1_IS_USART0
+  #define WAZAMONO_SERIAL1_IS_USART0
+#endif
+#ifndef WAZAMONO_NO_USART1
+  #define WAZAMONO_NO_USART1
+#endif
 #define HWSERIAL1_MUX                   (0x00 /* PORTMUX_USART1_DEFAULT_gc - no pins */)
 #define HWSERIAL1_MUX_PINSWAP_1         (0x01 << 3 /* ALT1 absent on DU - placeholder */)
 #define HWSERIAL1_MUX_PINSWAP_2         (0x02 << 3 /* PORTMUX_USART1_ALT2_gc - PD6/PD7 (occupied) */)

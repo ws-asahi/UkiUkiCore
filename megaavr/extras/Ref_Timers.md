@@ -16,23 +16,23 @@ TCA or TCD pins; these timers are much better for generation of PWM. Only use TC
 
 ## Meet the Modern AVR timers
 
-| TIMER       | On DA/DB | On DD | On EA | On EB | Pins:                                                  |Relevant Errata: |
-|-------------|----------|-------|-------|-------|--------------------------------------------------------|-----------------|
-| TCA0        | Yes      | Yes   | No    | No    | Pins 0-5 on your choice of ports.                      | Restart Command not intended to reset direction and on DD and future revisions will not |
-| TCA1        | >32 pin  | No    | Yes   | No    | Pins 0-5 on PB or PG, else pins 4-6 of PC, PE, PA* PD* | AVR128DA64 cannot output TCA1 compare match (pwm) on PORTG or PORTE |
-| TCD0        | Yes      | Yes   | No    | No    | PA4-7 on DA/DB. DD has special split-port mux option   | Only default portmux works on DA and older DB parts (major die rev B corrects this issue on DB, and if/when it comes out for DA, DA as well).
-| TCD1        | No       | No    | No    | No    | TBD, not expected to be seen ever.                     | No announced or released parts have had more than 1 TCD. I would be surprised to see a part with two of these.
-| TCB0        | Yes      | Yes   | Yes   | Yes   | PA2 or PF4. All TCBs are poor PWM timers               | DA/DB and 0/1-series must write both duty cycle and period to write either one, because it acts like a 16-bit register even in PWM mode. Fixed on newer DBs|
-| TCB1        | Yes      | Yes   | Yes   | Yes   | PA3 or PF5.                                            | And you get just 1 channel of 8-bit PWM for your 16-bit utility timer! (not errata, just lame) |
-| TCB2        | Yes      | 28/32 | Yes   | No    | PC0 or PB4. Default millis timer `**`                  | as above |
-| TCB3        | 48/64 pin| No    | Yes   | No    | PB5 or PC1.                                            | as above |
-| TCB4        | 64 pin   | No    | No    | No    | PG3 ~or PC6~                                           | On the only parts that have it, the alt portmux is broken.  |
-| TCE0        | No       | No    | No    | Yes   | Pins 0-3 of your choice of ports                       | None yet. It took years for the TCD errata to start flowing, and TCE is way more complicated. |
-| TCF0        | No       | No    | No    | Yes   | PA0/1, PA6/7, PF4/5                                   | Issues reading count accurately. Prescaler issues in some of the NCO modes.
-| TCE1        | No       | No    | No    | No    | TBD                                                    | No announced or released parts have had more than 1 TCE. Prospects for a second are uncertain, but any large chip w/new PLL will surely have 1, possibly 2 |
-| TCF1-n      | No       | No    | No    | No    | TBD                                                    | No announced or released parts have had more than 1 TCF. I think if a larger chip w/new PLL is released, it will almost certainly have at least 2. |
-| TCA2        | No       | No    | No    | No    | TBD                                                    | No announced or released parts have had more than 2 TCAs. Unclear if this is something they'd want to do. |
-| TCB5-7      | No       | No    | No    | No    | TBD                                                    | No announced or released parts have had more than 5 TCBs. I expect to see them IFF we get a 100-pin m2560 successor. |
+| TIMER       | On DA/DB | On DD | On DU| On EA | On EB | Pins:                                                  |Relevant Errata: |
+|-------------|----------|-------|-------|-------|-------|--------------------------------------------------------|-----------------|
+| TCA0        | Yes      | Yes   | Yes   | No    | No    | Pins 0-5 on your choice of ports.                      | Restart Command not intended to reset direction and on DD and future revisions will not |
+| TCA1        | >32 pin  | No    | No    | Yes   | No    | Pins 0-5 on PB or PG, else pins 4-6 of PC, PE, PA* PD* | AVR128DA64 cannot output TCA1 compare match (pwm) on PORTG or PORTE |
+| TCD0        | Yes      | Yes   | No    | No    | No    | PA4-7 on DA/DB. DD has special split-port mux option   | Only default portmux works on DA and older DB parts (major die rev B corrects this issue on DB, and if/when it comes out for DA, DA as well).
+| TCD1        | No       | No    | No    | No    | No    | TBD, not expected to be seen ever.                     | No announced or released parts have had more than 1 TCD. I would be surprised to see a part with two of these.
+| TCB0        | Yes      | Yes   | Yes   | Yes   | Yes   | PA2 or PF4. All TCBs are poor PWM timers               | DA/DB and 0/1-series must write both duty cycle and period to write either one, because it acts like a 16-bit register even in PWM mode. Fixed on newer DBs|
+| TCB1        | Yes      | Yes   | Yes   | Yes   | Yes   | PA3 or PF5.                                            | And you get just 1 channel of 8-bit PWM for your 16-bit utility timer! (not errata, just lame) |
+| TCB2        | Yes      | 28/32 | No    | Yes   | No    | PC0 or PB4. Default millis timer `**`                  | as above |
+| TCB3        | 48/64 pin| No    | No    | Yes   | No    | PB5 or PC1.                                            | as above |
+| TCB4        | 64 pin   | No    | No    | No    | No    | PG3 ~or PC6~                                           | On the only parts that have it, the alt portmux is broken.  |
+| TCE0        | No       | No    | No    | No    | Yes   | Pins 0-3 of your choice of ports                       | None yet. It took years for the TCD errata to start flowing, and TCE is way more complicated. |
+| TCF0        | No       | No    | No    | No    | Yes   | PA0/1, PA6/7, PF4/5                                   | Issues reading count accurately. Prescaler issues in some of the NCO modes.
+| TCE1        | No       | No    | No    | No    | No    | TBD                                                    | No announced or released parts have had more than 1 TCE. Prospects for a second are uncertain, but any large chip w/new PLL will surely have 1, possibly 2 |
+| TCF1-n      | No       | No    | No    | No    | No    | TBD                                                    | No announced or released parts have had more than 1 TCF. I think if a larger chip w/new PLL is released, it will almost certainly have at least 2. |
+| TCA2        | No       | No    | No    | No    | No    | TBD                                                    | No announced or released parts have had more than 2 TCAs. Unclear if this is something they'd want to do. |
+| TCB5-7      | No       | No    | No    | No    | No    | TBD                                                    | No announced or released parts have had more than 5 TCBs. I expect to see them IFF we get a 100-pin m2560 successor. |
 
 | TIMER
 

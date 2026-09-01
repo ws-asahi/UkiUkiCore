@@ -19,20 +19,19 @@
  *
  * Default input pins (fixed by the AC0 hardware mux):
  *              plus (+)             minus (-)
- *   Tachi      A1  (PD2, AINP0)     A0  (PD3, AINN0)
+ *   Tachi      D9  (PD2, AINP0)     D10 (PD3, AINN0)
  *   Tsurugi    D9  (PD2, AINP0)     D10 (PD3, AINN0)
- *   UkiUkiduino D9 (PD2, AINP0)     D10 (PD3, AINN0)
- *   Kunai      D6  (PD6, AINP3)     D7  (PD7, AINN2)
+ *   Kunai      D2  (PD6, AINP3)     D3  (PD7, AINN2)
  *
  * The comparator output can be driven onto PA7 with enableOutput()
- * (Tachi: D4 / Tsurugi: D8 / Kunai: D0 / UkiUkiduino: D8).
+ * (Tachi: D8 / Tsurugi: D2 / Kunai: D1).
  */
 #ifndef ANALOGCOMP_H
 #define ANALOGCOMP_H
 
 #include <Arduino.h>
 
-#if !defined(WAZAMONO_BOARD_TACHI) && !defined(WAZAMONO_BOARD_TSURUGI) && !defined(WAZAMONO_BOARD_KUNAI) && !defined(WAZAMONO_BOARD_UKIUKIDUINO)
+#if !defined(ARDUINO_AVR_TACHI) && !defined(ARDUINO_AVR_TSURUGI) && !defined(ARDUINO_AVR_KUNAI) && !defined(ARDUINO_AVR_UKIUKIDUINO)
   #error "AnalogComp supports Wazamono-family boards only."
 #endif
 
@@ -64,11 +63,11 @@ public:
   bool read();
 
   /* Select other input pins before or after begin(). Valid pins:
-   *   plus:  PD2 (Tachi A1 / Tsurugi D9), PD6 (Tachi D1* / Tsurugi D13 / Kunai D6),
-   *          PC3 (Tsurugi / UkiUkiduino D7 only)
-   *   minus: PD3 (Tachi A0 / Tsurugi・UkiUkiduino D10), PD0 (Tachi A3 / Tsurugi・UkiUkiduino D5),
-   *          PD7 (Tachi D0 / Kunai D7 / Tsurugi・UkiUkiduino: the AREF pin)
-   * (* Tachi D1/D0 are the Serial1 pins - usable when Serial1 is not.)
+   *   plus:  PD2 (Tachi D9 / Tsurugi D9), PD6 (Tachi D15* / Tsurugi D13 / Kunai D6),
+   *          PC3 (Tachi D4 / Tsurugi D7 / Kunai D0)
+   *   minus: PD3 (Tachi D10 / Tsurugi D10), PD0 (Tachi D5 / Tsurugi D5),
+   *          PD7 (Tachi A0* / Kunai D7 / Tsurugi: the AREF pin)
+   * (* Tachi D15/A0 are the SPI SCK/SS and Serial2 pins - usable when those are not.)
    * Returns false and leaves the setting unchanged if a pin is not a
    * valid comparator input on this board. */
   bool setInputs(uint8_t plusPin, uint8_t minusPin);
@@ -83,7 +82,7 @@ public:
   void setHysteresis(uint8_t level);
 
   /* Drive the comparator result onto the output pin PA7
-   * (Tachi: D4 / Tsurugi: D8 / Kunai: D0 / UkiUkiduino: D8). invert=true for active-low. */
+   * (Tachi: D8 / Tsurugi: D2 / Kunai: D1). invert=true for active-low. */
   void enableOutput(bool invert = false);
   void disableOutput();
 

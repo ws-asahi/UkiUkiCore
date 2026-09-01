@@ -1,23 +1,33 @@
+# SerialUPDI - a plain USB-serial adapter wired for one-wire UPDI.
+# Handled by avrdude 8.1 (-c serialupdi); the bundled prog.py/pymcuprog
+# path is no longer used, so no Python runtime is required.
+
 serialupdi.name=SerialUPDI - Normal: 230400 baud (recommended)
-serialupdi.protocol=uart
-serialupdi.program.extra_params=-u {serial.port} -b 230400
-serialupdi.program.protocol=uart
-serialupdi.program.tool=serialupdi
-serialupdi.bootloader.tool=serialupdi
+serialupdi.communication=serial
+serialupdi.protocol=serialupdi
+serialupdi.program.protocol=serialupdi
+serialupdi.program.tool=avrdude
+serialupdi.bootloader.tool=avrdude
+serialupdi.program.speed=230400
+serialupdi.program.extra_params=-P{serial.port} -b{program.speed}
 
 serialupdi345k.name=SerialUPDI - Faster: 345600 baud (not all adapters support this)
-serialupdi345k.protocol=uart
-serialupdi345k.program.extra_params=-u {serial.port} -b 345600
-serialupdi345k.program.protocol=uart
-serialupdi345k.program.tool=serialupdi
-serialupdi345k.bootloader.tool=serialupdi
+serialupdi345k.communication=serial
+serialupdi345k.protocol=serialupdi
+serialupdi345k.program.protocol=serialupdi
+serialupdi345k.program.tool=avrdude
+serialupdi345k.bootloader.tool=avrdude
+serialupdi345k.program.speed=345600
+serialupdi345k.program.extra_params=-P{serial.port} -b{program.speed}
 
 serialupdi57k.name=SerialUPDI - SLOW: 57600 baud (for lousy serial adapters or bad voodoo)
-serialupdi57k.protocol=uart
-serialupdi57k.program.extra_params=-u {serial.port} -b 57600
-serialupdi57k.program.protocol=uart
-serialupdi57k.program.tool=serialupdi
-serialupdi57k.bootloader.tool=serialupdi
+serialupdi57k.communication=serial
+serialupdi57k.protocol=serialupdi
+serialupdi57k.program.protocol=serialupdi
+serialupdi57k.program.tool=avrdude
+serialupdi57k.bootloader.tool=avrdude
+serialupdi57k.program.speed=57600
+serialupdi57k.program.extra_params=-P{serial.port} -b{program.speed}
 
 jtag2updi.name=JTAGv2 to UPDI bridge (jtag2updi)
 jtag2updi.communication=serial

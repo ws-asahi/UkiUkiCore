@@ -9,8 +9,10 @@
  * Target: AVR64DU32 with DxCore
  *
  * Architecture:
- *   - Uses official USB_EP_TABLE_t (FIFO[32] + EP[16] + FRAMENUM)
- *   - EPPTR set to &g_ep_table.EP[0]  (FIFO occupies negative offsets)
+ *   - Uses a trimmed EP table (EP[USB_NUM_EP]; the FIFO/FRAMENUM areas
+ *     are omitted by default since FIFOEN=STFRNUM=0, but can be reserved
+ *     again via USB_EP_TABLE_FIFO / USB_EP_TABLE_FRAMENUM - see usb_core.h)
+ *   - EPPTR set to &g_ep_table.EP[0] (valid in every layout)
  *   - Fully interrupt-driven: USB0_BUSEVENT_vect (reset/SOF) and
  *     USB0_TRNCOMPL_vect (SETUP + per-endpoint TRNCOMPL) drive all activity;
  *     usbPoll() is a no-op kept for source compatibility.
@@ -29,14 +31,32 @@
 #include <avr/interrupt.h>
 #include <util/delay.h>
 #include <string.h>
+#include <avr/pgmspace.h>
 #include "usb_core.h"
 #include "usb_standard.h"
 #include "USBCore_DU.h"
 
+
+/* Wazamono: USB clock floor check.
+ *
+ * DS40002548B 28.3.1.1: the USB peripheral needs CLK_PER >= 12 MHz for its
+ * register and SRAM interfaces, plus a nominal 48 MHz CLK_USB. CLK_USB comes
+ * from the PLL48M, which is fed by a *fixed* 4 MHz tap on the OSCHF that does
+ * not depend on the FRQSEL main-clock setting (12.3.4.1.1) - so the 16 MHz
+ * menu option leaves the USB clock intact and only CLK_PER matters here.
+ *
+ * No menu entry goes below the floor, but F_CPU can also arrive from a custom
+ * board definition or a hand-edited entry; if it ever does, say clearly at
+ * build time why USB is not going to enumerate rather than letting it fail
+ * silently at run time. */
+#if F_CPU < 12000000UL
+  #warning "F_CPU < 12 MHz: USB requires CLK_PER >= 12 MHz (DS40002548B 28.3.1.1). USB Serial will not enumerate at this clock."
+#endif
+
 /* ============================================================
  * Global state
  * ============================================================ */
-USB_EP_TABLE_t g_ep_table __attribute__((aligned(2)));
+usb_ep_table_t g_ep_table __attribute__((aligned(2)));  /* EPPTR[0]=0 required (28.5.7) */
 
 uint8_t  g_ep0_setup_buf[8]            __attribute__((aligned(2)));
 uint8_t  g_ep0_data_buf[USB_EP0_SIZE]  __attribute__((aligned(2)));
@@ -49,29 +69,9 @@ uint8_t  g_ep6_in_buf[USB_EP6_SIZE]    __attribute__((aligned(2)));
 
 ctrl_state_t g_ctrl_state          = CTRL_IDLE;
 
-/* --- diagnostic snapshot (read by the test sketch over Serial1) --- */
-volatile uint8_t g_dbg_ctrl_state    = 0;
-volatile uint8_t g_dbg_ep0out_status = 0;
-volatile uint8_t g_dbg_ep0in_status  = 0;
-volatile uint8_t g_dbg_intflagsb     = 0;
-volatile uint8_t g_dbg_usbaddr       = 0;
 uint8_t          g_pending_address   = 0;
 volatile uint8_t g_current_configuration = 0;
 uint8_t          g_remote_wakeup_enabled = 0;
-
-volatile uint16_t g_reset_count          = 0;
-volatile uint16_t g_setup_count          = 0;
-volatile uint16_t g_get_desc_count       = 0;
-volatile uint16_t g_stall_count          = 0;
-volatile uint16_t g_setcfg_count         = 0;
-volatile uint16_t g_class_req_count      = 0;
-volatile uint16_t g_mpkt_count           = 0;   /* multipacket IN transfers started */
-volatile uint16_t g_ep0in_tc_count       = 0;   /* EP0 IN transaction-complete events */
-volatile uint8_t  g_last_cfg_value       = 0xFF;
-volatile uint8_t  g_last_bmRequestType   = 0;
-volatile uint8_t  g_last_bRequest        = 0;
-volatile uint16_t g_last_wValue          = 0;
-volatile uint16_t g_last_wLength         = 0;
 
 /* ============================================================
  * RMW busy wait
@@ -103,7 +103,7 @@ __attribute__((weak)) void usb_cdc_on_sof(void)         { }
  *   EP2 OUT armed to receive bulk data from host.
  * ============================================================ */
 static void usb_ep_table_init(void) {
-    /* Zero entire table (FIFO + EP[16] + FRAMENUM) */
+    /* Zero entire table (EP[USB_NUM_EP] + any reserved FIFO/FRAMENUM areas) */
     memset(&g_ep_table, 0, sizeof(g_ep_table));
 
     /* EP0 OUT: Control, ready to receive SETUP */
@@ -154,12 +154,17 @@ static void usb_ep_table_init(void) {
 static const uint8_t *g_ep0_in_src;      /* next byte to send           */
 static uint16_t       g_ep0_in_rem;      /* bytes still to send         */
 static bool           g_ep0_in_need_zlp; /* terminating ZLP required?   */
+static bool           g_ep0_in_pgm;      /* source is PROGMEM, not RAM  */
 
 /* Load and fire one IN packet (n <= USB_EP0_SIZE). EP0.IN must be deactivated
  * (BUSNAK set) on entry — true right after SETUP and after each IN TRNCOMPL,
  * which satisfies the datasheet rule that CNT/MCNT are written while NAKed. */
 static void ep0_send_chunk(uint16_t n) {
-    for (uint16_t i = 0; i < n; i++) g_ep0_data_buf[i] = g_ep0_in_src[i];
+    if (g_ep0_in_pgm) {
+        memcpy_P(g_ep0_data_buf, g_ep0_in_src, n);
+    } else {
+        for (uint16_t i = 0; i < n; i++) g_ep0_data_buf[i] = g_ep0_in_src[i];
+    }
     g_ep0_in_src += n;
     g_ep0_in_rem -= n;
 
@@ -173,9 +178,11 @@ static void ep0_send_chunk(uint16_t n) {
     USB0.STATUS[0].INCLR = USB_UNFOVF_bm | USB_TRNCOMPL_bm | USB_STALLED_bm | USB_BUSNAK_bm;
 }
 
-void ep0_start_data_in(const uint8_t *data, uint16_t len, uint16_t host_requested) {
+static void ep0_start_data_in_ex(const uint8_t *data, uint16_t len,
+                                 uint16_t host_requested, bool pgm) {
     if (len > host_requested) len = host_requested;
 
+    g_ep0_in_pgm = pgm;
     g_ep0_in_src = data;
     g_ep0_in_rem = len;
     /* A short final packet ends the transfer. If we send a whole number of
@@ -183,7 +190,6 @@ void ep0_start_data_in(const uint8_t *data, uint16_t len, uint16_t host_requeste
     g_ep0_in_need_zlp = (len < host_requested) && (len != 0)
                         && ((len % USB_EP0_SIZE) == 0);
 
-    if (len > USB_EP0_SIZE) g_mpkt_count++;   /* diagnostic: multi-chunk read */
 
     /* Pre-arm EP0.OUT once to ACK the status-stage ZLP that follows the data */
     rmw_wait();
@@ -194,6 +200,19 @@ void ep0_start_data_in(const uint8_t *data, uint16_t len, uint16_t host_requeste
     /* Fire the first packet (len==0 sends a single ZLP) */
     uint16_t n = (g_ep0_in_rem > USB_EP0_SIZE) ? USB_EP0_SIZE : g_ep0_in_rem;
     ep0_send_chunk(n);
+}
+
+void ep0_start_data_in(const uint8_t *data, uint16_t len, uint16_t host_requested) {
+    ep0_start_data_in_ex(data, len, host_requested, false);
+}
+
+/* Same as ep0_start_data_in(), but `data_pgm` points into flash. The chunk
+ * refill in handle_ep0_in_complete() then stages each <=64 B packet from
+ * PROGMEM into g_ep0_data_buf, so no RAM-resident copy of the descriptor
+ * is ever needed. Everything else (wLength truncation, ZLP rule, DATA0/1
+ * toggling, RMW discipline) is the identical, hardware-proven path. */
+void ep0_start_data_in_P(const uint8_t *data_pgm, uint16_t len, uint16_t host_requested) {
+    ep0_start_data_in_ex(data_pgm, len, host_requested, true);
 }
 
 void ep0_start_data_out(uint8_t *buffer, uint16_t len) {
@@ -240,7 +259,6 @@ void ep0_send_zlp(void) {
 }
 
 void ep0_stall(void) {
-    g_stall_count++;
     g_ep_table.EP[0].OUT.CTRL |= USB_DOSTALL_bm;
     g_ep_table.EP[0].IN.CTRL  |= USB_DOSTALL_bm;
     g_ctrl_state = CTRL_IDLE;
@@ -253,10 +271,6 @@ void ep0_stall(void) {
 static void handle_setup(void) {
     usb_setup_t *s = (usb_setup_t *)g_ep0_setup_buf;
 
-    g_last_bmRequestType = s->bmRequestType;
-    g_last_bRequest      = s->bRequest;
-    g_last_wValue        = s->wValue;
-    g_last_wLength       = s->wLength;
 
     /* Clear DOSTALL on both EP0 directions for the NEW transfer.
      * While EPSETUP=1 the HW overrides DOSTALL (datasheet 28.7.4),
@@ -348,7 +362,6 @@ static void handle_ep0_out_complete(void) {
 static void usb_service_busevent(void) {
     uint8_t flags_a = USB0.INTFLAGSA;
     if (flags_a & USB_RESET_bm) {
-        g_reset_count++;
         USB0.ADDR = 0;
         usb_ep_table_init();
         g_ctrl_state            = CTRL_IDLE;
@@ -372,7 +385,6 @@ static void usb_service_trncompl(void) {
 
     /* SETUP arrived */
     if (flags_b & USB_SETUP_bm) {
-        g_setup_count++;
         handle_setup();
         USB0.INTFLAGSB = USB_SETUP_bm;
     }
@@ -382,7 +394,6 @@ static void usb_service_trncompl(void) {
         if (g_ep_table.EP[0].IN.STATUS & USB_TRNCOMPL_bm) {
             rmw_wait();
             USB0.STATUS[0].INCLR = USB_TRNCOMPL_bm;
-            g_ep0in_tc_count++;
             handle_ep0_in_complete();
         }
         if (g_ep_table.EP[0].OUT.STATUS & USB_TRNCOMPL_bm) {
@@ -421,11 +432,6 @@ static void usb_service_trncompl(void) {
     }
 
     /* diagnostic snapshot of EP0 / control state for the test sketch */
-    g_dbg_ctrl_state    = (uint8_t)g_ctrl_state;
-    g_dbg_ep0out_status = g_ep_table.EP[0].OUT.STATUS;
-    g_dbg_ep0in_status  = g_ep_table.EP[0].IN.STATUS;
-    g_dbg_intflagsb     = USB0.INTFLAGSB;
-    g_dbg_usbaddr       = USB0.ADDR;
 }
 
 /* The USB stack is interrupt-driven; the application no longer needs to call
@@ -471,13 +477,22 @@ void usbInit(void) {
 
     /* 2. Enable VUSB regulator (5V VDD -> 3.3V VUSB)
      *    ONLY on boards that generate VUSB on-chip (VDD = 5 V, datasheet power
-     *    config 5b). Boards with an EXTERNAL 3.3 V VUSB supply (e.g. an on-board
-     *    LDO, VDD = VUSB = 3.3 V, config 3s) must NOT enable the internal
-     *    regulator, or it would fight the external supply. Selected per board in
-     *    boards.txt via -DUSB_VREG_INTERNAL (set for the UkiUkiduino, which
-     *    generates VUSB with the on-chip regulator - config 5s). */
+     *    config 5b/5s). Boards with an EXTERNAL 3.3 V VUSB supply (an on-board
+     *    LDO, power config 3s) must NOT enable the internal regulator, or it
+     *    would fight the external supply. Selected per board in boards.txt via
+     *    -DUSB_VREG_INTERNAL. The Tachi and Kunai feed VUSB from an external
+     *    3.3 V LDO and must NOT set it; the Tsurugi runs VDD = 5 V and uses
+     *    the internal regulator (power configuration 5b, boards.txt passes
+     *    the define). This also makes the stock Tsurugi board selection work
+     *    on an AVR64DU32 Curiosity Nano without the J114/JP100 jumper.
+     * The write is unconditional in both directions: a bootloader or an
+     * earlier sketch may have left the opposite setting behind, and on
+     * external-VUSB boards a running internal regulator would fight the
+     * on-board LDO through the VUSB net. */
 #if defined(USB_VREG_INTERNAL)
     SYSCFG.VUSBCTRL = SYSCFG_USBVREG_bm;
+#else
+    SYSCFG.VUSBCTRL = 0;
 #endif
 
     /* 3. Settle */
@@ -488,10 +503,11 @@ void usbInit(void) {
 
     /* 5. Point USB peripheral at &g_ep_table.EP[0]
      *    Hardware layout (datasheet 28.7.1):
-     *      EPPTR - 32 .. -1   : FIFO[31..0] (negative offsets)
      *      EPPTR + 0          : EP[0].OUT.STATUS
-     *      EPPTR + (N+1)*16   : FRAMENUM
-     *    USB_EP_TABLE_t has FIFO[32] first, so EPPTR points past it. */
+     *      EPPTR + (MAXEP+1)*16-1 : last byte accessed with
+     *                               FIFOEN=STFRNUM=0 (the default)
+     *    (FIFO below EPPTR / FRAMENUM after the table exist only when
+     *     reserved via USB_EP_TABLE_FIFO / USB_EP_TABLE_FRAMENUM.) */
     USB0.EPPTR = (uint16_t)&g_ep_table.EP[0];
 
     /* 6. Enable USB interrupts (interrupt-driven; loop() need not poll).

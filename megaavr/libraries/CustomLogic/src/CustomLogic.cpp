@@ -3,10 +3,10 @@
 
 /* ---- board unit -> LUT/pin assignment --------------------------------- */
 /* IN0, IN1, IN2, OUT, OUT-alt (NOT_A_PIN when the LUT has no alternate) */
-#if defined(WAZAMONO_BOARD_KUNAI)
+#if defined(ARDUINO_AVR_KUNAI)
 static const uint8_t unit0_pins[5] = {PIN_PA0, PIN_PA1, PIN_PA2, PIN_PA3, PIN_PA6};
 CustomLogicClass CustomLogic(0, unit0_pins);   /* LUT0 */
-#else /* Tachi / Tsurugi / UkiUkiduino */
+#else /* Tachi / Tsurugi */
 static const uint8_t unit0_pins[5] = {PIN_PD0, PIN_PD1, PIN_PD2, PIN_PD3, PIN_PD6};
 static const uint8_t unit1_pins[5] = {PIN_PF0, PIN_PF1, PIN_PF2, PIN_PF3, NOT_A_PIN};
 CustomLogicClass CustomLogic(2, unit0_pins);   /* LUT2 */
@@ -189,7 +189,7 @@ bool CustomLogicClass::setInput(uint8_t input, LogicInput source) {
       if (!isEvenLut(_lut)) return false;
       break;
     case LOGIC_OTHER_UNIT:
-      #if defined(WAZAMONO_BOARD_KUNAI)
+      #if defined(ARDUINO_AVR_KUNAI)
         return false;                    /* this board has a single unit */
       #else
         break;

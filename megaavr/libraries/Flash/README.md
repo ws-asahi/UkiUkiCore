@@ -130,7 +130,7 @@ switch (result) {
 Return Values:
 FLASHWRITE_OK           = 0x00 // Bootloader present and supports this.
 FLASHWRITE_OLD          = 0x01 // If bootloader version is old, we know it won't work.
-FLASHWRITE_NOBOOT       = 0x10 // No bootloader was found (Returned only if USING_OPTIBOOT = 1; the most likely reason to see this is a third party IDE that requires manually specifying defines like this.
+FLASHWRITE_NOBOOT       = 0x10 // No bootloader was found (Returned only if USING_USBBOOT = 1; the most likely reason to see this is a third party IDE that requires manually specifying defines like this.
 FLASHWRITE_DISABLED     = 0x02 // Bootloader would support it, but it was explicitly disabled (APP_NOSPM)
 FLASHWRITE_UNRECOGNIZED = 0x03 // Some weird unrecognized bootloader is installed
 FLASHWRITE_FUSES        = 0x14 // Fuse settings do not support writing to flash without a bootloader (non-Optiboot configurations only).

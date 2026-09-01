@@ -22,7 +22,7 @@ License: LGPL 2.1 (to match the host DxCore repository).  See `LICENSE.md`.
 ## Building
 
 The DxCore distribution bundles the exact toolchain we developed and
-test against (`tools/avr-gcc/7.3.0-atmel3.6.1-azduino8`).  From inside
+test against (`tools/avr-gcc/avr-gcc-15.2.0`).  From inside
 this directory:
 
 ```

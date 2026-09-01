@@ -25,10 +25,6 @@ extern "C" {
 bool usbCdcReady(void);
 bool usbCdcTxIdle(void);   /* TX ring empty AND no packet in flight */
 
-/* diagnostic: total raw bytes received on the CDC bulk-OUT endpoint */
-extern volatile uint16_t g_cdc_rx_total;
-extern volatile uint16_t g_cdc_tx_starts;
-extern volatile uint16_t g_cdc_tx_pkts;
 uint8_t usbCdcLineState(void);
 bool    usbCdcTxInFlight(void);
 
@@ -36,18 +32,21 @@ bool    usbCdcTxInFlight(void);
  * for confirming the 1200 bps touch path from a user sketch via Serial1. */
 uint32_t usbCdcLineCodingBaud(void);
 
-/* Reset-surviving breadcrumb (diagnostic). Call usbCdcDiagBreadcrumbInit()
- * once from setup(); then read the counters to see how far the last 1200bps
- * touch got even though the chip has since bounced back into the app:
- *   Saw1200   - SET_LINE_CODING(1200) reached the native CDC at least once
- *   TrigCount - trigger_1200bps_reset() was entered (the reset was requested)
- *   TrigBaud  - g_line_coding.dwDTERate captured at the last trigger
- *   TrigSite  - 1 = SET_CONTROL_LINE_STATE path, 2 = SET_LINE_CODING path */
-void     usbCdcDiagBreadcrumbInit(void);
-uint16_t usbCdcDiagSaw1200(void);
-uint16_t usbCdcDiagTrigCount(void);
-uint32_t usbCdcDiagTrigBaud(void);
-uint8_t  usbCdcDiagTrigSite(void);
+/* Remaining fields of the host-requested line coding, exposed so that
+ * USBSerial can offer the Leonardo Serial_ accessors (stopbits(),
+ * paritytype(), numbits()). Raw CDC-ACM encodings:
+ *   stop bits : 0 = 1, 1 = 1.5, 2 = 2
+ *   parity    : 0 = none, 1 = odd, 2 = even, 3 = mark, 4 = space
+ *   data bits : 5, 6, 7, 8 or 16 (the literal bit count, as on the 32U4) */
+uint8_t usbCdcLineCodingStopBits(void);
+uint8_t usbCdcLineCodingParity(void);
+uint8_t usbCdcLineCodingDataBits(void);
+
+/* Most recent CDC SEND_BREAK duration requested by the host, consumed on
+ * read: returns 0..0xFFFF once, then -1 until the next request arrives
+ * (0 = end break, 0xFFFF = indefinite break). Matches Leonardo's
+ * Serial_::readBreak(). */
+int32_t usbCdcReadBreak(void);
 
 /* True when EP3 IN is ready to accept a fresh buffer */
 bool usbCdcTxReady(void);

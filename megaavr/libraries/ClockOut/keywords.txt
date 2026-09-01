@@ -1,0 +1,20 @@
+#######################################
+# Syntax Coloring Map For ClockOut
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+ClockOut	KEYWORD1
+ClockOutClass	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+begin	KEYWORD2
+end	KEYWORD2
+isRunning	KEYWORD2
+frequency	KEYWORD2
+pin	KEYWORD2

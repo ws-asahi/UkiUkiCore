@@ -51,9 +51,15 @@ enum KeyboardLeds : uint8_t {
 #ifndef HID_CUSTOM_LAYOUT
     #define HID_CUSTOM_LAYOUT
     #define LAYOUT_US_ENGLISH
-    #pragma message "Using default ASCII layout for keyboard modules"
-#else
-    #pragma message "Using custom layout for keyboard modules"
+    /* WazamonoCore: the upstream "#pragma message" layout notices are removed.
+     * Any diagnostic emitted while compiling under a directory whose path
+     * contains non-ASCII characters (e.g. OneDrive\<Documents> localized as
+     * a Japanese folder name) makes the mingw-built avr-g++ echo that path
+     * in the ANSI code page (CP932). The Arduino IDE ships compiler output
+     * to arduino-cli over gRPC as UTF-8 strings, and those CP932 bytes make
+     * the whole compile fail with "grpc: error while marshaling: string
+     * field contains invalid UTF-8" even though the build itself succeeded.
+     * The notice carried no information (it fired on every build). */
 #endif
 
 // Hut1_12v2.pdf

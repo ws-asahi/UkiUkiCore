@@ -442,6 +442,8 @@ void usb_min_init(void) {
      * per DS40002548A section 6.4). */
 #if defined(USB_VREG_INTERNAL)
     SYSCFG.VUSBCTRL = SYSCFG_USBVREG_bm;
+#else
+    SYSCFG.VUSBCTRL = 0;
 #endif
 
     _delay_ms(1);

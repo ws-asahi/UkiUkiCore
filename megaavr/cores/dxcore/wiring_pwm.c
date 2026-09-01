@@ -8,6 +8,7 @@
 
 #include "wiring_private.h"
 #include "pins_arduino.h"
+#include "wazamono_lutpwm.h" /* Wazamono: TCB1-via-CCL analogWrite support (no-op unless the variant opts in) */
 
 //#define TCECOND (true)
 
@@ -194,6 +195,21 @@ void turnOffPWM(uint8_t pin) {
     #endif
     if ((digital_pin_timer & 0xF0) == 0x10 ) {
       /* its on a TCB */
+      #if defined(WAZAMONO_TCB1_PWMMUX_ENABLED)
+        if (WAZAMONO_TCB1_PWM_IS_ROUTED_PIN(pin)) {
+          /* Wazamono multi-route: release only THIS pin's outlet. Clearing
+           * CCMPEN unconditionally (below) would kill an active WO-pin route
+           * when a LUT-routed sibling is merely digitalWrite()n. */
+          wazamono_tcb1_pwm_release(pin);
+          return;
+        }
+      #elif defined(WAZAMONO_TCB1_LUTPWM_ENABLED)
+        if (pin == WAZAMONO_TCB1_LUTPWM_PIN) {
+          /* Wazamono: this pin is driven from TCB1 through a CCL LUT, not from
+           * the TCB's own WO pin - release the LUT (if it is still ours). */
+          wazamono_tcb1_lutpwm_disengage();
+        }
+      #endif
       TCB_t * timer_B;
       timer_B = &TCB0 + (digital_pin_timer & 0x07);
       if (((timer_B->CTRLB) & TCB_CNTMODE_gm) == TCB_CNTMODE_PWM8_gc ) {
@@ -451,7 +467,24 @@ void analogWrite(uint8_t pin, int val) {
   uint8_t bit_mask = digitalPinToBitMask(pin);
   if (bit_mask == NOT_A_PIN) return; //this catches any run-time determined pin that isn't a pin.
   if ((val == 0 || val == 255)) {
-    digitalWrite(pin,val ? HIGH : LOW);
+    /* Wazamono: the classic Arduino AVR core calls pinMode(pin, OUTPUT)
+     * *before* this branch ("make sure the pin is in output mode ... which
+     * doesn't require a pinMode call for the analog output pins" -
+     * ArduinoCore-avr, wiring_analog.c). Upstream returned here without ever
+     * setting the direction, so on a pin that had not already been made an
+     * output, analogWrite(pin, 0) left it Hi-Z and analogWrite(pin, 255) only
+     * enabled the pull-up instead of driving the pin high. The normal PWM path
+     * below always ends in _setOutput(), so only these two endpoint values
+     * were affected - which is exactly where a sketch is most likely to skip
+     * pinMode() (fades that start at 0, on/off via analogWrite).
+     * digitalWrite() first (it sets OUT and turns PWM off), then the
+     * direction, so the pin never briefly drives a stale level. Leaving
+     * PULLUPEN set by digitalWrite()'s input-pin emulation is harmless and
+     * matches classic AVR semantics: DS40002548B 18.3.2.3 states the pull-up
+     * is disconnected while the pin is configured as an output. */
+    uint8_t portnum = digitalPinToPort(pin);
+    digitalWrite(pin, val ? HIGH : LOW);
+    _setOutput(portnum, bit_mask);
     return;
   }
   uint8_t portnum  = digitalPinToPort(pin);
@@ -709,7 +742,20 @@ void analogWrite(uint8_t pin, int val) {
       /* its on a TCB */
       TCB_t * timer_B;
       timer_B = &TCB0 + (digital_pin_timer & 0x07);
-      if (((timer_B->CTRLB) & TCB_CNTMODE_gm) == TCB_CNTMODE_PWM8_gc ) {
+      if ((((timer_B->CTRLB) & TCB_CNTMODE_gm) == TCB_CNTMODE_PWM8_gc)
+      /* Wazamono: a pin marked TIMERB1 that is really a CCL LUT output gets its
+       * waveform from TCB1 through the LUT. engage() takes or verifies the LUT;
+       * if someone else owns it (CustomLogic or direct register use), we fall
+       * through to the plain digital output below - analogWrite is disabled on
+       * this pin until the LUT is free again. The TCB1 side needs no extra
+       * check: tone() or user reconfiguration leaves PWM8 mode, which the
+       * CNTMODE test above already catches. */
+      #if defined(WAZAMONO_TCB1_PWMMUX_ENABLED)
+          && (!WAZAMONO_TCB1_PWM_IS_ROUTED_PIN(pin) || wazamono_tcb1_pwm_engage(pin))
+      #elif defined(WAZAMONO_TCB1_LUTPWM_ENABLED)
+          && ((pin != WAZAMONO_TCB1_LUTPWM_PIN) || wazamono_tcb1_lutpwm_engage())
+      #endif
+         ) {
         /* set duty cycle */
         #if defined(ERRATA_TCB_CCMP) && ERRATA_TCB_CCMP == 0
           timer_B->CCMPH = val;
@@ -720,8 +766,21 @@ void analogWrite(uint8_t pin, int val) {
            * insist on reading the timer value from within an ISR, yes that's a race condition, and it will shit on the compare value
            * This case was of course promptly hit by the stock arduino megaavr implementation. */
         #endif
-        /* Enable Timer Output */
-        timer_B->CTRLB |= (TCB_CCMPEN_bm);
+        /* Enable Timer Output. Wazamono LUT-PWM pin: the waveform reaches the
+         * pin through the CCL, and CCMPEN would additionally drive TCB1's own
+         * (parked) WO pin regardless of its direction - so skip it unless the
+         * variant requests it (WAZAMONO_TCB1_LUTPWM_CCMPEN, see header). */
+        #if defined(WAZAMONO_TCB1_PWMMUX_ENABLED)
+          /* Multi-route: engage(pin) already opened the right outlet (CCMPEN
+           * for the WO pin, a LUT for the others); setting CCMPEN here for a
+           * LUT-routed pin would additionally drive the parked WO pin. */
+          if (!WAZAMONO_TCB1_PWM_IS_ROUTED_PIN(pin))
+        #elif defined(WAZAMONO_TCB1_LUTPWM_ENABLED) && (WAZAMONO_TCB1_LUTPWM_CCMPEN == 0)
+          if (pin != WAZAMONO_TCB1_LUTPWM_PIN)
+        #endif
+        {
+          timer_B->CTRLB |= (TCB_CCMPEN_bm);
+        }
         _setOutput(portnum, bit_mask);
         return;
       }
@@ -773,7 +832,7 @@ void analogWrite(uint8_t pin, int val) {
       c. there is no timer listed in the timer table either.
   */
   if (val > 127) {
-    _setValueLow(portnum,bit_mask);
+    _setValueHigh(portnum,bit_mask);
   } else {
     _setValueLow(portnum,bit_mask);
   }

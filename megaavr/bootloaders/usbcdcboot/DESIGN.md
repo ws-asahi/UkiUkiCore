@@ -145,7 +145,7 @@ string (e.g. "Wazamono Tachi Bootloader" / "Wazamono Tsurugi Bootloader")
 so the host can distinguish it from the running application.
 
 VID/PID (pid.codes test range; the bootloader PID and product string are
-selected per board at build time via `-DWAZAMONO_BOARD_*` - see
+selected per board at build time via `-DARDUINO_AVR_*` - see
 src/usb_desc.h / src/usb_desc.c):
 
  - VID = 0x1209 (pid.codes), shared by all Wazamono boards

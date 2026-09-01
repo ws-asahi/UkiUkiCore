@@ -11,3 +11,4 @@ megaavr/platform.local.txt
 
 # Boards Manager release staging (make_release.sh output)
 dist/
+WazamonoCore-*.tar.bz2

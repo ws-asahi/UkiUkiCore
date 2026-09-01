@@ -1,67 +1,67 @@
-# AnalogComp — Wazamono用アナログコンパレータライブラリ
+# AnalogComp — Analog comparator library for Wazamono
 
-AVR DUシリーズ内蔵のアナログコンパレータ(AC0)を、SerialやSDと同じ感覚で使えるようにした
-WazamonoCore専用ライブラリです。インスタンス `AnalogComp` が用意済みなので、
-`begin()` するだけで使い始められます。
+A WazamonoCore-specific library that makes the analog comparator (AC0) built into the AVR DU series
+as easy to use as Serial or SD. The instance `AnalogComp` is predefined, so you can start with
+just `begin()`.
 
 ```cpp
 #include <AnalogComp.h>
 
 void setup() {
-  AnalogComp.begin();                    // +ピンと−ピンを比較
-  // AnalogComp.begin(INTERNAL2V5);      // +ピンを内蔵基準電圧2.5Vと比較
-  // AnalogComp.begin(VDD, 128);         // +ピンをVDDの1/2と比較
+  AnalogComp.begin();                    // Compare the + pin with the − pin
+  // AnalogComp.begin(INTERNAL2V5);      // Compare the + pin with the internal 2.5 V reference
+  // AnalogComp.begin(VDD, 128);         // Compare the + pin with 1/2 of VDD
 }
 
 void loop() {
-  if (AnalogComp.read()) {     // + > − のとき true
+  if (AnalogComp.read()) {     // true when + > −
     ...
   }
 }
 ```
 
-## 入出力ピン(ハードウェア固定)
+## Input/output pins (fixed in hardware)
 
-| | +入力 | −入力 | 出力 (`enableOutput()`) |
+| | + input | − input | Output (`enableOutput()`) |
 |---|---|---|---|
-| **Tachi** | A1 (PD2) | A0 (PD3) | D4 (PA7) |
-| **Tsurugi** | D9 (PD2) | D10 (PD3) | D8 (PA7) |
-| **Kunai** | D6 (PD6) | D7 (PD7) | D0 (PA7) |
+| **Tachi** | D9 (PD2) | D10 (PD3) | D8 (PA7) |
+| **Tsurugi** | D9 (PD2) | D10 (PD3) | D2 (PA7) |
+| **Kunai** | D2 (PD6) | D3 (PD7) | D1 (PA7) |
 
-`setInputs(plus, minus)` で別の対応ピンへ切り替えられます
-(+: PD2/PD6、−: PD3/PD0/PD7 のうちボードに実在するもの)。
+`setInputs(plus, minus)` switches to other supported pins
+(+: PD2/PD6, −: PD3/PD0/PD7, whichever exist on the board).
 
 ## API
 
-| メソッド | 説明 |
+| Method | Description |
 |---|---|
-| `begin()` | +ピン vs −ピンで比較開始 |
-| `begin(ref)` / `begin(ref, level)` | +ピン vs 基準電圧で比較開始。`ref`は`analogReference()`と同じ定数(`INTERNAL1V024/2V048/2V5/4V096`、`VDD`、`EXTERNAL`)。しきい値 = Vref × level ÷ 256(level省略時255≒Vrefそのもの) |
-| `read()` | 比較結果。+ > − で `true` |
-| `setThreshold(ref, level)` | 基準電圧・しきい値を変更(−入力を基準電圧側に切替) |
-| `setInputs(plus, minus)` | 入力ピンの切り替え(非対応ピンなら `false`) |
-| `setHysteresis(level)` | `AC_HYST_NONE/SMALL/MEDIUM/LARGE`(約0/10/25/50mV) |
-| `enableOutput(invert)` / `disableOutput()` | 比較結果をPA7へ出力 |
-| `attachInterrupt(fn, mode)` | `RISING/FALLING/CHANGE` で関数呼び出し |
-| `detachInterrupt()` | 割り込み解除 |
-| `end()` | 停止してピンを解放 |
+| `begin()` | Start comparing the + pin with the − pin |
+| `begin(ref)` / `begin(ref, level)` | Start comparing the + pin with a reference voltage. `ref` takes the same constants as `analogReference()` (`INTERNAL1V024/2V048/2V5/4V096`, `VDD`, `EXTERNAL`). Threshold = Vref × level ÷ 256 (level defaults to 255 ≈ Vref itself) |
+| `read()` | Comparison result. `true` when + > − |
+| `setThreshold(ref, level)` | Change the reference voltage and threshold (switches the − input to the reference side) |
+| `setInputs(plus, minus)` | Switch the input pins (`false` for unsupported pins) |
+| `setHysteresis(level)` | `AC_HYST_NONE/SMALL/MEDIUM/LARGE` (about 0/10/25/50 mV) |
+| `enableOutput(invert)` / `disableOutput()` | Drive the comparison result on PA7 |
+| `attachInterrupt(fn, mode)` | Call a function on `RISING/FALLING/CHANGE` |
+| `detachInterrupt()` | Remove the interrupt |
+| `end()` | Stop and release the pins |
 
-## サンプル
+## Examples
 
-- **ReadState** — ピン同士の比較結果をシリアルへ表示
-- **Threshold** — 内蔵基準電圧2.5Vとの比較結果をLEDに表示
-- **OutputPin** — 比較結果をPA7へハードウェア出力(スケッチ介在なし)
-- **EdgeInterrupt** — しきい値クロスで割り込み
+- **ReadState** — Print the pin-vs-pin comparison result to serial
+- **Threshold** — Show the comparison against the internal 2.5 V reference on an LED
+- **OutputPin** — Drive the comparison result on PA7 in hardware (no sketch involvement)
+- **EdgeInterrupt** — Interrupt on threshold crossing
 
-## 実装の出自
+## Provenance
 
-本ライブラリはAVR64DU28/32データシート(DS40002548A)とMicrochip公式デバイスヘッダのみを
-情報源とした独立実装です。DxCore/megaTinyCoreのComparatorライブラリを含む既存の
-コンパレータライブラリのコードは使用・参照していません。
+This library is an independent implementation based solely on the AVR64DU28/32 datasheet (DS40002548A)
+and the official Microchip device headers. No code from existing comparator libraries, including the
+Comparator library of DxCore/megaTinyCore, has been used or consulted.
 
-## 注意
+## Notes
 
-- 入力電圧はGND〜VDDの範囲で使用してください。
-- `EXTERNAL`指定時はVREFAピン(PD7)へ基準電圧を入力します。
-- ノイズのある信号では `setHysteresis()` の併用を推奨します(特に割り込み使用時)。
-- 内蔵基準電圧の精度を保つため、しきい値はVDDより0.5V以上低くしてください。
+- Keep input voltages within GND to VDD.
+- With `EXTERNAL`, supply the reference voltage on the VREFA pin (PD7).
+- For noisy signals, combining with `setHysteresis()` is recommended (especially when using interrupts).
+- To preserve the accuracy of the internal reference, keep the threshold at least 0.5 V below VDD.

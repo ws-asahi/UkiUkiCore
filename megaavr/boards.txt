@@ -20,6 +20,9 @@
 #  for tone() (Tone.cpp routes tone to TCB1 whenever millis is on TCB0;
 #  tone therefore shares TCB1 with D3 PWM - using tone() suspends D3 PWM
 #  only, exactly like Uno R3's Timer2, but D11 PWM (TCA0) is preserved).
+menu.clock=Clock Speed
+menu.usbeps=USB Endpoints
+
 ukiukiduino.name=UkiUkiduino
 
 ukiukiduino.upload.tool=avrdude
@@ -31,12 +34,16 @@ ukiukiduino.vid.0=0x1209
 ukiukiduino.pid.0=0x000C
 ukiukiduino.vid.1=0x1209
 ukiukiduino.pid.1=0x000B
-ukiukiduino.build.board=avrdu
+ukiukiduino.build.board=AVR_UKIUKIDUINO
 ukiukiduino.build.core=dxcore
 ukiukiduino.build.f_cpu={build.speed}000000L
 ukiukiduino.build.text_section_start=.text=0x1000
 ukiukiduino.build.defaultswaps=
-ukiukiduino.build.extra_flags= {build.defaultswaps} -DUSING_AVRDU_CDC_BOOTLOADER -DUSING_OPTIBOOT -DUSB_VREG_INTERNAL -DWAZAMONO_SERIAL1_IS_USART0
+ukiukiduino.build.extra_flags= {build.defaultswaps} -DUSING_AVRDU_CDC_BOOTLOADER -DUSING_USBBOOT -DUSB_VREG_INTERNAL {build.usbepflags}
+ukiukiduino.menu.usbeps.ep8=8 (EP0-EP7, standard)
+ukiukiduino.menu.usbeps.ep8.build.usbepflags=
+ukiukiduino.menu.usbeps.ep16=16 (EP0-EP15, extended)
+ukiukiduino.menu.usbeps.ep16.build.usbepflags=-DUSB_EP_SLOTS=16
 # Force-link the variant init TU (variants/UkiUkiduino/ukiukiduino_init.cpp).
 # Arduino archives variant objects into core.a, so its strong initVariant() that
 # sets up the CCL/EVSYS LED mirror would otherwise be dropped (core main.cpp has
@@ -89,8 +96,12 @@ ukiukiduino.bootloader.appspm=
 
 # --- Clock: fixed 24 MHz internal OSCHF (crystal-less; no Clock menu). ---
 #  clocksource 0 = internal OSCHF. USB CLK_USB (48 MHz) = OSCHF + PLL48M, SOF-tuned.
-ukiukiduino.build.speed=24
-ukiukiduino.build.clocksource=0
+ukiukiduino.menu.clock.24internal=24 MHz internal
+ukiukiduino.menu.clock.24internal.build.speed=24
+ukiukiduino.menu.clock.24internal.build.clocksource=0
+ukiukiduino.menu.clock.16internal=16 MHz internal
+ukiukiduino.menu.clock.16internal.build.speed=16
+ukiukiduino.menu.clock.16internal.build.clocksource=0
 
 # --- Locked to AVR64DU32. Variant + bootloader hex fixed to UkiUkiduino. ---
 ukiukiduino.build.mcu=avr64du32

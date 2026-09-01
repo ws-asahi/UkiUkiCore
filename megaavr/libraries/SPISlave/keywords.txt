@@ -1,0 +1,26 @@
+#######################################
+# Syntax Coloring Map For SPISlave
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+SPISlave	KEYWORD1
+SPISlaveClass	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+begin	KEYWORD2
+end	KEYWORD2
+setData	KEYWORD2
+onData	KEYWORD2
+onDataSent	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+SPISLAVE_BUFFER_SIZE	LITERAL1

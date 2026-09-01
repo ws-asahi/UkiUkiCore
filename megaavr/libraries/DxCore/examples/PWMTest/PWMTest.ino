@@ -20,8 +20,8 @@
  *
  * First, it prints the table of pins within each pinset of TCA0. 255 is
  * NOT_A_PIN (either the pin does not exist on this board, or it is not
- * available - e.g. the crystal pins on Tachi/Tsurugi, or PC3 which is the
- * VBUS divider on Tachi/Kunai; on Tsurugi PC3 is the plain GPIO D7).
+ * available - e.g. the crystal pins on Tsurugi, or the on-board LED pins
+ * PA0/PA1 on Tachi).
  *
  * Then, starting with TCA0, it looks at the PORTMUX register to see which
  * pinset it is on, looks up the pins in the table, and analogWrite()s each

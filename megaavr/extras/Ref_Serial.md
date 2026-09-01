@@ -60,6 +60,10 @@ The pinsets are shown on the pinout charts and/or part specific reference pages.
 * The DD has made things a lot more complicated/exciting with regards to pin mapping for many peripherals, but nothing benefited more than USART0. The options are:
   * USART0: PA0-PA3, PA4-PA7, PA2-PA3 (no XCK/XDIR), PD4-7, PC1-PC3 (no XDIR). (note that PA2-PA7 are not available on 14-pin parts, so valid swap options are 0, 3, 4, with only 4 having all pins)
   * USART1: PC0-PC3 (note that 14/20 pin parts have no PC0), PC4-PC7 (not available because pins not present.), PD6-PD7 (no XCK/XDIR).
+* The DU-series (all Wazamono boards) has a subset of the DD's options - PORTC lost all pins except PC3 (per DS40002548A):
+  * USART0: PA0-PA3, PA4-PA7, PA2-PA3 (no XCK/XDIR), or PD4-7. On WazamonoCore, `Serial0` is fixed to PD4/PD5 (ALT3) - no swap() call is needed (or supported for moving it elsewhere).
+  * USART1: PD6-PD7 (no XCK/XDIR) is the only pin position the DU has; `Serial1` is fixed there. No swap() call is needed.
+  * On every Wazamono board, `Serial` is the native USB CDC port (`USBSerial`), not a USART. Use `Serial0`/`Serial1` for the hardware UARTs.
 * The EA-series has the same options as the DDs, plus USART2 and maybe USART3 on 48-pin parts. The product brief is all we have to go on, and it's not self-consistent on the matter of how many USARTs these will have. It looks like they just copy-pasted pieces of the DD and DB's table together, .
 * On tinyAVR parts with more than 8 pins, the two mapping options for Serial are PB2, PB3, PB1, PB0 and PA1, PA2, PA3, PA4 for TX, RX, XCK, XDIR.
 * On 8-pin parts, they are PA6, PA7, PA3, PA0 (yes, that means no XDIR for the 8-pin parts without setting UPDI as GPIO), and PA1, PA2 (no XCK or XDIR with alt mapping)

@@ -179,6 +179,17 @@
 
 #define PWM_TIMER_PERIOD  (0xFE)  // For frequency
 #define PWM_TIMER_COMPARE (0x00) // For duty cycle - this is never used.
+
+/* Wazamono: this core really does use the type B timers for PWM -
+ * init_TCBs() puts every TCB that is not the millis timer into 8-bit PWM
+ * mode. Tone.cpp takes exclusive control of one of those timers and has a
+ * block in disableTimer() that puts it back into PWM mode when noTone()
+ * releases it, but that block is guarded by ENABLE_TCB_PWM, which upstream
+ * never defines anywhere. The guard was therefore always false: after any
+ * tone()/noTone() pair the timer stayed disabled and its analogWrite() pin
+ * was dead until the next reset. On the Tachi that pin is D3 (TCB1), one of
+ * the five PWM pins a Pro Micro sketch expects to have. */
+#define ENABLE_TCB_PWM 1
 /* The original implementation set the compare registers (all 6 of them, with an STS instruction),
  * and also set a number of other TCA registers to their POR values. That was dumb, and is no longer done.
  * TCA0 is present on all parts and always used for PWM.

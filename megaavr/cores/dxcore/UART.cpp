@@ -495,7 +495,18 @@
 
     // Not static
     uint8_t HardwareSerial::getPin(uint8_t pin) {
-      return _getPin(_usart_pins, pin, _pin_set, _mux_count);
+      /* Wazamono fix: _getPin() is declared
+       *   _getPin(pinInfo, mux_count, mux_setting, pin)
+       * but the arguments were passed as (pinInfo, pin, _pin_set, _mux_count),
+       * so mux_count received the requested pin index and pin received the
+       * mux count. Its first guard is "if (pin > 3 ...) return NOT_A_PIN",
+       * and every part with more than four USART0 mux options tripped it, so
+       * getPin() returned NOT_A_PIN for every index on every such part.
+       * That silently broke mspiBegin()/syncBegin(), whose only job is to set
+       * the direction of the XCK pin that getPin(2) is supposed to name:
+       * with XCK left as an input the USART never drives the clock and a
+       * host-SPI transfer produces nothing at all. */
+      return _getPin(_usart_pins, _mux_count, _pin_set, pin);
     }
     // Static
     uint8_t HardwareSerial::_getPin(uint8_t * mux_table_ptr, uint8_t muxcount, uint8_t pinset, uint8_t pin) {
@@ -521,7 +532,28 @@
            */
       #endif
       if (pin & 1) {
-        base++;
+        #if defined(NONCANONICAL_PIN_NUMBERS)
+          /* Wazamono fix: RX sits one PORT bit above TX, and XDIR one above
+           * XCK - but "one Arduino pin number above" only follows from that
+           * when the variant numbers its pins in port-bit order. A board with
+           * a custom map does not: on the Tachi TX = PA4 = D1 and RX = PA5 =
+           * D0, so base + 1 named D2 (PA2) instead of D0. Step through the
+           * port and bit position and look the neighbour back up. */
+          uint8_t port = digitalPinToPort(base);
+          uint8_t bp   = digitalPinToBitPosition(base);
+          if (port == NOT_A_PORT || bp == NOT_A_PIN || bp > 6) {
+            return NOT_A_PIN;
+          }
+          bp++;
+          for (uint8_t p = 0; p < NUM_TOTAL_PINS; p++) {
+            if (digitalPinToPort(p) == port && digitalPinToBitPosition(p) == bp) {
+              return p;
+            }
+          }
+          return NOT_A_PIN;   /* that PORT bit is not exposed on this board */
+        #else
+          base++;
+        #endif
       }
       return base; // RX = TX + 1. XDIR = XCK + 1 for all Dx and Ex parts!
     }
@@ -560,6 +592,23 @@
             baud   >>= 1;                       // And lower the baud rate by haldf
       }
       baud_setting = (((4 * F_CPU) / baud));  // And now the registers that baud was passed in are done.
+      /* Wazamono: in Synchronous and SPI Host modes only the integer part of
+       * BAUD selects the rate - DS40002548B 25.3.2.2.1 states that only
+       * BAUD[15:6] determines the baud rate and that the fractional part
+       * BAUD[5:0] "must be written as zero", with
+       *     fBAUD = fCLK_PER / (S * BAUD[15:6]),  S = 2
+       * The value computed above is the asynchronous one and normally has a
+       * non-zero fraction, which is out of spec here and silently produces a
+       * different clock than the caller asked for: on a 24 MHz part every
+       * request between 6 and 12 MHz truncated to BAUD[15:6] = 1 and came out
+       * at 12 MHz. Round to the nearest valid setting instead. */
+      if ((ctrlc & USART_CMODE_gm) == USART_CMODE_MSPI_gc ||
+          (ctrlc & USART_CMODE_gm) == USART_CMODE_SYNCHRONOUS_gc) {
+        baud_setting = (baud_setting + 0x20) & 0xFFC0;   /* 四捨五入して小数部を落とす */
+        if (baud_setting < 64) {
+          baud_setting = 64;
+        }
+      }
       if (baud_setting < 64)                      // so set to the maximum baud rate setting.
         baud_setting= 64;       // set the U2X bit in what will become CTRLB
       //} else if (baud < (F_CPU / 16800)) {      // Baud rate is too low

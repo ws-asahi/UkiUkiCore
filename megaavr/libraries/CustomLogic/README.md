@@ -1,157 +1,157 @@
-# CustomLogic — Wazamono用ハードウェアロジックゲートライブラリ
+# CustomLogic — Hardware logic gate library for Wazamono
 
-AVR DUシリーズ内蔵のCCL(Configurable Custom Logic)を、SerialやSDと同じ感覚で
-使えるようにしたWazamonoCore専用ライブラリです。`begin()`した瞬間から
-**CPUを一切使わずに**ハードウェアだけで論理ゲートが動き続けます。
+A WazamonoCore-specific library that makes the CCL (Configurable Custom Logic) built into the
+AVR DU series as easy to use as Serial or SD. From the moment you call `begin()`, the logic gate
+keeps running in hardware **without using the CPU at all**.
 
 ```cpp
 #include <CustomLogic.h>
 
 void setup() {
   CustomLogic.begin(AND);                  // OUT = IN0 AND IN1
-  // CustomLogic.begin(OR, OR);            // 3入力OR: (IN0 OR IN1) OR IN2
+  // CustomLogic.begin(OR, OR);            // 3-input OR: (IN0 OR IN1) OR IN2
   // CustomLogic.begin(AND, OR);           // (IN0 AND IN1) OR IN2
-  // CustomLogic.begin(NOP, OR);           // IN1 OR IN2(IN0不使用)
-  // CustomLogic.begin(NOP);               // IN0のバッファ(OUT=IN0)
-  // CustomLogic.beginTruthTable(0x96, 3); // 任意の真理値表(3入力XOR)
+  // CustomLogic.begin(NOP, OR);           // IN1 OR IN2 (IN0 unused)
+  // CustomLogic.begin(NOP);               // Buffer of IN0 (OUT = IN0)
+  // CustomLogic.beginTruthTable(0x96, 3); // Arbitrary truth table (3-input XOR)
 }
 
 void loop() {
-  // 何も書かなくてもゲートは動き続けます
+  // The gate keeps running even if you write nothing here
 }
 ```
 
-## ユニットとピン(ハードウェア固定)
+## Units and pins (fixed in hardware)
 
-| | IN0 | IN1 | IN2 | OUT | OUT(代替) |
+| | IN0 | IN1 | IN2 | OUT | OUT (alternate) |
 |---|---|---|---|---|---|
-| **CustomLogic** (Tachi) | A3 (PD0) | A2 (PD1) | A1 (PD2) | A0 (PD3) | D1 (PD6) |
+| **CustomLogic** (Tachi) | D5 (PD0) | D6 (PD1) | D9 (PD2) | D10 (PD3) | D15 (PD6) |
 | **CustomLogic** (Tsurugi) | D5 (PD0) | D6 (PD1) | D9 (PD2) | D10 (PD3) | D13 (PD6) |
-| **CustomLogic** (Kunai) | D4 (PA0) | D5 (PA1) | D3 (PA2) | D2 (PA3) | D8 (PA6) |
-| **CustomLogic1** (Tachi) | D5 (PF0) | D6 (PF1) | D7 (PF2) | D8 (PF3) | — |
+| **CustomLogic** (Kunai) | D6 (PA0) | D7 (PA1) | D4 (PA2) | D5 (PA3) | D8 (PA6) |
+| **CustomLogic1** (Tachi) | A1 (PF0) | A2 (PF1) | A3 (PF2) | D17 (PF3) | — |
 | **CustomLogic1** (Tsurugi) | A0 (PF0) | A1 (PF1) | A2 (PF2) | A3 (PF3) | — |
 
-- Kunaiは1ユニットのみ(CustomLogic1はありません)
-- 入力ピンは自動的にプルアップされるので、ボタンをGNDへ直結するだけで実験できます
-  (駆動されたロジック信号はプルアップに勝つのでそのまま接続可)
+- Kunai has a single unit only (there is no CustomLogic1)
+- Input pins are pulled up automatically, so you can experiment by wiring a button straight to GND
+  (a driven logic signal overrides the pull-up, so it can be connected directly as well)
 
 ## API
 
-| メソッド | 説明 |
+| Method | Description |
 |---|---|
-| `begin(logic1)` | 2入力ゲート: OUT = IN0 (logic1) IN1。`LogicType`は`AND/OR/XOR/NAND/NOR/XNOR/NOT/NOP`(NOT=IN0のインバータ、NOP=IN0のバッファ。いずれも1入力) |
-| `begin(logic1, logic2)` | 3入力ロジック: OUT = (IN0 logic1 IN1) logic2 IN2。例: `begin(AND, OR)`=A・B+C。**NOPで片側を省略可**: `begin(NOP, x)`=IN0不使用でIN1 (x) IN2、`begin(x, NOP)`=IN2不使用(`begin(x)`と同じ)。NOTは合成不可、(NOP, NOP)は無効 |
-| `beginTruthTable(table, n)` | 真理値表を直接指定。bit iが「入力の並びが数値iのときの出力」(IN2=bit2, IN1=bit1, IN0=bit0) |
-| `setInputIN0(src)` / `setInputIN1(src)` / `setInputIN2(src)` | その入力の**取得元**を変更(既定は`LOGIC_PIN`)。`setInput(番号, src)`でも同じ |
-| `setOutput(pin)` | 結果の**出力先ピン**を変更(そのピンのみに出力) |
-| `addOutput(pin)` | **出力先を追加**(複数ピンへ同時出力) |
-| `disableOutput()` | 出力ピンなし(割り込み・他ユニットへの供給のみ) |
-| `read()` | 現在の出力ピンの状態 |
-| `attachInterrupt(fn, mode)` | 出力変化で関数呼び出し(`RISING/FALLING/CHANGE`) |
-| `detachInterrupt()` | 割り込み解除 |
-| `end()` | 停止してピンを解放 |
+| `begin(logic1)` | 2-input gate: OUT = IN0 (logic1) IN1. `LogicType` is one of `AND/OR/XOR/NAND/NOR/XNOR/NOT/NOP` (NOT = inverter of IN0, NOP = buffer of IN0; both are single-input) |
+| `begin(logic1, logic2)` | 3-input logic: OUT = (IN0 logic1 IN1) logic2 IN2. Example: `begin(AND, OR)` = A·B+C. **NOP can drop one side**: `begin(NOP, x)` = IN1 (x) IN2 with IN0 unused, `begin(x, NOP)` = IN2 unused (same as `begin(x)`). NOT cannot be combined; (NOP, NOP) is invalid |
+| `beginTruthTable(table, n)` | Specify the truth table directly. Bit i is "the output when the input pattern equals the number i" (IN2 = bit 2, IN1 = bit 1, IN0 = bit 0) |
+| `setInputIN0(src)` / `setInputIN1(src)` / `setInputIN2(src)` | Change the **source** of that input (default `LOGIC_PIN`). `setInput(n, src)` does the same |
+| `setOutput(pin)` | Change the **output pin** (output only to that pin) |
+| `addOutput(pin)` | **Add** an output destination (drive several pins at once) |
+| `disableOutput()` | No output pin (interrupts and feeding other units only) |
+| `read()` | Current state of the output pin |
+| `attachInterrupt(fn, mode)` | Call a function on output change (`RISING/FALLING/CHANGE`) |
+| `detachInterrupt()` | Remove the interrupt |
+| `end()` | Stop and release the pins |
 
-## 入力の取得元(`LogicInput`)
+## Input sources (`LogicInput`)
 
-入力はピンからでなくても構いません。**チップ内部の配線**なので、ピンも配線もCPU時間も消費しません。
+Inputs do not have to come from pins. These are **on-chip connections**, so they consume no pins, no wiring, and no CPU time.
 
-| 定数 | 意味 |
+| Constant | Meaning |
 |---|---|
-| `LOGIC_PIN` | そのユニットのINnピン(**既定**) |
-| `LOGIC_ANALOG_COMP` | **AnalogCompの比較結果**(AC0出力)。`AnalogComp.begin()`するだけでよく、`enableOutput()`は不要 |
-| `LOGIC_OWN_OUTPUT` | **自分自身の出力**。ラッチや発振回路が作れる(CustomLogicのみ) |
-| `LOGIC_OTHER_UNIT` | **もう一方のユニットの出力**。2段構成の論理が作れる(Tachi/Tsurugiのみ) |
-| `LOGIC_EVENT_A` / `LOGIC_EVENT_B` | イベント接続経由。**任意のピン**を入力にできる(EventSystemライブラリで配線) |
+| `LOGIC_PIN` | The unit's INn pin (**default**) |
+| `LOGIC_ANALOG_COMP` | **The AnalogComp result** (AC0 output). `AnalogComp.begin()` is all that is needed; `enableOutput()` is not required |
+| `LOGIC_OWN_OUTPUT` | **The unit's own output**. Lets you build latches and oscillators (CustomLogic only) |
+| `LOGIC_OTHER_UNIT` | **The other unit's output**. Lets you build two-stage logic (Tachi/Tsurugi only) |
+| `LOGIC_EVENT_A` / `LOGIC_EVENT_B` | Via an event connection. **Any pin** can become an input (wired with the EventSystem library) |
 
 ```cpp
-// 電圧が2.5Vを超えている AND ボタンが押されていない → 出力HIGH(CPU不使用)
+// Voltage above 2.5 V AND button not pressed -> output HIGH (no CPU involved)
 AnalogComp.begin(INTERNAL2V5);
 CustomLogic.setInputIN0(LOGIC_ANALOG_COMP);
 CustomLogic.begin(AND);
 
-// 2段構成: (IN0₁ OR IN1₁) AND IN1₀   ※Tachi/Tsurugi
+// Two stages: (IN0₁ OR IN1₁) AND IN1₀   (Tachi/Tsurugi)
 CustomLogic1.begin(OR);
 CustomLogic.setInputIN0(LOGIC_OTHER_UNIT);
 CustomLogic.begin(AND);
 
-// 任意のピン(D8)をIN0へ、イベント経由で       ※EventSystemライブラリ併用
+// Any pin (D8) into IN0, via an event       (with the EventSystem library)
 EventSystem.connect(8, EVENT_TO_LOGIC_A);
 CustomLogic.setInputIN0(LOGIC_EVENT_A);
 CustomLogic.begin(AND);
 ```
 
-**ピンを使わない入力は、そのピンに一切触れません**(プルアップも設定しません)。
-たとえばKunaiでIN0/IN1をイベント経由にすれば、重なっているI2Cピン(D4/D5)をそのまま
-I2Cとして使えます。
+**An input that does not use a pin never touches that pin** (the pull-up is not set either).
+For example, on Kunai, routing IN0/IN1 through events leaves the overlapping I2C pins (D4/D5)
+free for I2C.
 
-### `LOGIC_OWN_OUTPUT`と`LOGIC_OTHER_UNIT`の関係
+### Relationship between `LOGIC_OWN_OUTPUT` and `LOGIC_OTHER_UNIT`
 
-CCLはLUTペアの**偶数側**の出力をフィードバックします。CustomLogicが偶数側
-(Tachi/Tsurugi=LUT2、Kunai=LUT0)なので自分の出力を見られますが、CustomLogic1は
-奇数側(LUT3)なので、そこで見えるのは**CustomLogicの出力**です。これはそのまま
-`LOGIC_OTHER_UNIT`の意味なので、`setInput()`は
-CustomLogic1での`LOGIC_OWN_OUTPUT`と、Kunaiでの`LOGIC_OTHER_UNIT`を`false`で拒否します。
+The CCL feeds back the output of the **even-numbered** LUT of a pair. CustomLogic is the even one
+(Tachi/Tsurugi = LUT2, Kunai = LUT0), so it can see its own output; CustomLogic1 is the odd one
+(LUT3), so what it sees there is **CustomLogic's output**. That is exactly what `LOGIC_OTHER_UNIT`
+means, so `setInput()` rejects (returns `false` for) `LOGIC_OWN_OUTPUT` on CustomLogic1 and
+`LOGIC_OTHER_UNIT` on Kunai.
 
-## 出力先(`setOutput` / `addOutput`)
+## Output destinations (`setOutput` / `addOutput`)
 
-結果は専用OUTピン以外にも出せます。**イベントシステムの設定はライブラリが行う**ので、
-EventSystemライブラリを併用する必要はありません。
+The result can go to pins other than the dedicated OUT pin. **The library configures the event system itself**,
+so you do not need the EventSystem library for this.
 
-| 出力経路 | 説明 |
+| Output path | Description |
 |---|---|
-| 専用OUTピン | 既定。`begin()`しただけで出力される |
-| 代替OUTピン | 上表の「OUT(代替)」。CustomLogic1にはありません |
-| **イベント出力ピン(EVOUT)** | 下表のピン。**専用OUTピンと同時に使えます** |
+| Dedicated OUT pin | Default. Driven as soon as you call `begin()` |
+| Alternate OUT pin | The "OUT (alternate)" column above. Not available on CustomLogic1 |
+| **Event output pins (EVOUT)** | The pins in the table below. **Can be used at the same time as the dedicated OUT pin** |
 
-**イベント出力ピン(ボードごとに固定 — ピン構成表どおり)**
+**Event output pins (fixed per board — as in the pinout tables)**
 
 | | EVOUTA | EVOUTD | EVOUTF |
 |---|---|---|---|
-| **Tachi** | D2 (PA2) | D0 (PD7) | D7 (PF2) |
-| **Tsurugi** | D8 (PA7) | D9 (PD2) | A2 (PF2) |
-| **Kunai** | D0 (PA7) | D7 (PD7) | — |
+| **Tachi** | D8 (PA7) | D9 (PD2) | A3 (PF2) |
+| **Tsurugi** | D2 (PA7) | D9 (PD2) | A2 (PF2) |
+| **Kunai** | D1 (PA7) | D3 (PD7) | — |
 
 ```cpp
 CustomLogic.begin(AND);
-CustomLogic.addOutput(2);      // 専用OUTピン + D2 の2箇所へ同時出力(Tachi)
-// CustomLogic.setOutput(2);   // D2 のみへ出力(専用OUTピンは使わない)
-// CustomLogic.disableOutput();// どのピンにも出さない(割り込み・連結のみ)
+CustomLogic.addOutput(8);      // Drive both the dedicated OUT pin and D8 (Tachi)
+// CustomLogic.setOutput(2);   // Drive D2 only (dedicated OUT pin unused)
+// CustomLogic.disableOutput();// Drive no pin (interrupts and chaining only)
 ```
 
-最大で**専用OUTピン1本 + 上表のイベント出力ピン(各1本)**まで同時出力できます
-(Tachi/Tsurugiで最大4本、Kunaiで最大3本)。
+At most **one dedicated OUT pin + the event output pins in the table above (one each)** can be driven simultaneously
+(up to 4 on Tachi/Tsurugi, up to 3 on Kunai).
 
-- イベントチャネルは**高番号側(CH5→)から空きを自動確保**します。EventSystemの接続
-  (EventSystem=CH0から順の固定番号)や、他の手段で設定済みのチャネルは決して奪いません。
-- **代替OUTピンの注意**: Tachiでは**D1(Serial1のTX)**、Tsurugiでは**D13(SPIのSCK)**と
-  兼用です。TsurugiのD13はオンボードLEDにオペアンプ経由で接続されているため、D13へ出力すると
-  **オンボードLEDが論理結果を表示**します(SPIとは併用不可)。TsurugiのPD7はAREFのため
-  イベント出力の対象外です。
+- Event channels are **allocated automatically from the high end (CH5 downward)**. EventSystem connections
+  (fixed numbers counting up from CH0 for EventSystem) and channels configured by other means are never taken over.
+- **Note on the alternate OUT pin**: on Tachi it is shared with **D15 (SPI SCK / Serial2 TX)**, on Tsurugi with
+  **D13 (SPI SCK)**. Tsurugi's D13 drives the on-board LED through an op-amp, so driving D13 makes
+  **the on-board LED display the logic result** (cannot be combined with SPI). Tsurugi's PD7 is AREF and is
+  not available as an event output.
 
-## サンプル
+## Examples
 
-- **TwoInputAND** — 2入力ANDゲート(ボタン2個+LED)
-- **ThreeInputOR** — 3入力OR。ゲート名を書き換えるだけで他のゲートに
-- **TruthTable** — 真理値表の直接指定(3入力XOR=0x96)
-- **EdgeInterrupt** — ゲート出力の変化で割り込み
-- **DualUnits** — 2ユニット同時動作(Tachi/Tsurugi)
-- **AnalogCompInput** — AnalogCompの結果を入力にする(電圧しきい値 AND ボタン)
-- **SetResetLatch** — 自分の出力を入力にしてSRラッチ(ハードだけで「記憶」)
-- **MultipleOutputs** — 同じ結果を専用OUTピンとイベント出力ピンへ同時出力
+- **TwoInputAND** — 2-input AND gate (two buttons + LED)
+- **ThreeInputOR** — 3-input OR. Change the gate name to get other gates
+- **TruthTable** — Direct truth table (3-input XOR = 0x96)
+- **EdgeInterrupt** — Interrupt on gate output change
+- **DualUnits** — Two units running at once (Tachi/Tsurugi)
+- **AnalogCompInput** — Use the AnalogComp result as an input (voltage threshold AND button)
+- **SetResetLatch** — SR latch using its own output as an input ("memory" in pure hardware)
+- **MultipleOutputs** — Drive the same result to the dedicated OUT pin and an event output pin
 
-## 注意
+## Notes
 
-- **AnalogCompとのピン共有(Tachi/Tsurugi)**: CustomLogicのIN2/OUT(PD2/PD3)は
-  AnalogCompの初期入力と同じピンです。ただし`AnalogComp.begin(INTERNAL2V5)`のように
-  **内蔵基準電圧と比較する場合は−入力(PD3)を使わない**ので衝突しません
-  (AnalogCompInputサンプル参照)。2入力ゲートならIN2のピン(PD2)にも触れません。
-- **KunaiのI2Cとの共有**: KunaiのCustomLogic(PA0〜PA3)はI2Cピンと重なります。
-  `setInputIN0(LOGIC_EVENT_A)`などでピンを使わない入力にすれば共存できます。
-- ゲートの応答はハードウェア直結です(フィルタなし)。チャタリングのある機械接点を
-  割り込みで数える場合はその点に留意してください。
+- **Pin sharing with AnalogComp (Tachi/Tsurugi)**: CustomLogic's IN2/OUT (PD2/PD3) are the same pins as
+  AnalogComp's default inputs. However, when comparing against the **internal reference, as in
+  `AnalogComp.begin(INTERNAL2V5)`, the negative input (PD3) is not used**, so there is no conflict
+  (see the AnalogCompInput example). A 2-input gate does not touch the IN2 pin (PD2) either.
+- **Sharing with I2C on Kunai**: Kunai's CustomLogic (PA0–PA3) overlaps the I2C pins.
+  They can coexist if you use pin-less inputs such as `setInputIN0(LOGIC_EVENT_A)`.
+- The gate responds directly in hardware (no filtering). Keep this in mind when counting
+  bouncy mechanical contacts with interrupts.
 
-## 実装の出自
+## Provenance
 
-本ライブラリはAVR64DU28/32データシート(DS40002548A)とMicrochip公式デバイスヘッダのみを
-情報源とした独立実装です。DxCore/megaTinyCoreのLogicライブラリを含む既存の
-CCLライブラリのコードは使用・参照していません。
+This library is an independent implementation based solely on the AVR64DU28/32 datasheet (DS40002548A)
+and the official Microchip device headers. No code from existing CCL libraries, including the Logic
+library of DxCore/megaTinyCore, has been used or consulted.

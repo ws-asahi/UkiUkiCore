@@ -1,63 +1,63 @@
-# WazamonoCore 同梱ライブラリ
+# Libraries bundled with WazamonoCore
 
-WazamonoCoreは、Wazamonoボード(Tachi・Tsurugi・Kunai — いずれもAVR DUシリーズ)で使うライブラリをすべて同梱しています。DU固有の周辺機能ライブラリは共通の設計に従います: `Serial`と同じく**定義済みオブジェクト**、**ボードごとに固定されたピン**を**Arduinoピン番号**で扱い、I/Oヘッダを開く必要はありません。`AnalogComp`・`CustomLogic`・`EventSystem`は互いに組み合わせて使えるよう作られています。DUシリーズに存在しない周辺機能(TCD・ZCD・OPAMP・PTC・MVIO)のライブラリは含みません。
+WazamonoCore bundles every library used with the Wazamono boards (Tachi, Tsurugi, Kunai — all AVR DU series). The DU-specific peripheral libraries follow a common design: like `Serial`, they are **predefined objects**, they use **pins that are fixed per board**, addressed by **Arduino pin number**, and there is no need to open the I/O headers. `AnalogComp`, `CustomLogic`, and `EventSystem` are built to be combined with each other. Libraries for peripherals that do not exist on the DU series (TCD, ZCD, OPAMP, PTC, MVIO) are not included.
 
-## Wazamono固有
+## Wazamono-specific
 
 ### Flash
-[Flash readme](../libraries/Flash/README.md) 実行中のスケッチからプログラムフラッシュへ書き込みます。Wazamonoボードでは、USB CDCブートローダが4KBブート区画の末尾に持つ小さなスタブ(`spm z+; ret`)経由で書き込みます。`Flash.checkWritable()`が書き込み前にブートローダを検証し、4KB境界より下(ブートローダ自身)への書き込みはすべて拒否されます。消去単位は512バイトのフラッシュページです。自分のコードと衝突しないよう、**高位アドレスから**使ってください。FlashDemo・FlashWriteTestサンプルで実機検証済みです。
+[Flash readme](../libraries/Flash/README.md) Writes to program flash from the running sketch. On Wazamono boards this goes through a small stub (`spm z+; ret`) that the USB CDC bootloader keeps at the end of its 4 KB boot section. `Flash.checkWritable()` validates the bootloader before writing, and any write below the 4 KB boundary (the bootloader itself) is refused. The erase unit is a 512-byte flash page. Use **high addresses first** so you do not collide with your own code. Verified on hardware with the FlashDemo and FlashWriteTest examples.
 
 ### USERSIG
-[USERSIG readme](../libraries/USERSIG/README.md) USERROW(ユーザ署名領域)は0x1200にある**512バイト**の不揮発メモリで、チップ消去や通常のスケッチ書き込みでも消えません — シリアル番号・校正値・ボード設定の置き場所に最適です。APIはEEPROM互換(`read`/`write`/`update`/`get`/`put`)。USERROWは全体消去しかできないため、ビットを1に戻す必要がある書き込みはRAM(512バイト)にバッファされ、`flush()`で反映されます。`write()`は直接書けたとき1、`flush()`待ちのとき0を返します。書き換え耐久は有限です — ループ内で書かないでください。UsersigTestサンプルが全512バイトを実機で検査します。
+[USERSIG readme](../libraries/USERSIG/README.md) The USERROW (user signature area) is **512 bytes** of non-volatile memory at 0x1200 that survives a chip erase and normal sketch uploads — the ideal place for serial numbers, calibration values, and board configuration. The API is EEPROM-compatible (`read`/`write`/`update`/`get`/`put`). Because the USERROW can only be erased as a whole, writes that need to turn a bit back to 1 are buffered in RAM (512 bytes) and applied by `flush()`. `write()` returns 1 when the write went straight through and 0 when it is waiting for `flush()`. Endurance is finite — do not write in a loop. The UsersigTest example checks all 512 bytes on hardware.
 
 ### DxCore
-[DxCore readme](../libraries/DxCore/README.md) チップ設定まわりの補助ラッパー(PWMTestサンプルの置き場所でもあります)。APIの一部はDUに存在しない周辺機能(MVIO・OPAMP)に触れており、互換のため維持しつつ、ボードパッケージ公開前にスリム化する予定です。
+[DxCore readme](../libraries/DxCore/README.md) Helper wrappers around chip configuration (also home to the PWMTest example). Part of the API touches peripherals that do not exist on the DU (MVIO, OPAMP); it is kept for compatibility and will be slimmed down before the board package is published.
 
-## 周辺機能ライブラリ
-DUのアナログコンパレータ・カスタムロジック・イベントシステムを、同じ様式で相互接続できる3つの小さなライブラリとして提供します。
+## Peripheral libraries
+The DU's analog comparator, custom logic, and event system are provided as three small libraries in the same style that can be interconnected.
 
 ### AnalogComp
-[AnalogComp readme](../libraries/AnalogComp/README.md) オンチップのアナログコンパレータ(AC0)を1つの定義済みオブジェクトとして提供: 2つの電圧の比較、内蔵基準電圧との比較(`begin(INTERNAL2V5)`など、細かなレベル指定も可)、ヒステリシス、結果の読み取り、AC出力ピンへの出力、出力変化での`attachInterrupt()`式コールバック。比較結果は**ピンもCPUも使わずに**`CustomLogic`(`LOGIC_ANALOG_COMP`)や`EventSystem`(`EVENT_ANALOG_COMP`)へ直接渡せます。
+[AnalogComp readme](../libraries/AnalogComp/README.md) Exposes the on-chip analog comparator (AC0) as a single predefined object: compare two voltages, compare against the internal reference (`begin(INTERNAL2V5)` etc., with fine level control), hysteresis, reading the result, driving the AC output pin, and `attachInterrupt()`-style callbacks on output change. The comparison result can be fed directly to `CustomLogic` (`LOGIC_ANALOG_COMP`) or `EventSystem` (`EVENT_ANALOG_COMP`) **using neither a pin nor the CPU**.
 
 ### CustomLogic
-[CustomLogic readme](../libraries/CustomLogic/README.md) CCL(Configurable Custom Logic)のルックアップテーブルを、固定ピンの定義済みユニットとして提供: ゲート(`AND`/`OR`/`XOR`/`NAND`/`NOR`/`XNOR`/`NOT`/`NOP`)か任意の3入力真理値表を選ぶだけで、結果が**CPU時間ゼロ**のハードウェアとして動きます。入力はユニットのピンのほか、アナログコンパレータ、自分自身の出力(ラッチが作れます)、もう一方のユニット、`EventSystem`経由の任意ピンから取れます(`setInputINn()`)。結果は専用OUTピン・代替ピン・ボードのイベント出力ピンへ**複数同時に**出せます(`setOutput()`/`addOutput()`)。出力変化の`attachInterrupt()`式コールバックも使えます。
+[CustomLogic readme](../libraries/CustomLogic/README.md) Exposes the CCL (Configurable Custom Logic) lookup tables as predefined units with fixed pins: pick a gate (`AND`/`OR`/`XOR`/`NAND`/`NOR`/`XNOR`/`NOT`/`NOP`) or any 3-input truth table, and the result runs in hardware with **zero CPU time**. Inputs can come from the unit's pins, from the analog comparator, from its own output (to build latches), from the other unit, or from any pin via `EventSystem` (`setInputINn()`). The result can be driven to **several destinations at once** — the dedicated OUT pin, the alternate pin, and the board's event output pins (`setOutput()`/`addOutput()`). `attachInterrupt()`-style callbacks on output change are available too.
 
 ### EventSystem
-[EventSystem readme](../libraries/EventSystem/README.md) チップ内部の「配線」です。6本の定義済み接続(`EventSystem`〜`EventSystem5`)が、それぞれ1つの送り元 — Arduinoピン、AnalogCompの結果、CustomLogicの出力、またはソフトウェアの`trigger()`パルス — を任意個の送り先(ボード固定のイベント出力ピン、CustomLogicのイベント入力)へ運びます。`EventSystem.connect(8, 2);` だけで完結します。ピン送り元は**同一ポート同時2本まで**(ハードウェアの性質)。タイマ/USART/SPIのイベント機能は競合回避のため提供しません。
+[EventSystem readme](../libraries/EventSystem/README.md) The chip's internal "wiring". Six predefined connections (`EventSystem` through `EventSystem5`) each carry one source — an Arduino pin, the AnalogComp result, a CustomLogic output, or a software `trigger()` pulse — to any number of destinations (the board's fixed event output pins, CustomLogic event inputs). `EventSystem.connect(8, 2);` is all it takes. Pin sources are limited to **two at a time from the same port** (a hardware property). Timer/USART/SPI event features are not provided, to avoid conflicts.
 
-## USBクラスライブラリ
-WazamonoボードはネイティブUSBデバイスです。CDCシリアルポート(`Serial`)に加え、同梱の2つのクラスライブラリでHIDデバイスやMIDI楽器として振る舞えます。いずれもAVR DU対応を上流へ提出済みのWazamonoフォーク版です(出自は各readmeの同梱注記を参照)。
+## USB class libraries
+Wazamono boards are native USB devices. In addition to the CDC serial port (`Serial`), two bundled class libraries let them act as HID devices or MIDI instruments. Both are Wazamono forks whose AVR DU support has been submitted upstream (see the bundling notes in each readme for provenance).
 
 ### HID-Project
-[HID-Project readme](../libraries/HID-Project/Readme.md) NicoHood氏の拡張HIDライブラリ(ws-asahi/HIDフォークから同梱、MIT): BootKeyboard/BootMouse、Keyboard、Mouse、AbsoluteMouse、Consumer(メディアキー)、System、Gamepad、RawHID。サンプル13本を同梱。
+[HID-Project readme](../libraries/HID-Project/Readme.md) NicoHood's extended HID library (bundled from the ws-asahi/HID fork, MIT): BootKeyboard/BootMouse, Keyboard, Mouse, AbsoluteMouse, Consumer (media keys), System, Gamepad, RawHID. 13 examples included.
 
 ### MIDIUSB
-[MIDIUSB readme](../libraries/MIDIUSB/README.adoc) Arduino公式MIDIUSBライブラリ(ws-asahi/MIDIUSBフォークから同梱、LGPL 2.1): ボードがUSB-MIDI楽器として認識され、MIDIイベントパケットを送受信できます。サンプル5本を同梱。
+[MIDIUSB readme](../libraries/MIDIUSB/README.adoc) The official Arduino MIDIUSB library (bundled from the ws-asahi/MIDIUSB fork, LGPL 2.1): the board enumerates as a USB-MIDI instrument and can send and receive MIDI event packets. 5 examples included.
 
 ### HID
-HID-Projectの土台となる低レベルのPluggableUSB HIDトランスポート(`HID_`)。スケッチから直接は使いません。
+The low-level PluggableUSB HID transport (`HID_`) on which HID-Project is built. Not used directly from sketches.
 
-## 標準Arduinoライブラリ
+## Standard Arduino libraries
 
 ### EEPROM
-[EEPROM readme](../libraries/EEPROM/README.md) DUの**256バイト**内蔵EEPROMの標準API。消去はバイト単位です(USERROWと違い、バッファのような仕掛けは不要)。他アーキテクチャのEEPROM内部実装を前提にしたライブラリには注意してください。
+[EEPROM readme](../libraries/EEPROM/README.md) The standard API for the DU's **256-byte** built-in EEPROM. Erase is byte-granular (unlike the USERROW, no buffering tricks are needed). Beware of libraries that assume the EEPROM internals of other architectures.
 
 ### SPI
-[SPI readme](../libraries/SPI/README.md) SPI0による標準SPIマスタAPI。各Wazamonoボードはシルク印刷どおりにSPIのピン割り付けを固定しているため(Tsurugi: UnoのD11-D13位置)、スケッチで`swap()`を呼ぶ必要はありません(呼ばないでください)。
+[SPI readme](../libraries/SPI/README.md) The standard SPI master API on SPI0. Each Wazamono board fixes its SPI pin assignment to match the silkscreen (Tsurugi: the Uno's D11–D13 positions), so there is no need to call `swap()` in sketches (and you should not).
 
 ### Wire
-[Wire readme](../libraries/Wire/README.md) TWIのマスタ/スレーブ(デュアルモード対応)。標準API一式に加え、ジェネラルコール受信、第2アドレス、アドレスマスクに対応します。**内蔵プルアップは自動では有効になりません** — バスにプルアップ抵抗が無い場合は`Wire.usePullups()`を呼んでください(本来は実抵抗を付けるのが正道です)。
+[Wire readme](../libraries/Wire/README.md) TWI master/slave (dual mode supported). In addition to the full standard API it supports general-call reception, a second address, and an address mask. **The internal pull-ups are not enabled automatically** — call `Wire.usePullups()` if your bus has no pull-up resistors (fitting real resistors is the proper solution).
 
 ### SD
-[SD readme](../libraries/SD/README.adoc) 標準のArduino SDカードライブラリ(SPI経由のFAT16/FAT32)。サンプル7本を同梱。
+[SD readme](../libraries/SD/README.adoc) The standard Arduino SD card library (FAT16/FAT32 over SPI). 7 examples included.
 
 ### SoftwareSerial
-公式megaavrコアから無改変で継承していますが、**使わないのが最善**です: どのボードにもUSB CDCポート(`Serial`)と固定ピンのハードウェアUSARTがあります。SoftwareSerialは使用ピンの割り込みを占有し、ビットバンギングでCPU時間を消費します。
+Inherited unchanged from the official megaavr core, but **best avoided**: every board has a USB CDC port (`Serial`) and fixed-pin hardware USARTs. SoftwareSerial monopolizes the interrupt on the pins it uses and burns CPU time bit-banging.
 
-## 汎用ハードウェア
+## General hardware
 
 ### Servo
-[Servoリファレンス](https://www.arduino.cc/reference/en/libraries/servo/) megaTinyCore/DxCore系の改良版再実装: TCA0プリスケーラに依存しないため**PWM周波数を変えてもサーボが壊れず**、ISRのタイミングも改善されています。ライブラリマネージャ版のServoが同梱版より優先されてしまう場合は`#include <Servo_DxCore.h>`に変えてください — APIは同一です。
+[Servo reference](https://www.arduino.cc/reference/en/libraries/servo/) The improved reimplementation from the megaTinyCore/DxCore lineage: it does not depend on the TCA0 prescaler, so **changing the PWM frequency does not break servos**, and ISR timing is improved. If the Library Manager version of Servo takes precedence over the bundled one, switch to `#include <Servo_DxCore.h>` — the API is identical.
 
 ### tinyNeoPixel
-[tinyNeoPixelの解説](tinyNeoPixel.md) WS2812系(NeoPixel)制御を2種類で提供: `tinyNeoPixel`(Adafruit互換、動的バッファ)と`tinyNeoPixel_Static`(フレームバッファを自分で宣言するためRAM消費がコンパイル結果に表示され、mallocも使いません)。show()のタイミングはこれらのパーツのAVRxt命令タイミング向けに書かれており、サポートする全クロックで成立します。
+[tinyNeoPixel documentation](tinyNeoPixel.md) WS2812-style (NeoPixel) control in two flavors: `tinyNeoPixel` (Adafruit-compatible, dynamic buffer) and `tinyNeoPixel_Static` (you declare the frame buffer yourself, so RAM usage shows up in the compile output and malloc is not used). The show() timing is written for the AVRxt instruction timing of these parts and holds at every supported clock.

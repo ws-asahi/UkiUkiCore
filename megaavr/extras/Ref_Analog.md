@@ -128,7 +128,8 @@ In addition to reading from pins, you can read from a number of internal sources
 | -                | -                 | -                 | `ADC_DACREF1`    | `ADC_DACREF1`    | ???              |
 | -                | -                 | -                 | `ADC_DAC0`       | `ADC_DAC0` ?!    | ???              |
 
-Note that the AVR EB-series does not have a DAC.
+Note that the AVR EB-series and the AVR DU-series do not have a DAC (the DU has only the DACREF inside its analog comparator).
+The DU-series is absent from this table because it has no MUXNEG at all: its ADC is single-ended only, with no differential capability.
 
 | tinyAVR 0/1-series                     | tinyAVR 2-series                    |
 |----------------------------------------|-------------------------------------|

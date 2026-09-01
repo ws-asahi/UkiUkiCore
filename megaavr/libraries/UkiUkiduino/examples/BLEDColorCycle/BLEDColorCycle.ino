@@ -31,7 +31,7 @@ uint8_t colorIdx = 0;
 
 void setup() {
   Serial.begin(115200);
-  pinMode(BTN_BUILTIN, INPUT);          // 基板に1kΩプルダウン実装済み
+  pinMode(BTN_BUILTIN, INPUT);          // 基板に5.5.1kΩプルダウン実装済み
   pinMode(LED_BUILTIN, OUTPUT);
 
   setBLEDColor(colors[colorIdx]);          // 最初の色(黄色)にして…

@@ -22,7 +22,7 @@ const int pinButton = BTN_BUILTIN;  // 基板上のボタン(押下=HIGH)
 
 void setup() {
   pinMode(pinLed, OUTPUT);
-  pinMode(pinButton, INPUT);  // 基板に1kΩプルダウン実装済みのためINPUTでよい
+  pinMode(pinButton, INPUT);  // 基板に5.5.1kΩプルダウン実装済みのためINPUTでよい
 
   // ホストへクリーンなレポートを送る。どのArduinoでも重要な儀式です。
   Consumer.begin();

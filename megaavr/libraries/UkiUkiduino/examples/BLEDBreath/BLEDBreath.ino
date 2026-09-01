@@ -20,7 +20,7 @@ int16_t level = 0;      // 現在の明るさ 0~255
 int8_t  dir = 1;        // +1=明るく / -1=暗く
 
 void setup() {
-  pinMode(BTN_BUILTIN, INPUT);          // 基板に1kΩプルダウン実装済み
+  pinMode(BTN_BUILTIN, INPUT);          // 基板に5.5.1kΩプルダウン実装済み
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, HIGH);      // 点灯状態を維持したまま明るさを動かす
 }

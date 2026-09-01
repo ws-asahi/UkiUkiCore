@@ -4,8 +4,8 @@
  * DxCore). (C) Workshop Asahi 2026. DxCore is (C) Spence Konde, LGPL 2.1
  * (see LICENSE.md).
  *
- * The on-board LED is a WS2812D-F5 addressable RGB LED whose DIN is wired to
- * PA0. To preserve the classic Arduino Uno "D13 LED" experience, the core's
+ * The on-board LED is a WS2812D-F5-12mA-C1 addressable RGB LED (a low-profile
+ * 5 mm package, ~6 mm tall) whose DIN is wired to PA0. To preserve the classic Arduino Uno "D13 LED" experience, the core's
  * LED_BUILTIN_MIRROR hook (wiring_digital.c) calls __led_builtin_mirror_hook()
  * after every digitalWrite()/digitalWriteFast() that lands on D13 (PD6). The
  * hook reads the RESULTING PD6 OUT bit and sends the matching one-pixel frame:
@@ -21,20 +21,22 @@
  * written from the WS2812D-F5 datasheet) - it does NOT use or depend on the
  * tinyNeoPixel libraries in any way.
  *
- * --- WS2812D-F5 protocol timing (datasheet "Data Transfer Time") -----------
- *      T0H  220 ns - 380 ns     T1H  580 ns - 1 us
- *      T0L  580 ns - 1 us       T1L  580 ns - 1 us
- *      RES  > 280 us (frame latch; the D-F5 explicitly supports slow/paused
- *                     transfer, so inter-bit lows longer than nominal are safe)
- *      Data order: G7..G0 R7..R0 B7..B0 (GRB, MSB first)
+ * --- WS2812D-F5-12mA-C1 protocol timing (datasheet V1.4, "Data Transfer
+ *     Time"; LCSC C4154875) --------------------------------------------------
+ *      T0H  220 ns - 380 ns     T1H  750 ns - 1 us
+ *      T0L  750 ns - 1 us       T1L  220 ns - 1 us
+ *      bit period T0H+T0L, T1H+T1L >= 1.25 us
+ *      RES  > 280 us (frame latch)
+ *      Data order: R7..R0 G7..G0 B7..B0 (RGB, MSB first) - NOTE: this part is
+ *      RGB-ordered, unlike the GRB order of most WS2812 variants.
  *
- * At F_CPU = 24 MHz (41.67 ns/cycle) the bit loop below runs 31 cycles/bit:
+ * At F_CPU = 24 MHz (41.67 ns/cycle) the bit loop below runs 30 cycles/bit
+ * (= 1.25 us, the minimum period):
  *      T0H =  7 cycles = 292 ns   (within 220-380)
- *      T1H = 17 cycles = 708 ns   (within 580-1000)
- *      T1L = 14 cycles = 583 ns   (within 580-1000)
- *      T0L = 24 cycles = 1000 ns  (at the nominal edge; longer lows are fine
- *                                  on this part - see RES note above)
- * The frame (24 bits + inter-byte call overhead) takes ~31 us with interrupts
+ *      T1H = 20 cycles = 833 ns   (within 750-1000)
+ *      T0L = 23 cycles = 958 ns   (within 750-1000)
+ *      T1L = 10 cycles = 417 ns   (within 220-1000)
+ * The frame (24 bits + inter-byte call overhead) takes ~30 us with interrupts
  * disabled. Before every frame we busy-wait 300 us so the PREVIOUS frame has
  * latched (RES > 280 us). A mirrored digitalWrite(13) therefore costs ~340 us.
  *
@@ -62,7 +64,7 @@ static inline uint8_t scale8(uint8_t c, uint8_t brightness) {
   return (uint8_t)(((uint16_t)c * (uint16_t)(brightness + 1)) >> 8);
 }
 
-/* One byte, MSB first, 31 cycles/bit. Cycle numbers in comments count from
+/* One byte, MSB first, 30 cycles/bit. Cycle numbers in comments count from
  * the SBI that raises the line. Both bit values re-align at cycle 9 because
  * SBRS takes 2 cycles when it skips the (1-word) CBI. */
 static void ws2812_byte(uint8_t b) {
@@ -73,14 +75,13 @@ static void ws2812_byte(uint8_t b) {
     "nop \n\t nop \n\t nop \n\t nop \n\t nop \n\t" /* c2-c6              */
     "sbrs %[b], 7                \n\t" /* c7 (c7-c8 when bit=1: skips CBI)  */
     "cbi  0x01, 0                \n\t" /* c8        bit=0: LOW, T0H=7cy     */
-    "nop \n\t nop \n\t nop \n\t nop \n\t nop \n\t"
-    "nop \n\t nop \n\t nop \n\t nop \n\t"          /* c9-c17             */
-    "cbi  0x01, 0                \n\t" /* c18       bit=1: LOW, T1H=17cy    */
-    "lsl  %[b]                   \n\t" /* c19                              */
-    "nop \n\t nop \n\t nop \n\t nop \n\t nop \n\t"
-    "nop \n\t nop \n\t nop \n\t nop \n\t"          /* c20-c28            */
-    "dec  %[c]                   \n\t" /* c29                              */
-    "brne 1b                     \n\t" /* c30-c31   -> 31 cycles/bit       */
+    "nop \n\t nop \n\t nop \n\t nop \n\t nop \n\t nop \n\t"
+    "nop \n\t nop \n\t nop \n\t nop \n\t nop \n\t nop \n\t" /* c9-c20 */
+    "cbi  0x01, 0                \n\t" /* c21       bit=1: LOW, T1H=20cy    */
+    "lsl  %[b]                   \n\t" /* c22                              */
+    "nop \n\t nop \n\t nop \n\t nop \n\t nop \n\t" /* c23-c27            */
+    "dec  %[c]                   \n\t" /* c28                              */
+    "brne 1b                     \n\t" /* c29-c30   -> 30 cycles/bit       */
     : [b] "+r" (b), [c] "+r" (cnt)
     :
   );
@@ -92,8 +93,8 @@ static void ws2812_frame(uint8_t r, uint8_t g, uint8_t b) {
   __builtin_avr_delay_cycles(F_CPU / 1000000UL * 300UL); /* 300 us guard */
   uint8_t s = SREG;
   cli();
-  ws2812_byte(g);   /* GRB order, per the WS2812D-F5 datasheet */
-  ws2812_byte(r);
+  ws2812_byte(r);   /* RGB order, per the WS2812D-F5-12mA-C1 datasheet */
+  ws2812_byte(g);
   ws2812_byte(b);
   SREG = s;
 }

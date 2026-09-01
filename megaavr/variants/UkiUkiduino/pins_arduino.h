@@ -68,7 +68,7 @@
  *           (WAZAMONO_SERIAL1_IS_USART0, set in boards.txt; see below).
  *   AREF  -> PD7 = VREFA is wired to the Uno R3 AREF header pin, so
  *           analogReference(EXTERNAL) IS supported on this board.
- *   LED   -> on-board LED is a WS2812D-F5 addressable RGB LED, data-in on PA0.
+ *   LED   -> on-board LED is a WS2812D-F5-12mA-C1 addressable RGB LED, data-in on PA0.
  *           digitalWrite()/digitalWriteFast() to D13 (PD6) are SOFTWARE-mirrored:
  *           the core reads the resulting PD6 OUT bit and sends the matching
  *           WS2812 frame on PA0 (HIGH = lit in the current color - yellow by
@@ -77,7 +77,7 @@
  *           Only software writes are mirrored - SPI (SCK) traffic does NOT
  *           blink the LED (a deliberate difference from the Uno R3), and
  *           direct register writes to PORTD are not mirrored. Each mirrored
- *           write costs ~340 us (280 us WS2812 latch guard + 31 us frame).
+ *           write costs ~340 us (300 us WS2812 latch guard + 30 us frame).
  *   BUTTON-> BTN_BUILTIN = D20 (PA1). External 1 kOhm pull-down on the board;
  *           pressed = HIGH. Use pinMode(BTN_BUILTIN, INPUT) - no pullup needed.
  *   Serial-> native USB CDC (USBSerial), Leonardo/Micro convention.
@@ -129,7 +129,7 @@
 #define PIN_PA2 (18)  // D18 A4 / SDA
 #define PIN_PA3 (19)  // D19 A5 / SCL
 #define PIN_PA1 (20)  // D20 BTN_BUILTIN (on-board button; no ADC channel)
-#define PIN_PA0 (21)  // WS2812D-F5 LED data-in (driven by the D13 software mirror); no ADC; no Dn alias
+#define PIN_PA0 (21)  // WS2812D-F5-12mA-C1 LED data-in (driven by the D13 software mirror); no ADC; no Dn alias
 #define PIN_PD7 (22)  // AREF header pin = VREFA (external reference; AIN7); no Dn alias
 #define PIN_PF6 (23)  // RESET
 #define PIN_PF7 (24)  // UPDI (Power header pin 1; highest index -> NUM_DIGITAL_PINS = 25)
@@ -155,8 +155,8 @@
  * ukiukiduino_led.cpp. SPI SCK traffic and direct register writes are
  * intentionally NOT mirrored.
  * TIMING: each mirrored write busy-waits the WS2812 frame-latch time
- * (RES > 280 us, WS2812D-F5 datasheet) and then streams the 24-bit frame
- * with interrupts briefly disabled (~31 us). digitalWrite(13) therefore
+ * (RES > 280 us, WS2812D-F5-12mA-C1 datasheet) and then streams the 24-bit
+ * frame with interrupts briefly disabled (~30 us). digitalWrite(13) therefore
  * takes ~340 us - fine for Blink-style use, but do not bit-bang fast
  * protocols on D13 (it is the SPI SCK pin anyway; hardware SPI is not
  * affected because SCK traffic is not mirrored). */
@@ -170,7 +170,7 @@ void __led_builtin_mirror_hook(void);
 #endif
 
 #ifdef __cplusplus
-/* ---- On-board LED color API (WS2812D-F5 on PA0) ----
+/* ---- On-board LED color API (WS2812D-F5-12mA-C1 on PA0) ----
  * The LED still follows D13 like a classic Uno: digitalWrite(LED_BUILTIN,
  * HIGH/LOW) = lit/off. These functions change WHAT "lit" looks like.
  * The "B" in setBLEDColor marks them as Built-in-LED-only functions:

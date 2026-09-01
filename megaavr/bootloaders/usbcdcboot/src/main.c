@@ -118,7 +118,8 @@ static uint16_t s_led_period_counts;   /* main-loop iters per toggle/step */
 
 #if defined(BL_LED_WS2812)
 /* --------------------------------------------------------------------
- *  WS2812 (addressable RGB) DFU LED - UkiUkiduino: WS2812D-F5 on PA0.
+ *  WS2812 (addressable RGB) DFU LED - UkiUkiduino: WS2812D-F5-12mA-C1
+ *  on PA0.
  *
  *  Instead of a plain blink, DFU mode "breathes" yellow like the Uno R4 /
  *  Leonardo bootloaders: brightness ramps 0..BL_WS_BREATH_MAX..0 in a
@@ -126,10 +127,12 @@ static uint16_t s_led_period_counts;   /* main-loop iters per toggle/step */
  *  (magic = fast, double-tap = medium, blank app = slow), reusing
  *  s_led_period_counts (one brightness step per period_counts/32 iters).
  *
- *  Timing (WS2812D-F5 datasheet, 24 MHz = the DFU clock): 31 cycles/bit ->
- *  T0H 7cy=292ns (220-380), T1H 17cy=708ns (580-1000), T1L 14cy=583ns.
+ *  Timing (WS2812D-F5-12mA-C1 datasheet V1.4, 24 MHz = the DFU clock):
+ *  30 cycles/bit = 1.25 us -> T0H 7cy=292ns (220-380), T1H 20cy=833ns
+ *  (750-1000), T0L 23cy=958ns (750-1000), T1L 10cy=417ns (220-1000).
  *  Frames are sent from the DFU loop only (>= 1 ms apart >> RES 280 us).
- *  GRB order, MSB first. SBI/CBI keep the rest of PORTA untouched.
+ *  RGB order (this part is RGB, not GRB), MSB first. SBI/CBI keep the
+ *  rest of PORTA untouched.
  *
  *  NOTE: WS2812 mode drives the pin on PORTA (VPORTA.OUT, I/O addr 0x01);
  *  the LED_AH/LED_AL polarity options do not apply. The 4 MHz double-tap
@@ -140,7 +143,7 @@ static uint16_t s_led_period_counts;   /* main-loop iters per toggle/step */
 static uint8_t s_ws_level;             /* current brightness 0..MAX     */
 static int8_t  s_ws_dir;               /* +1 rising / -1 falling        */
 
-/* One byte, MSB first, 31 cycles/bit ("rjmp .+0" = 2-cycle, 1-word nop). */
+/* One byte, MSB first, 30 cycles/bit ("rjmp .+0" = 2-cycle, 1-word nop). */
 static void bl_ws_byte(uint8_t b) {
     uint8_t cnt = 8;
     __asm__ __volatile__(
@@ -155,16 +158,15 @@ static void bl_ws_byte(uint8_t b) {
         "rjmp .+0                  \n\t"
         "rjmp .+0                  \n\t"
         "rjmp .+0                  \n\t"
-        "nop                       \n\t" /* c9-c17                      */
-        "cbi  0x01, %[bit]         \n\t" /* c18   bit=1: low, T1H=17cy  */
-        "lsl  %[b]                 \n\t" /* c19                         */
+        "rjmp .+0                  \n\t"
+        "rjmp .+0                  \n\t" /* c9-c20                      */
+        "cbi  0x01, %[bit]         \n\t" /* c21   bit=1: low, T1H=20cy  */
+        "lsl  %[b]                 \n\t" /* c22                         */
         "rjmp .+0                  \n\t"
         "rjmp .+0                  \n\t"
-        "rjmp .+0                  \n\t"
-        "rjmp .+0                  \n\t"
-        "nop                       \n\t" /* c20-c28                     */
-        "dec  %[c]                 \n\t" /* c29                         */
-        "brne 1b                   \n\t" /* c30-c31 -> 31 cycles/bit    */
+        "nop                       \n\t" /* c23-c27                     */
+        "dec  %[c]                 \n\t" /* c28                         */
+        "brne 1b                   \n\t" /* c29-c30 -> 30 cycles/bit    */
         : [b] "+r" (b), [c] "+r" (cnt)
         : [bit] "I" (BL_LED_PIN)
     );
@@ -175,8 +177,8 @@ static void bl_ws_byte(uint8_t b) {
 static void bl_ws_frame(uint8_t r, uint8_t g, uint8_t b) {
     uint8_t s = SREG;
     __asm__ __volatile__("cli" ::: "memory");
+    bl_ws_byte(r);   /* RGB order (WS2812D-F5-12mA-C1) */
     bl_ws_byte(g);
-    bl_ws_byte(r);
     bl_ws_byte(b);
     SREG = s;
 }

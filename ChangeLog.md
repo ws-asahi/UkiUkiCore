@@ -12,6 +12,7 @@ The change history of WazamonoCore. WazamonoCore is the Arduino core for the Waz
 
 ### Core
 
+- **LUT-routed PWM edges are now synchronized** (`WAZAMONO_LUTPWM_FILTSEL`, default SYNCH): the CCL truth-table output is combinational, and DS40002548B §30.3.1.5 notes that it may produce short glitches when the input changes — i.e. on every PWM edge. On a scope this showed as a brief wobble on the rising edge of LUT-routed pins (Tachi D4/D7, Tsurugi D3/D4, Kunai D0/D2) that the direct TCB WO pin does not have. The LUT output is now re-clocked on CLK_PER (2-cycle delay, 83 ns at 24 MHz, applied to both edges, so the duty cycle is unchanged). `-DWAZAMONO_LUTPWM_FILTSEL=0` restores the zero-latency combinational path for comparison.
 - `WAZAMONO_TCB1_PWMMUX` no longer requires a direct WO outlet: `WAZAMONO_TCB1_PWM_WO_PIN` may be left undefined (Kunai has none — TCB1's WO positions are PA3/SCL and the absent PF5), in which case the CCMPEN code paths are compiled out. Tachi and Tsurugi are unchanged.
 
 ### Documentation

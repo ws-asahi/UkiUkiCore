@@ -26,13 +26,15 @@
 /* This module's exact configuration - doubling as the ownership signature.
  * No other WazamonoCore component ever selects INSEL1 = TCB (CustomLogic has
  * no TCB input source), so a LUT wearing these bytes is ours.
- *   CTRLA: OUTEN | ENABLE (clock source CLK_PER, no filter/edge detector -
- *          the LUT is a purely combinational pass-through, so it responds
- *          asynchronously and the clock is unused).
+ *   CTRLA: OUTEN | FILTSEL | ENABLE (clock source CLK_PER). With the default
+ *          FILTSEL = SYNCH the truth-table output is re-clocked on CLK_PER
+ *          before it reaches the pin, removing the combinational glitches
+ *          DS40002548B 30.3.1.5 describes (see WAZAMONO_LUTPWM_FILTSEL in the
+ *          header); with 0 the LUT is a zero-latency combinational pass-through.
  *   CTRLB: INSEL1 = TCB1 WO (0x0A), INSEL0 = MASK.
  *   CTRLC: INSEL2 = MASK.
  *   TRUTH: 0xCC = OUT follows IN1 whatever IN0/IN2 read as.               */
-#define _LUTPWM_CFG_CTRLA  (CCL_OUTEN_bm | CCL_ENABLE_bm)
+#define _LUTPWM_CFG_CTRLA  (WAZAMONO_LUTPWM_CFG_CTRLA)
 #define _LUTPWM_CFG_CTRLB  (0x0A << 4)  /* INSEL1 = TCBn -> TCB1 WO (DS40002548A 30.2.2.1) */
 #define _LUTPWM_CFG_CTRLC  (0x00)
 #define _LUTPWM_CFG_TRUTH  (0xCC)
@@ -89,7 +91,7 @@ void wazamono_tcb1_lutpwm_disengage(void) {
  * LUT0-ALT and LUT1-default routes were verified on silicon at 44% duty,
  * CCMPEN = 0. Kunai additionally uses LUT2 on its ALT1 position, PD6 -
  * DS40002548B 17.2.2, CCLROUTEA bit 2 = ALT1 - with the very same bytes). */
-#define _PWMMUX_CFG_CTRLA  (CCL_OUTEN_bm | CCL_ENABLE_bm)
+#define _PWMMUX_CFG_CTRLA  (WAZAMONO_LUTPWM_CFG_CTRLA)   /* OUTEN | FILTSEL | ENABLE */
 #define _PWMMUX_CFG_CTRLB  (0x0A << 4)   /* INSEL1 = TCB -> TCB1 WO */
 #define _PWMMUX_CFG_CTRLC  (0x00)
 #define _PWMMUX_CFG_TRUTH  (0xCC)        /* OUT follows IN1 */

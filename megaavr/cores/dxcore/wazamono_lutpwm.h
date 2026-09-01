@@ -28,6 +28,23 @@
  *                                 the least harmful PORTMUX position (0x02 =
  *                                 ALT1 = PF5; absent on 20-pin parts).
  *
+ * LUT output stage (both the single-route and the multi-route block):
+ *   WAZAMONO_LUTPWM_FILTSEL       0 = DISABLE, 1 = SYNCH (default), 2 = FILTER.
+ *     The truth-table output of a LUT is combinational, and DS40002548B
+ *     30.3.1.5 warns that it "may cause some short glitches when the inputs
+ *     change the value". That is exactly the rising/falling edge of the PWM
+ *     waveform, and on a scope it shows up as a brief wobble on the edge that
+ *     the direct WO pin (registered in the timer) never has. SYNCH re-clocks
+ *     the LUT output on CLK_LUTn (= CLK_PER): the edge becomes a clean, single
+ *     flip-flop transition, at the cost of a fixed 2-cycle delay (83 ns at
+ *     24 MHz) applied equally to both edges - the duty cycle is unchanged, and
+ *     the delay is far below the PWM timebase (TCB1 counts the TCA0-prescaled
+ *     clock). FILTER adds 4 cycles and majority voting, which PWM does not
+ *     need. 0 restores the original zero-latency combinational path; use
+ *     -DWAZAMONO_LUTPWM_FILTSEL=0 (platform.local.txt compiler.*.extra_flags)
+ *     for an A/B measurement. The value is part of the LUT ownership
+ *     signature, so both blocks below use the same macro.
+ *
  * Conflict handling ("someone else is using TCB1 or the LUT"):
  *   - TCB1 side: the standard analogWrite() TCB path only acts while TCB1 is
  *     in 8-bit PWM mode. tone() (which uses TCB1 on these boards) or any user
@@ -63,6 +80,17 @@
 #define WAZAMONO_LUTPWM_H
 
 #include <avr/io.h>
+
+#if !defined(WAZAMONO_LUTPWM_FILTSEL)
+  #define WAZAMONO_LUTPWM_FILTSEL (1)   /* SYNCH: glitch-free edges, +2 CLK_PER */
+#endif
+#if (WAZAMONO_LUTPWM_FILTSEL) < 0 || (WAZAMONO_LUTPWM_FILTSEL) > 2
+  #error "WAZAMONO_LUTPWM_FILTSEL must be 0 (DISABLE), 1 (SYNCH) or 2 (FILTER)."
+#endif
+/* LUTnCTRLA value shared by both routing blocks: OUTEN | FILTSEL | ENABLE.
+ * CLKSRC stays 0 (CLK_PER), which also clocks the synchronizer/filter. */
+#define WAZAMONO_LUTPWM_CFG_CTRLA \
+    (CCL_OUTEN_bm | ((WAZAMONO_LUTPWM_FILTSEL) << CCL_FILTSEL_gp) | CCL_ENABLE_bm)
 
 #if defined(WAZAMONO_TCB1_LUTPWM_PIN) && defined(TCB1) && !defined(MILLIS_USE_TIMERB1)
   #if !defined(WAZAMONO_TCB1_LUTPWM_LUT) || !defined(WAZAMONO_TCB1_LUTPWM_LUT_ALT)

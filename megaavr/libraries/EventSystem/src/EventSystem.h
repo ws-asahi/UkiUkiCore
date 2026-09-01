@@ -32,6 +32,7 @@
  *                    EVOUTA        EVOUTD        EVOUTF
  *       Tachi        D8  (PA7)     D9 (PD2)      A3 (PF2)
  *       Tsurugi      D2  (PA7)     D9 (PD2)      A2 (PF2)
+ *       UkiUkiduino  D2  (PA7)     D9 (PD2)      A2 (PF2)
  *       Kunai        D1  (PA7)     D7 (PD7)      -
  *   - a CustomLogic event input: EVENT_TO_LOGIC_A / EVENT_TO_LOGIC_B
  *     (EVENT_TO_LOGIC1_A / _B for the second unit - not on Kunai), paired

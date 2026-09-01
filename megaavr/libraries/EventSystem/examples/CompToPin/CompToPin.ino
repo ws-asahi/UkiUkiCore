@@ -6,7 +6,7 @@
  *
  * 接続:
  *   監視したい電圧      -> AnalogComp +入力 = D9
- *   LED(+抵抗、GNDへ)   -> イベント出力ピン = D8
+ *   LED(+抵抗、GNDへ)   -> イベント出力ピン = D2
  *
  * (D9はEVOUTDピンとしても使われるピンですが、EVOUTDを使っていない
  *  限り+入力として自由に使えます。)
@@ -20,7 +20,7 @@ void setup() {
   AnalogComp.begin(INTERNAL2V5);              // +入力 vs 内蔵2.5V基準
   AnalogComp.setHysteresis(AC_HYST_MEDIUM);
 
-  EventSystem.connect(EVENT_ANALOG_COMP, 8);  // 判定結果 -> D8(EVOUTA)
+  EventSystem.connect(EVENT_ANALOG_COMP, 2);  // 判定結果 -> D2(EVOUTA)
 }
 
 void loop() {

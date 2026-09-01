@@ -63,6 +63,8 @@ jobs:
             - megaavr/libraries/SoftwareSerial/examples
             - megaavr/libraries/HID-Project/examples
             - megaavr/libraries/MIDIUSB/examples
+            - megaavr/libraries/ClockOut/examples
+            - megaavr/libraries/SPISlave/examples
           platforms: |
             # Pull the WazamonoCore toolchain + released platform (also
             # provides builtin tools such as ctags).

@@ -37,8 +37,9 @@
  * PIN_SPI_SS_HARDWARE - not necessarily PIN_SPI_SS, which is the host-mode CS):
  *   Tachi    SS = PD7 = D18 (A0)     SPI0 ALT4   MOSI D16 / MISO D14 / SCK D15
  *   Tsurugi  SS = PD7 = D20 = AREF   SPI0 ALT4   MOSI D11 / MISO D12 / SCK D13
+ *   UkiUkiduino  (same as Tsurugi)   SPI0 ALT4   MOSI D11 / MISO D12 / SCK D13
  *   Kunai    SS = PA7 = D1           SPI0 DEFAULT MOSI D10 / MISO D9  / SCK D8
- * Tsurugi: the AREF header pin IS the SS input while SPISlave is active, so
+ * Tsurugi / UkiUkiduino: the AREF header pin IS the SS input while SPISlave is active, so
  * it is exclusive with an external analog reference (analogReference(EXTERNAL)),
  * with GPIO/analog use of D20/A20, and with Serial2 (whose RX is PD7 and whose
  * TX PD6 is SCK). begin() enables the pull-up on it; nothing else about the
@@ -55,8 +56,8 @@
 
 #include <Arduino.h>
 
-#if !defined(ARDUINO_AVR_TACHI) && !defined(ARDUINO_AVR_TSURUGI) && !defined(ARDUINO_AVR_KUNAI)
-  #error "SPISlave supports the Wazamono Tachi, Tsurugi and Kunai only."
+#if !defined(ARDUINO_AVR_TACHI) && !defined(ARDUINO_AVR_TSURUGI) && !defined(ARDUINO_AVR_KUNAI) && !defined(ARDUINO_AVR_UKIUKIDUINO)
+  #error "SPISlave supports the Wazamono Tachi, Tsurugi, Kunai and the UkiUkiduino only."
 #endif
 
 /* The SS input of client mode is the SPI0 position's own SS pin. Variants

@@ -20,10 +20,12 @@
  *   CustomLogic
  *     Tachi       D5 (PD0)   D6 (PD1)   D9 (PD2)   D10 (PD3)  D15 (PD6)
  *     Tsurugi     D5 (PD0)   D6 (PD1)   D9 (PD2)   D10 (PD3)  D13 (PD6)
+ *     UkiUkiduino D5 (PD0)   D6 (PD1)   D9 (PD2)   D10 (PD3)  D13 (PD6)
  *     Kunai       D4 (PA0)   D5 (PA1)   D3 (PA2)   D2 (PA3)   D8  (PA6)
  *   CustomLogic1  (not available on Kunai)
  *     Tachi       A1 (PF0)   A2 (PF1)   A3 (PF2)   D17 (PF3)  -
  *     Tsurugi     A0 (PF0)   A1 (PF1)   A2 (PF2)   A3 (PF3)   -
+ *     UkiUkiduino A0 (PF0)   A1 (PF1)   A2 (PF2)   A3 (PF3)   -
  *   (Tachi: CustomLogic1's OUT = D17 is the on-board LED_BUILTIN, active-LOW,
  *    with no header pin; use setOutput()/addOutput() for an external signal.)
  *
@@ -33,6 +35,7 @@
  *                 EVOUTA        EVOUTD        EVOUTF
  *     Tachi       D8  (PA7)     D9 (PD2)      A3 (PF2)
  *     Tsurugi     D2  (PA7)     D9 (PD2)      A2 (PF2)
+ *     UkiUkiduino D2  (PA7)     D9 (PD2)      A2 (PF2)
  *     Kunai       D1  (PA7)     D7 (PD7)      -
  *
  * Input pins are configured with pull-ups, so you can wire buttons
@@ -73,14 +76,15 @@ enum LogicInput : uint8_t {
   LOGIC_OWN_OUTPUT,   /* this unit's own output - the way to build latches
                        * (only on CustomLogic; see the note below)             */
   LOGIC_OTHER_UNIT,   /* the other CustomLogic unit's output - two-stage logic
-                       * (Tachi and Tsurugi only)                              */
+                       * (Tachi / Tsurugi / UkiUkiduino only)                  */
   LOGIC_EVENT_A,      /* an event connection - the way to feed ANY pin into
                        * a LUT; wire it with the EventSystem library:          */
   LOGIC_EVENT_B       /* EventSystem.connect(pin, EVENT_TO_LOGIC_A / _B)       */
 };
 
 /* Note on LOGIC_OWN_OUTPUT: the CCL feeds back the output of the *even* LUT
- * of each LUT pair. CustomLogic is that even LUT (LUT2 on Tachi/Tsurugi, LUT0
+ * of each LUT pair. CustomLogic is that even LUT (LUT2 on Tachi/Tsurugi/
+ * UkiUkiduino, LUT0
  * on Kunai), so it can see its own output. CustomLogic1 is the odd LUT, so
  * what it would see there is CustomLogic's output - which is exactly what
  * LOGIC_OTHER_UNIT means. setInput() therefore rejects LOGIC_OWN_OUTPUT on

@@ -32,7 +32,7 @@
  *   None. Unlike the earlier CCL-based design, no EVSYS channel and no CCL LUT
  *   is consumed - EVSYS CH0 and CCL LUT1 are fully available to user sketches.
  *
- * Note: BTN_BUILTIN (D20 = PA1) needs no init here - it has an external 1 kOhm
+ * Note: BTN_BUILTIN (D21 = PA1) needs no init here - it has an external 5.1 kOhm
  *   pull-down on the board (pressed = HIGH) and is read as a plain input.
  */
 

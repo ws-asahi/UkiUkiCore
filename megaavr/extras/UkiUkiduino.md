@@ -69,7 +69,7 @@ AVR64DU32 は新世代の **AVRxt コア**で、USB 内蔵・クロック・メ�
 - **タイマ利用** - Servo や Tone 使用時には TCB1 を使用するためD3 ピンの PWM が無効化されます（Uno R3 では D3 と D11 、Leonardo では D5 が無効）。
 - **2つ目のSPI** - USART0 を使用して2つ目の SPI（SPI1）を使用できます。D0-D2を使用するためSerial1と排他利用になります。
 - **割り込み** - 全GPIOでエッジ/レベルの制約無く無制限に割り込み処理を実行可能です。1クロック未満の入力も検知します。
-- **ユーザーボタン搭載** — 標準的な Arduino ボードには無いオンボードのユーザーボタン（D20 / BNT_BUILTIN）を搭載。追加部品なしで入力プログラムを試せます。
+- **ユーザーボタン搭載** — 標準的な Arduino ボードには無いオンボードのユーザーボタン（D21 / BTN_BUILTIN）を搭載。追加部品なしで入力プログラムを試せます。
 
 ### 留意点
 
@@ -82,32 +82,32 @@ AVR64DU32 は新世代の **AVRxt コア**で、USB 内蔵・クロック・メ�
 ## ピンマッピング
 
 Arduino Uno R3 と同じ番号付け（D0–D13、A0–A5）です。
-A0–A5 はデジタル D14–D19 、D0～D13 は アナログ A6–A19 を兼ねます。
+A0–A5 はデジタル D14–D19 、D0～D13 は アナログ A6–A19 を兼ねます。ヘッダ番号の外側に、AREF 端子の D20 とオンボードボタンの D21 が追加されています。
 
 | D# | MCU | アナログ別名 | ADC ch | 主な機能 |
 |----|-----|--------------|--------|----------|
 | D0 | PA5 | A6 | AIN25 | **RX**（Serial1) / MOSI（SPI1） |
 | D1 | PA4 | A7 | AIN24 | **TX**（Serial1) / MISO（SPI1） |
-| D2 | PA6 | A8 | AIN26 | XCK（Serial1） / SCK（SPI1） |
-| D3 | PF5 | A9 | AIN21 | PWM |
-| D4 | PF4 | A10 | AIN20 |  |
+| D2 | PA7 | A8 | AIN27 | XDIR（Serial1） / AC0 OUT / EVOUTA |
+| D3 | PA6 | A9 | AIN26 | PWM（TCB1 → CCL LUT0 経由） / XCK（Serial1） / SCK（SPI1） |
+| D4 | PC3 | A10 | AIN31 | PWM（TCB1 → CCL LUT1 経由） / AC0 AINP4 |
 | D5 | PD0 | A11 | AIN0 | PWM / CCL（LUT2-IN0） |
 | D6 | PD1 | A12 | AIN1 | PWM / CCL（LUT2-IN1） |
-| D7 | PC3 | A13 | AIN31 | AC0 AINP4 ／ CCL（LUT1-OUT） |
-| D8 | PA7 | A14 | AIN27 | EVOUTA / AC OUT |
+| D7 | PF5 | A13 | AIN21 | PWM（TCB1 WO 直結。D3/D4 と排他、既定は D3） |
+| D8 | PF4 | A14 | AIN20 |  |
 | D9 | PD2 | A15 | AIN2 | PWM / CCL（LUT2-IN2）/ AC AINP0 / EVOUTD |
 | D10 | PD3 | A16 | AIN3 | PWM / CCL（LUT2-OUT）/ AC AINN0  |
 | D11 | PD4 | A17 | AIN4 | PWM / **MOSI**（SPI） |
 | D12 | PD5 | A18 | AIN5 | PWM / **MISO**（SPI） |
-| D13 | PD6 | A19 | AIN6 | **LED_BUILTIN** / **SCK**（SPI） |
+| D13 | PD6 | A19 | AIN6 | **LED_BUILTIN** / **SCK**（SPI） / TX（Serial2） |
 | D14 | PF0 | A0 | AIN16 | CCL（LUT3-IN0） |
 | D15 | PF1 | A1 | AIN17 | CCL（LUT3-IN1） |
 | D16 | PF2 | A2 | AIN18 | CCL（LUT3-IN2） |
 | D17 | PF3 | A3 | AIN19 | CCL（LUT3-OUT） |
 | D18 | PA2 | A4 | AIN22 | アナログ A4 / **SDA**（I2C） |
 | D19 | PA3 | A5 | AIN23 | アナログ A5 / **SCL**（I2C） |
-| D20 | PA1 | — | — | **BTN_BUILTIN** （物理ピンなし） |
-| AREF | PD7 | — | — | **VREFA**（外部基準電圧入力） |
+| D20 | PD7 | A20 | AIN7 | **AREF**（VREFA 外部基準電圧入力）/ GPIO / SPI ハードウェア SS / RX（Serial2） |
+| D21 | PA1 | — | — | **BTN_BUILTIN** （物理ピンなし） |
 
 **ヘッダの専用ピン:** ICSP（PD4/PD5/PD6 = MOSI/MISO/SCK + RESET）／Power ヘッダ 1 番ピン = **UPDI**（PF7）。
 **内部・非ヘッダピン:** PA0（LED_BUILTIN ドライバ）／PF6（RESET）。
@@ -140,7 +140,7 @@ SPI は Uno R3 と同じく D11–D13 および ICSP ヘッダ共用で配置さ
 |------|------|
 | MOSI | D0 |
 | MISO | D1 |
-| SCK | D2 |
+| SCK | D3 |
 
 SPI1 はボード独自の拡張により USART0 を利用して追加のSPIデバイスへ接続できます。
 
@@ -199,10 +199,10 @@ UkiUkiduino は **2 系統の電源入力**を持ち、いずれからでも 5V 
 | 電源 LED | 電源（赤） | 通電表示 |
 | **LED_BUILTIN** | **D13**（黄 / 砲弾型） | オンボード LED |
 | リセット | RESET | タクトスイッチ |
-| **BTN_BUILTIN** | **D20** | オンボードボタン |
+| **BTN_BUILTIN** | **D21** | オンボードボタン |
 
 `LED_BUILTIN` は **D13** です。`digitalWrite(13, ...)` / `digitalWrite(LED_BUILTIN, ...)` で書き込んだ値が、コアによって自動的にオンボード LED（駆動ピン PA0）へ複写されます。LED が D13/SCK ラインに負荷をかけない設計のため、Uno R3 と違い **SPI 通信（SCK）では LED は点滅しません**。また `VPORTD.OUT` 等の直接レジスタ操作も LED には反映されません（`digitalWrite` / `digitalWriteFast` のみ対象）。
-**BTN_BUILTIN（D20）** は 1kΩ でプルダウンされており、**押すと HIGH** になります。プルアップ設定は不要で、`digitalRead(BTN_BUILTIN)` がそのまま使えます。
+**BTN_BUILTIN（D21）** は 5.1kΩ でプルダウンされており、**押すと HIGH** になります。プルアップ設定は不要で、`digitalRead(BTN_BUILTIN)` がそのまま使えます。
 
 ---
 

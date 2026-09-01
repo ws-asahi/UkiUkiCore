@@ -21,10 +21,11 @@
  *              plus (+)             minus (-)
  *   Tachi      D9  (PD2, AINP0)     D10 (PD3, AINN0)
  *   Tsurugi    D9  (PD2, AINP0)     D10 (PD3, AINN0)
+ *   UkiUkiduino D9 (PD2, AINP0)     D10 (PD3, AINN0)   (same map as Tsurugi)
  *   Kunai      D2  (PD6, AINP3)     D3  (PD7, AINN2)
  *
  * The comparator output can be driven onto PA7 with enableOutput()
- * (Tachi: D8 / Tsurugi: D2 / Kunai: D1).
+ * (Tachi: D8 / Tsurugi: D2 / Kunai: D1 / UkiUkiduino: D2).
  */
 #ifndef ANALOGCOMP_H
 #define ANALOGCOMP_H
@@ -64,7 +65,7 @@ public:
 
   /* Select other input pins before or after begin(). Valid pins:
    *   plus:  PD2 (Tachi D9 / Tsurugi D9), PD6 (Tachi D15* / Tsurugi D13 / Kunai D6),
-   *          PC3 (Tachi D4 / Tsurugi D7 / Kunai D0)
+   *          PC3 (Tachi D4 / Tsurugi D4 / Kunai D0 / UkiUkiduino D4)
    *   minus: PD3 (Tachi D10 / Tsurugi D10), PD0 (Tachi D5 / Tsurugi D5),
    *          PD7 (Tachi A0* / Kunai D7 / Tsurugi: the AREF pin)
    * (* Tachi D15/A0 are the SPI SCK/SS and Serial2 pins - usable when those are not.)
@@ -82,7 +83,7 @@ public:
   void setHysteresis(uint8_t level);
 
   /* Drive the comparator result onto the output pin PA7
-   * (Tachi: D8 / Tsurugi: D2 / Kunai: D1). invert=true for active-low. */
+   * (Tachi: D8 / Tsurugi: D2 / Kunai: D1 / UkiUkiduino: D2). invert=true for active-low. */
   void enableOutput(bool invert = false);
   void disableOutput();
 

@@ -1,6 +1,6 @@
 /* buttoncycler(ボタンでアニメーション切替・Static版)
    ボタン入力でNeoPixel(WS2812系フルカラーLED)のアニメーションを
-   切り替えるデモです。UkiUkiduinoに搭載のボタン(BTN_BUILTIN = D20)を
+   切り替えるデモです。UkiUkiduinoに搭載のボタン(BTN_BUILTIN = D21)を
    押すたびに次のアニメーションへ進みます。最初のアニメーションを
    始めるにも1回ボタンを押してください。
 

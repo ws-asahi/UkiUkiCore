@@ -8,7 +8,7 @@
 #  SHA-256 + size, and writes them into docs/package_ukiuki_index.json.
 #
 #  Usage (from repo root or anywhere, Git Bash OK):
-#      megaavr/extras/make_release.sh [version]
+#      docs/make_release.sh [version]
 #  If [version] is omitted, the LAST "version=" line of megaavr/platform.txt
 #  is used (the IDE-workaround override, e.g. "version=0.0.3").
 #
@@ -27,7 +27,7 @@
 # ============================================================================
 set -euo pipefail
 
-REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 MEGAAVR="$REPO_ROOT/megaavr"
 INDEX="$REPO_ROOT/docs/package_ukiuki_index.json"
 DIST="$REPO_ROOT/dist"

@@ -14,8 +14,8 @@
 #  "version" fields are never modified).
 #
 #  Usage (Windows PowerShell 5.1 or pwsh 7, from anywhere):
-#      .\megaavr\extras\make_release.ps1            # version from platform.txt
-#      .\megaavr\extras\make_release.ps1 0.1.0      # explicit version
+#      .\docs\make_release.ps1                      # version from platform.txt
+#      .\docs\make_release.ps1 0.1.0                # explicit version
 #
 #  Requirements: tar.exe (bundled with Windows 10 1803+; libarchive build
 #  with bzip2 support) - checked at startup.
@@ -35,7 +35,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-$RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
+$RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $MegaAvr  = Join-Path $RepoRoot 'megaavr'
 $Index    = Join-Path $RepoRoot 'docs\package_ukiuki_index.json'
 $Dist     = Join-Path $RepoRoot 'dist'

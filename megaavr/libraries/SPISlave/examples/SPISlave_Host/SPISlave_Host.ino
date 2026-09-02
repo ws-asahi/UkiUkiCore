@@ -1,21 +1,23 @@
-/* SPISlave_Host - host-side counterpart for the SPISlave_Test example.
+/* SPISlave_Host - SPISlave_Testサンプルのホスト側
  *
- * Runs on any Arduino-compatible board with the standard SPI library
- * (including another Wazamono board). Sends a question, then clocks out the
- * client's staged answer in a second transaction.
+ * 標準のSPIライブラリが使えるArduino互換ボードなら何でも動きます
+ * (もう1枚のUkiUkiduinoでも可)。質問を送り、2回目のトランザクションで
+ * クライアントが用意した答えを読み出します。
  *
- * Connect MOSI/MISO/SCK to the client's SPI pins, CS_PIN to the client's SS
- * (Tachi: A0/D18, Tsurugi: AREF/D20, Kunai: D1), and join GND.
+ * MOSI/MISO/SCKをクライアントのSPIピンへ、CS_PINをクライアントのSS
+ * (UkiUkiduinoならAREF/D20)へ接続し、GNDを共通にしてください。
  *
- * The client stages its reply from onData() - i.e. after the question's
- * transaction has ended - so the answer is fetched with a separate read
- * transaction. The short delay between the two leaves the client's interrupt
- * handlers time to run.
+ * クライアントは答えをonData()の中 - つまり質問のトランザクションが
+ * 終わった後 - で用意するため、答えは別の読み出しトランザクションで
+ * 取得します。2回の間の短い待ちは、クライアント側の割り込み処理が
+ * 走る時間を確保するためのものです。
+ *
+ * UkiUkiduino向けに日本語化
  */
 
 #include <SPI.h>
 
-const uint8_t CS_PIN = 10;   // any free pin wired to the client's SS
+const uint8_t CS_PIN = 10;   // 空いているピンならどれでも。クライアントのSSへ配線する
 const uint32_t SPI_HZ = 1000000;
 
 void spiSend(const char *msg) {
@@ -50,7 +52,7 @@ void loop() {
   char answer[33];
 
   spiSend("Are you alive?");
-  delay(1);                       // let the client stage its answer
+  delay(1);                       // クライアントが答えを用意する時間
   spiReadAnswer(answer, 32);
   Serial.print(F("Answer: "));
   Serial.println(answer);

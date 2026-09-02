@@ -1,21 +1,24 @@
-/* SPISlave_Test - Wazamono SPI client ("slave") demo.
+/* SPISlave_Test - SPIクライアント(スレーブ)側のデモ
  *
- * Runs on a Wazamono Tachi (SS = A0/D18), Tsurugi (SS = AREF/D20) or Kunai
- * (SS = D1) and answers questions from an SPI host. Pair it with the
- * SPISlave_Host example on a second board. The flow mirrors the SPISlave_Test
- * example of the ESP8266 Arduino core.
+ * UkiUkiduinoをSPIクライアントとして動かし、SPIホストからの質問に
+ * 答えます。もう1枚のボードでSPISlave_Hostサンプルを動かして組み
+ * 合わせてください。流れはESP8266 Arduinoコアの同名サンプルに
+ * 倣っています。
  *
- * Wiring (client <-> host):
- *   MOSI <- host MOSI     Tachi: D16      / Tsurugi: D11  / Kunai: D10
- *   MISO -> host MISO     Tachi: D14      / Tsurugi: D12  / Kunai: D9
- *   SCK  <- host SCK      Tachi: D15      / Tsurugi: D13  / Kunai: D8
- *   SS   <- host CS pin   Tachi: A0 (D18) / Tsurugi: AREF / Kunai: D1
+ * 配線(クライアント <-> ホスト):
+ *   MOSI <- ホストのMOSI     D11
+ *   MISO -> ホストのMISO     D12
+ *   SCK  <- ホストのSCK      D13
+ *   SS   <- ホストのCSピン   AREF (D20)
  *   GND  -- GND
- * Tsurugi: the AREF header pin is the SS input, so no external reference
- * voltage may be applied there, and Serial2 cannot be used at the same time.
+ * 注意: UkiUkiduinoではAREFヘッダピンがSS入力になります。
+ *   SPISlave使用中はAREFに外部基準電圧を加えないでください。
+ *   また同じピンを使うSerial2は同時に使えません。
  *
- * Callbacks run in interrupt context: this sketch only copies data there and
- * does its Serial printing from loop().
+ * コールバックは割り込みコンテキストで動きます。このスケッチでは
+ * そこではデータのコピーだけを行い、シリアル表示はloop()で行います。
+ *
+ * UkiUkiduino向けに日本語化
  */
 
 #include <SPISlave.h>
@@ -26,12 +29,12 @@ char              message[SPISLAVE_BUFFER_SIZE + 1];
 void setup() {
   Serial.begin(115200);
 
-  // Received a transaction from the host (fires when SS returns high).
+  // ホストからのトランザクションを受信した(SSがHIGHに戻ると発火)
   SPISlave.onData([](uint8_t *data, size_t len) {
     memcpy(message, data, len);
     message[len] = '\0';
     got_message = true;
-    // Stage the answer the host will clock out on its NEXT transaction.
+    // ホストが「次の」トランザクションで読み出す答えを用意する
     if (strcmp(message, "Are you alive?") == 0) {
       SPISlave.setData("Yes, alive!");
     } else {
@@ -39,13 +42,13 @@ void setup() {
     }
   });
 
-  // The host clocked out the complete staged answer.
+  // 用意した答えをホストが最後まで読み出した
   SPISlave.onDataSent([]() {
-    // Keep it short - interrupt context. loop() reports via got_message.
+    // 割り込みコンテキストなので短く。報告はloop()がgot_message経由で行う
   });
 
-  SPISlave.begin();               // SPI mode 0, MSB first
-  SPISlave.setData("Hello Host!");  // answer for the very first read
+  SPISlave.begin();               // SPIモード0、MSBファースト
+  SPISlave.setData("Hello Host!");  // いちばん最初の読み出しへの答え
 }
 
 void loop() {

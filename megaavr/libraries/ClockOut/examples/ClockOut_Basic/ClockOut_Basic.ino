@@ -1,24 +1,24 @@
-/* ClockOut_Basic - put the system clock on the CLKOUT pin.
+/* ClockOut_Basic - システムクロックをCLKOUTピンに出力する
  *
- * Drives CLK_PER (the peripheral/CPU clock) out on PA7 so an external device
- * can share this board's time base, or so you can measure the real system
- * clock with a scope or frequency counter.
+ * CLK_PER(周辺/CPUクロック)をPA7に出力します。外部デバイスとこの
+ * ボードの時間基準を共有したり、オシロや周波数カウンタで実際の
+ * システムクロックを測ったりできます。
  *
- * CLKOUT pin by board:
- *   Wazamono Tachi   -> D8
- *   Wazamono Tsurugi -> D2
- *   Wazamono Kunai   -> D1
+ * UkiUkiduinoのCLKOUTピン: D2 (PA7)
  *
- * On the crystal-less Kunai, whose internal oscillator is tuned against the
- * USB frame marker, this is a convenient way to confirm the tuning is
- * working: connect a counter and check the reading against frequency().
+ * UkiUkiduinoはクリスタルレスで、内蔵発振器をUSBのフレーム信号に
+ * 合わせて自動調整しています。この出力にカウンタをつなぎ、読みを
+ * frequency()の値と突き合わせれば、調整が効いていることを手軽に
+ * 確認できます。
+ *
+ * UkiUkiduino向けに日本語化
  */
 
 #include <ClockOut.h>
 
 void setup() {
   Serial.begin(115200);
-  while (!Serial) { }            // native USB CDC: wait for the monitor
+  while (!Serial) { }            // ネイティブUSB CDC: モニタの接続を待つ
 
   if (ClockOut.begin()) {
     Serial.print(F("CLKOUT running on D"));
@@ -27,15 +27,14 @@ void setup() {
     Serial.print(ClockOut.frequency());
     Serial.println(F(" Hz"));
   } else {
-    // PA7 is already driven by AC0's output, by the event output EVOUTA,
-    // or (on the Kunai) by an enabled SPI0 that needs it as SS.
+    // PA7がAC0の出力かイベント出力EVOUTAに既に使われている
     Serial.println(F("CLKOUT unavailable: PA7 is in use by another peripheral"));
   }
 }
 
 void loop() {
-  // A Clock Failure Detection event switches the output off in hardware,
-  // so isRunning() is worth checking rather than assuming.
+  // クロック故障検出(CFD)イベントが起きると出力はハードウェアで
+  // 止まるので、動いている前提にせずisRunning()で確認する価値がある。
   if (!ClockOut.isRunning()) {
     Serial.println(F("CLKOUT has stopped (clock failure?)"));
     delay(1000);

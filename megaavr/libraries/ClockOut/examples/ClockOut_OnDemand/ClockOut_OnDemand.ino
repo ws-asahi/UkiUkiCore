@@ -1,15 +1,15 @@
-/* ClockOut_OnDemand - run CLKOUT only while it is actually needed.
+/* ClockOut_OnDemand - 必要なときだけCLKOUTを動かす
  *
- * A 24 MHz square wave with fast edges is a strong EMI source and costs
- * current in the pin driver, so a product is usually better off enabling the
- * clock output around the transaction that needs it instead of leaving it on
- * permanently.
+ * エッジの速い24MHzの矩形波は強いEMI源であり、ピンドライバの消費
+ * 電流も増えます。製品ではクロック出力を常時ONにせず、必要な
+ * トランザクションの前後だけ有効にする方が一般に得策です。
  *
- * This sketch pretends to talk to an external device that wants a clock only
- * while it converts: the clock is started, the work happens, the clock is
- * stopped again.
+ * このスケッチは「変換中だけクロックが欲しい外部デバイス」と
+ * 通信する体で、クロックを開始→処理→クロック停止、を繰り返します。
  *
- * CLKOUT pin: Tachi D8 / Tsurugi D2 / Kunai D1.
+ * UkiUkiduinoのCLKOUTピン: D2 (PA7)
+ *
+ * UkiUkiduino向けに日本語化
  */
 
 #include <ClockOut.h>
@@ -20,11 +20,11 @@ void readExternalDevice() {
     return;
   }
 
-  delayMicroseconds(50);        // let the external device see a stable clock
-  // ... talk to the device here (SPI/I2C/GPIO) ...
-  delay(5);                     // stand-in for the device's conversion time
+  delayMicroseconds(50);        // 外部デバイスに安定したクロックを見せる
+  // ... ここでデバイスと通信する(SPI/I2C/GPIO) ...
+  delay(5);                     // デバイスの変換時間の代わり
 
-  ClockOut.end();               // release PA7 and stop radiating
+  ClockOut.end();               // PA7を解放し、放射を止める
   Serial.println(F("done (clock off)"));
 }
 

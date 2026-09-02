@@ -1,8 +1,9 @@
 # UkiUkiCore
 
-**UkiUkiduino専用 Arduino コア**
-USB ネイティブな新世代 AVR(AVR DU シリーズ)を搭載した Arduino Uno R3 互換ボード「UkiUkiduino」のためのボードサポートパッケージ（Arduino core）です。
-UkiUkiduino は VTuber「浮々ゆにこ」のファングッズとして開発されたボードです。
+**UkiUkiduino専用 Arduino コア**  
+USB ネイティブな新世代 AVR(AVR DU シリーズ)を搭載した Arduino Uno R3 互換ボード  
+「UkiUkiduino」のためのボードサポートパッケージ（Arduino core）です。  
+UkiUkiduino は VTuber「浮々ゆにこ」のファングッズとして開発されたボードです。  
 
 ![platform](https://img.shields.io/badge/platform-AVR%20DU-blue)
 ![license](https://img.shields.io/badge/license-LGPL--2.1-green)
@@ -56,7 +57,7 @@ UkiUkiCore は、このボードを Arduino IDE で開発するための専用�
    ```
 
 2. **ツール > ボード > ボードマネージャ** で「**UkiUkiCore**」を検索してインストールします。
-3. コア本体に加えて、専用ツールチェーン（avr-gcc 15.2.0 / avrdude 8.1）が自動的にダウンロード・設定されます。
+3. コア本体に加えて、専用ツールチェーン（avr-gcc 15.2.0 / avrdude 8.1）が自動的にダウンロード・設定されます。  
    追加の設定は不要です。
 
 詳しい手順・手動インストール（開発者向け）は [Installation.md](Installation.md) を参照してください。
@@ -66,7 +67,8 @@ UkiUkiCore は、このボードを Arduino IDE で開発するための専用�
 - Arduino IDE 1.8.13 以降、または 2.x
 - ブートローダーの書き換えには UPDI プログラマ（PICkit 4/5、Atmel-ICE、jtag2updi 等）が必要になります。
 
-> Linux をお使いの場合、Arduino IDE は必ず [arduino.cc](https://www.arduino.cc) 配布版を使用してください。ディストリのパッケージマネージャ版は改変されており、正常に動作しません。
+> Linux をお使いの場合、Arduino IDE は必ず [arduino.cc](https://www.arduino.cc) 配布版を使用してください。  
+> ディストリのパッケージマネージャ版は改変されており、正常に動作しません。  
 
 ---
 
@@ -114,9 +116,10 @@ void loop() {
 
 ## Uno R3 / Leonardo との比較
 
-UkiUkiduino の比較対象となる Arduino Uno R3 は 旧世代の8ビットマイコン **ATmega328P**（ネイティブUSB なし）を搭載しています。
-また同じく旧世代の Arduino Leonardo が搭載する **ATmega32U4** はネイティブUSBを搭載していますがブートローダーで多くのプログラムメモリを消費します。
-AVR64DU32 は新世代の **AVRxt コア**で、USB 内蔵・クロック・メモリ・周辺機能の多くが強化されています。
+UkiUkiduino の比較対象となる Arduino Uno R3 は 旧世代の8ビットマイコン **ATmega328P**（ネイティブUSB なし）を搭載しています。  
+また同じく旧世代の Arduino Leonardo が搭載する **ATmega32U4** はネイティブUSBを搭載していますが  
+ブートローダーで多くのプログラムメモリを消費します。  
+AVR64DU32 は新世代の **AVRxt コア**で、USB 内蔵・クロック・メモリ・周辺機能の多くが強化されています。  
 
 | 項目 | UkiUkiduino (AVR64DU32) | Arduino Uno R3 (ATmega328P) | Arduino Leonardo (ATmega32U4) |
 |------|------------------------------|------------------------------|------------------------------|
@@ -141,7 +144,7 @@ AVR64DU32 は新世代の **AVRxt コア**で、USB 内蔵・クロック・メ�
 
 ## 特長
 
-- **クロックと処理速度** — 24 MHz 動作(Uno の 16 MHz 比で 1.5 倍)に加え、
+- **クロックと処理速度** — 24 MHz 動作(Uno の 16 MHz 比で 1.5 倍)に加え、  
   AVRxt コアは一部命令のタイミングが改善されており、ベンチマークでは同一クロックでも約 12% 高速です。  
 - **記憶領域の刷新** - 新しく USERROW / Flash などの記憶領域が追加(一方 EEPROM 容量は 256 B へ減少)。  
 - **USB ネイティブ** - 追加の USB-シリアル変換チップが不要。`Serial` がそのまま USB仮想シリアルポートになります。  
@@ -150,21 +153,22 @@ AVR64DU32 は新世代の **AVRxt コア**で、USB 内蔵・クロック・メ�
 - **HID / MIDI 対応** - USB キーボード・マウス等の HID、および USB-MIDI などをサポート。  
 - **高い互換性** - 同系統の MCU を採用しているため UnoR3 や ProMicro のコードをほぼそのまま実装可能。  
 - **各ピンの出力能力** - ピンあたりの電流出力は 20 mA を維持しており、UnoR4 の 8 mA では動かせない外部機器も動作可能。  
-- **全ピンアナログ入力対応** - 全てのデジタル入出力ピン（D0–D20）でアナログ値の読取りが可能。
+- **全ピンアナログ入力対応** - 全てのデジタル入出力ピン（D0–D20）でアナログ値の読取りが可能。  
 - **7 系統の PWM 出力** - Uno R3 では 6 本だった PWM を 7 本に拡張し、  
   更に LUT を使用した択一式 PWM でフレキシブルな運用が可能。  
-- **UPDI 対応** - Power ヘッダの 1 番ピンから UPDI デバッガーで動作中の MCU にアクセス可能。
-- **ネイティブ avr-gcc 対応** - DxCore と異なる点として最新の avr-gcc コンパイラを使用（今後も順次更新されます）。
+- **UPDI 対応** - Power ヘッダの 1 番ピンから UPDI デバッガーで動作中の MCU にアクセス可能。  
+- **ネイティブ avr-gcc 対応** - DxCore と異なる点として最新の avr-gcc コンパイラを使用（今後も順次更新されます）。  
 - **追加の シリアル通信** — 2 系統の UART シリアル通信と2系統の SPI を利用可能です。  
-- **フルカラーLED搭載** - LED_BUILTIN(D13)と連動してRGB色指定が可能なLEDが動作します。
-- **オンボードボタン搭載** - BTN_BUILTIN（D21）で追加部品なしに入力を試せます。
+- **フルカラーLED搭載** - LED_BUILTIN(D13)と連動してRGB色指定が可能なLEDが動作します。  
+- **オンボードボタン搭載** - BTN_BUILTIN（D21）で追加部品なしに入力を試せます。  
 
 ---
 
 ### 留意点
 
 - **EEPROM 容量は ATmega328P / ATmega32U4 のほうが大きい**(1 KB 対 256 B)。
-- 多くの不揮発データを保存する用途では保存方法の見直し(User Row やフラッシュの活用)が必要になる場合があります(後述「データ記憶領域」参照)。
+- 多くの不揮発データを保存する用途では保存方法の見直し(User Row やフラッシュの活用)が必要になる場合があります
+  (後述「データ記憶領域」参照)。
 
 ---
 
@@ -199,7 +203,8 @@ ATmega と比べて EEPROM は小さくなりましたが（256 B）、代わり
 ## ピンマッピング
 
 Arduino Uno R3 と同じ番号付け（D0–D13、A0–A5）です。
-A0–A5 はデジタル D14–D19 、D0～D13 は アナログ A6–A19 を兼ねます。ヘッダ番号の外側に、AREF 端子の D20 とオンボードボタンの D21 が追加されています。
+A0–A5 はデジタル D14–D19 、D0～D13 は アナログ A6–A19 を兼ねます。  
+また AREF 端子の D20 とオンボードボタンの D21 が追加されています。
 
 | D# | MCU | アナログ別名 | ADC ch | 主な機能 |
 |----|-----|--------------|--------|----------|
@@ -210,7 +215,7 @@ A0–A5 はデジタル D14–D19 、D0～D13 は アナログ A6–A19 を兼�
 | D4 | PC3 | A10 | AIN31 | PWM（TCB1 → CCL LUT1 経由） / AC0 AINP4 |
 | D5 | PD0 | A11 | AIN0 | PWM / CCL（LUT2-IN0） |
 | D6 | PD1 | A12 | AIN1 | PWM / CCL（LUT2-IN1） |
-| D7 | PF5 | A13 | AIN21 | PWM（TCB1 WO 直結。D3/D4 と排他、既定は D3） |
+| D7 | PF5 | A13 | AIN21 | PWM（TCB1 WO 直結） |
 | D8 | PF4 | A14 | AIN20 |  |
 | D9 | PD2 | A15 | AIN2 | PWM / CCL（LUT2-IN2）/ AC AINP0 / EVOUTD |
 | D10 | PD3 | A16 | AIN3 | PWM / CCL（LUT2-OUT）/ AC AINN0  |
@@ -232,9 +237,9 @@ A0–A5 はデジタル D14–D19 、D0～D13 は アナログ A6–A19 を兼�
 | A4 | PA2 | D18 | AIN22 | **SDA**(I2C) |
 | A5 | PA3 | D19 | AIN23 | **SCL**(I2C) |
 
->  
 > **D3 / D4 / D7 の PWM は択一**です。  
-> 1 本の TCB1 波形をいずれかのピンに出し分ける構造のため、最後に `analogWrite()` したピンが出口になります(既定は D3)。  
+> 1 本の TCB1 波形をいずれかのピンに出し分ける構造のため、  
+> 最後に `analogWrite()` したピンが出口になります(既定は D3)。  
 > 3 本同時に異なる PWM は出せません。周波数・デューティは 3 ピンで共通です。  
 > tone などで TCB1 を使用する時は 3 つとも PWM が無効化されます。  
 >  
@@ -246,7 +251,6 @@ A0–A5 はデジタル D14–D19 、D0～D13 は アナログ A6–A19 を兼�
 > オンボード LED は D13 への digitalWrite に連動して動作します。 
 > D13 への入力および SPI 動作等では動作しません。 
 > また専用の命令で点灯色の色を変更可能です。
-> 
 
 ---
 
@@ -258,11 +262,9 @@ A0–A5 はデジタル D14–D19 、D0～D13 は アナログ A6–A19 を兼�
 | `Serial1` | USART0 | D0(RX) / D1(TX) | Uno R3 互換ハードウェア UART |
 | `Serial2` | USART1 | AREF(RX) / D13(TX) | 追加 UART |
 
->  
 > Serial1は XCK(D3) / XDIR(D2) と併用して **RS-485 の方向制御や SPI ホストモードにも対応**。  
 >  
 > `Serial` は `USBSerial` の別名として定義されており USB-CDC を利用します。  
->  
 
 ---
 
@@ -276,14 +278,11 @@ A0–A5 はデジタル D14–D19 、D0～D13 は アナログ A6–A19 を兼�
 | SCK | D13 | D3 |
 | SS | AREF | なし |
 
->  
 > **クライアント(受信側)動作:** ハードウェア SS(AREF) が実ピンにあるため、  
 > 付属の **SPISlave ライブラリ**（ESP8266 互換 API）で SPI スレーブとしても動作できます。  
 > その間 AREF ピンは SS 入力となり、外部基準電圧(`analogReference(EXTERNAL)`)・GPIO D20/A20・Serial2 とは排他です。  
 >  
 > 詳細は [libraries/SPISlave](../libraries/SPISlave/README.md) を参照。  
->  
->  
 
 ---
 
@@ -294,10 +293,8 @@ A0–A5 はデジタル D14–D19 、D0～D13 は アナログ A6–A19 を兼�
 | SDA | A4 |
 | SCL | A5 |
 
->  
 > Uno R3 と同じ A4/A5 に配置されています。**Leonardo とは異なります。**  
 > 通常の `Wire.begin()` でそのまま使えます。  
->  
 
 ---
 
@@ -307,11 +304,10 @@ A0–A5 はデジタル D14–D19 、D0～D13 は アナログ A6–A19 を兼�
 - **D3 / D4 / D7** - TCB1 の 8bit PWM 波形を直接または LUT 経由で出力(排他使用)
 - Uno R3 に対して D12 へ PWM 機能が追加されています。
 
->  
-> **排他 PWM:** TCB1 が他の用途に使われている間、`analogWrite(D3)`(またはD4, D7) は PWM をあきらめて単純な HIGH/LOW 出力(127 を閾値)に切り替わります。  
+> **排他 PWM:** TCB1 が他の用途に使われている間、`analogWrite(D3)`(またはD4, D7) は  
+> PWM をあきらめて単純な HIGH/LOW 出力(127 を閾値)に切り替わります。  
 > - `tone()` は TCB1 を使うため、実行中は D3, D4, D7 の PWM が停止します。  
 > これは Uno R3 の Timer2(`tone()` 実行中は D3, D11 が停止)に相当する挙動です。  
->  
 
 ---
 
@@ -321,9 +317,8 @@ A0–A5 はデジタル D14–D19 、D0～D13 は アナログ A6–A19 を兼�
 - Uno R3 ヘッダの **A0–A5**(= D14–D19)
 - 各デジタルピンも ADC チャネルを持ち、A6–A20 として参照可能
 
-> 
-> 入力チャネルは複数あっても ADC は一つしかないので多チャンネルで同時に `analogRead` を実行すると安定性が劣化します(megaAVR と同じ挙動)。
-> 
+> 入力チャネルは複数あっても ADC は一つしかないので多チャンネルで同時に `analogRead` を実行すると安定性が劣化します(megaAVR と同じ挙動)。  
+> ただし切り替え速度の向上により影響は最小限になっています。  
 
 ---
 
@@ -332,10 +327,8 @@ A0–A5 はデジタル D14–D19 、D0～D13 は アナログ A6–A19 を兼�
 - メインクロック(CLK_PER)を **D2** へ出力できます。外部 IC へのクロック供給、他 MCU との同期、実クロックの測定に使えます。
 - 付属の **ClockOut ライブラリ**で `ClockOut.begin()` / `ClockOut.end()` により開閉します(詳細は [libraries/ClockOut](../libraries/ClockOut/README.md))。
 
->  
 > 24MHz の連続矩形波は EMI 源になるため、必要な期間だけ有効化する運用を推奨します。  
-> D2 は AC0 出力・EVOUTA と共用のため、それらが使用中は `begin()` が `false` を返します。  
->  
+> D2 は AC0 出力・EVOUTA と共用のため、それらが使用中は `begin()` が `false` を返します。 
 
 ---
 
@@ -344,9 +337,7 @@ A0–A5 はデジタル D14–D19 、D0～D13 は アナログ A6–A19 を兼�
 - UkiUkiduino は **水晶を搭載しない**設計で、システムクロックは内蔵 OSCHF から生成します(既定 **24 MHz**。下記の選択肢参照)。
 - USB 用の 48 MHz(CLK_USB)は内蔵 PLL48M が生成し、USB の SOF に同期して自動調整されるため水晶なしでも USB は仕様通りに機能します。
 
->  
 > USB ホスト切断時は動作クロックの精度が内蔵オシレータ単体の精度になります。  
->  
 
 ---
 
@@ -359,10 +350,8 @@ Arduino IDE の「ツール > Clock Speed」で次の 2 つを選べます。
 | 24 MHz internal(既定) | 24 MHz | 通常はこちら |
 | 16 MHz internal | 16 MHz | classic AVR(16 MHz)とのタイミング互換、省電力 |
 
->  
 > PWM の周波数と `delayMicroseconds()` などの時間処理は F_CPU に追従します。  
 > `millis()` / `micros()` はどちらの選択肢でも正しく動作します。  
->  
 
 ---
 
@@ -388,12 +377,10 @@ UkiUkiduino は **2 系統の電源入力**を持ち、いずれからでも 5V 
 | **BTN_BUILTIN** | **D21**(Push-HIGH) | ユーザー用ボタン |
 | リセット | RESET | ボタン |
 
->  
 > LED_BUILTIN は `setBLED` 命令により点灯色を指定可。  
 >  
 > BTN_BUILTIN は `digitalRead(BTN_BUILTIN)` または `digitalRead(D21)` で読み取り可能。  
 > ボタン押下で HIGH 、離すと LOW になる。
->  
 
 ---
 
@@ -414,10 +401,7 @@ UkiUkiduino は **2 系統の電源入力**を持ち、いずれからでも 5V 
 - Uno R3 と比較すると Serial は純粋な USB-CDC になっています。  
   D0 / D1 は Serial1 として使用できます(Leonardoと同等)。  
 
->  
 > レジスタ構成は大幅に変化しているため、レジスタを直接操作するプログラムの移植は難易度が高くなります。  
->  
-
 
 ## ライセンスとクレジット
 

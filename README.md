@@ -2,8 +2,9 @@
 
 **UkiUkiduino専用 Arduino コア**  
 USB ネイティブな新世代 AVR(AVR DU シリーズ)を搭載した Arduino Uno R3 互換ボード  
-「UkiUkiduino」のためのボードサポートパッケージ（Arduino core）です。  
-UkiUkiduino は VTuber「浮々ゆにこ」のファングッズとして開発されたボードです。  
+「UkiUkiduino」および Pro Micro 互換ボード「UkiUkiduino ProMicro」のための  
+ボードサポートパッケージ（Arduino core）です。  
+UkiUkiduino シリーズは VTuber「浮々ゆにこ」のファングッズとして開発されたボードです。  
 
 ![platform](https://img.shields.io/badge/platform-AVR%20DU-blue)
 ![license](https://img.shields.io/badge/license-LGPL--2.1-green)
@@ -74,8 +75,8 @@ UkiUkiCore は、このボードを Arduino IDE で開発するための専用�
 
 ## クイックスタート
 
-1. **ツール > ボード > ** から **UkiUkiduino** を選択
-2. USB ケーブルで接続し、 UkiUkiduino が接続された COM ポートを選択して書き込み
+1. **ツール > ボード > UkiUkiCore** から **UkiUkiduino** または **UkiUkiduino ProMicro** を選択
+2. USB ケーブルで接続し、ボードが接続された COM ポートを選択して書き込み
 
 
 **Lチカ:**
@@ -388,7 +389,8 @@ UkiUkiduino は **2 系統の電源入力**を持ち、いずれからでも 5V 
 
 | マクロ |  用途 |
 |--------|------|
-| `ARDUINO_AVR_UKIUKIDUINO` | ボード識別用 |
+| `ARDUINO_AVR_UKIUKIDUINO` | ボード識別用(UkiUkiduino) |
+| `ARDUINO_AVR_UKIUKIDUINO_PROMICRO` | ボード識別用(UkiUkiduino ProMicro、後述) |
 | `__AVR_AVR64DU32__` | MCU 識別用 |
 | `__AVR_DU__` | 製品グループ `"DU"` 識別用 |
 
@@ -402,6 +404,111 @@ UkiUkiduino は **2 系統の電源入力**を持ち、いずれからでも 5V 
   D0 / D1 は Serial1 として使用できます(Leonardoと同等)。  
 
 > レジスタ構成は大幅に変化しているため、レジスタを直接操作するプログラムの移植は難易度が高くなります。  
+
+## UkiUkiduino ProMicro
+
+UkiUkiduino シリーズの第二機種、**Pro Micro 互換ボード**です。  
+MCU(AVR64DU32)・クロック・USB・書き込み方式・オンボード LED / ボタンの API は UkiUkiduino と共通で、  
+ピン配置とフォームファクタが Pro Micro(ATmega32U4 版)に合わせてあります。  
+キーボード等の組み込み用途(HID)を主眼にしているため、**電源は USB 5V 専用**の簡素な構成です。  
+
+| 項目 | 値 |
+|------|----|
+| フォームファクタ | Pro Micro 互換(35.0 × 17.8 mm、12 ピン × 2 列、USB-C 側に 2 mm 延長) |
+| MCU / クロック / USB | UkiUkiduino と同一(AVR64DU32、内蔵 24 MHz、USB 2.0 FS) |
+| 電源 | **USB 5V のみ**(レギュレータ非搭載。RAW / VCC ピンはともに +5V に直結) |
+| オンボード LED | フルカラー LED(WS2812B、`LED_BUILTIN` = D17)、TX / RX LED(D30 / D31、負論理)、電源 LED |
+| オンボードボタン | `BTN_BUILTIN` = **D22**(押下 = HIGH) |
+| 書き込み | USB ブートローダー / UPDI(4 ピン UPDI ヘッダ: RESET / VCC / GND / UPDI) |
+
+> ⚠️ **RAW ピンに 5V を超える電圧を加えないでください。** Pro Micro と異なりレギュレータがなく、  
+> RAW は MCU の VDD に直結されています(絶対最大定格 5.5V)。外部 5V を RAW / VCC へ供給しながら  
+> USB を接続することは、USB 側の理想ダイオード(CH213K)が逆流を防ぐため可能です。
+
+---
+
+### ピンマッピング(ProMicro)
+
+Pro Micro(SparkFun / ATmega32U4)と同じ番号付けです。D11〜D13 は存在しません。  
+A0〜A3 は D18〜D21 を兼ね、その他のデジタルピンはアナログ A6〜A19 を兼ねます(A4 / A5 はありません)。  
+
+| D# | MCU | アナログ別名 | ADC ch | 主な機能 |
+|----|-----|--------------|--------|----------|
+| D0 | PA5 | A11 | AIN25 | **RX**(Serial1) / **MOSI**(SPI1) |
+| D1 | PA4 | A12 | AIN24 | **TX**(Serial1) / **MISO**(SPI1) |
+| D2 | PA2 | A13 | AIN22 | **SDA**(I2C) |
+| D3 | PA3 | A14 | AIN23 | **SCL**(I2C) / PWM(TCB1、既定の出口) |
+| D4 | PC3 | A6 | AIN31 | PWM(TCB1 → CCL LUT1 経由) / AC0 AINP4 |
+| D5 | PD0 | A15 | AIN0 | PWM / CCL(LUT2-IN0) |
+| D6 | PD1 | A7 | AIN1 | PWM / CCL(LUT2-IN1) |
+| D7 | PA6 | A16 | AIN26 | PWM(TCB1 → CCL LUT0 経由) / XCK(Serial1) / SCK(SPI1) |
+| D8 | PA7 | A8 | AIN27 | XDIR(Serial1) / AC0 OUT / EVOUTA / CLKOUT |
+| D9 | PD2 | A9 | AIN2 | PWM / CCL(LUT2-IN2) / AC AINP0 / EVOUTD |
+| D10 | PD3 | A10 | AIN3 | PWM / CCL(LUT2-OUT) / AC AINN0 |
+| D14 | PD5 | A17 | AIN5 | PWM / **MISO**(SPI) |
+| D15 | PD6 | A18 | AIN6 | **SCK**(SPI) / TX(Serial2) |
+| D16 | PD4 | A19 | AIN4 | PWM / **MOSI**(SPI) |
+| D17 | PF5 | — | — | **LED_BUILTIN**(物理ピンなし) |
+| D18 | PD7 | A0 | AIN7 | **A0** / SPI ハードウェア SS / RX(Serial2) / VREFA |
+| D19 | PF1 | A1 | AIN17 | **A1** / CCL(LUT3-IN1) |
+| D20 | PF2 | A2 | AIN18 | **A2** / CCL(LUT3-IN2) / EVOUTF |
+| D21 | PF3 | A3 | AIN19 | **A3** / CCL(LUT3-OUT) |
+| D22 | PF0 | — | AIN16 | **BTN_BUILTIN**(物理ピンなし) / CCL(LUT3-IN0) |
+| D30 | PA0 | — | — | **LED_BUILTIN_TX**(TX LED、負論理、物理ピンなし) |
+| D31 | PA1 | — | — | **LED_BUILTIN_RX**(RX LED、負論理、物理ピンなし) |
+
+> **D3 / D4 / D7 の PWM は択一**です(UkiUkiduino の D3 / D4 / D7 と同じ仕組み)。  
+> 最後に `analogWrite()` したピンが出口になり、`tone()` 実行中は 3 本とも停止します。  
+> Pro Micro 本来の PWM ピン(D3 / D5 / D6 / D9 / D10)はすべて使え、さらに D4 / D7 / D14 / D16 が加わります。  
+>  
+> **Pro Micro に AREF ピンはありません。** 外部基準電圧を使う場合は A0(PD7 = VREFA)に入力し、  
+> その間 A0 / SPI SS / Serial2 RX は使えません。  
+>  
+> オンボード LED は D17 への digitalWrite に連動します。D17 に物理ピンはありません。  
+
+| 機能 | UkiUkiduino | UkiUkiduino ProMicro |
+|------|-------------|----------------------|
+| `Serial1`(USART0) | D0(RX) / D1(TX) | D0(RX) / D1(TX) |
+| `Serial2`(USART1) | AREF(RX) / D13(TX) | A0(RX) / D15(TX) |
+| SPI(MOSI / MISO / SCK) | D11 / D12 / D13 | D16 / D14 / D15 |
+| SPI ハードウェア SS(SPISlave) | AREF(D20) | A0(D18) |
+| I2C(SDA / SCL) | A4 / A5 | D2 / D3 |
+| クロック出力(ClockOut) | D2 | D8 |
+| イベント出力 EVOUTA / EVOUTD / EVOUTF | D2 / D9 / A2 | D8 / D9 / A2 |
+| CustomLogic1(LUT3) IN0 / IN1 / IN2 / OUT | A0 / A1 / A2 / A3 | D22(ボタン) / A1 / A2 / A3 |
+| `LED_BUILTIN` | D13 | D17 |
+| `BTN_BUILTIN` | D21 | D22 |
+| TX / RX LED | なし | D30 / D31(`TXLED1` 等の 32U4 互換マクロあり) |
+
+---
+
+### LED とスイッチ(ProMicro)
+
+| 部品 | 接続 | 用途 |
+|------|------|------|
+| **LED_BUILTIN** | D17(Active-HIGH) | ユーザー用フルカラー LED(WS2812B) |
+| **LED_BUILTIN_TX / RX** | D30 / D31(Active-LOW) | USB シリアル送受信表示(Pro Micro と同じ挙動) |
+| **BTN_BUILTIN** | **D22**(Push-HIGH) | ユーザー用ボタン |
+| リセット | RESET | ボタン(ダブルタップでブートローダ) |
+
+> `setBLEDColor()` による色・明るさ指定、`digitalWrite(LED_BUILTIN, HIGH/LOW)` による点灯・消灯、  
+> ブートローダ DFU 時の黄色ブレス点灯は UkiUkiduino と同一です。  
+> UkiUkiduino ライブラリのサンプル(BLEDColorCycle 等)はそのまま動作します。  
+>  
+> TX / RX LED は USB-CDC の送受信で自動点灯しますが、スケッチから `digitalWrite(D30, LOW)` で  
+> 点灯させることもできます(負論理)。  
+
+---
+
+### 移植のヒント(Pro Micro → UkiUkiduino ProMicro)
+
+- ピン番号・`LED_BUILTIN` / `BTN_BUILTIN`・`Serial` / `Serial1` の意味は Pro Micro と揃えてあるので、  
+  多くのスケッチは無改変で動きます。  
+- `A6`〜`A10` は Pro Micro と同じ物理ピン(D4 / D6 / D8 / D9 / D10)を指します。  
+- ボード判定は `#if defined(ARDUINO_AVR_UKIUKIDUINO_PROMICRO)` を使ってください。  
+- 32U4 特有のレジスタ操作・`USBCON` の直接操作は動作しません。  
+
+---
 
 ## ライセンスとクレジット
 

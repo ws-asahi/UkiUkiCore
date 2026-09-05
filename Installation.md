@@ -1,6 +1,6 @@
 # UkiUkiCOre のインストール
 
-UkiUkiCore は、UkiUkiduino を Arduino IDE で開発するための専用コアです。
+UkiUkiCore は、UkiUkiduino / UkiUkiduino ProMicro を Arduino IDE で開発するための専用コアです。
 
 ## 対応 IDE
 
@@ -34,7 +34,7 @@ UkiUkiCore は、UkiUkiduino を Arduino IDE で開発するための専用コ�
 3. **UkiUkiCore** を選んで **インストール** します。
    コア本体に加えて、コンパイラや書き込みツールが自動的にダウンロード・設定されます。
 
-4. 「ツール > ボード > UkiUkiCore」に **UkiUkiduino** が表示されればインストール完了です。
+4. 「ツール > ボード > UkiUkiCore」に **UkiUkiduino** と **UkiUkiduino ProMicro** が表示されればインストール完了です。
 
 > ツールチェーンを含めて数百 MB のダウンロードが発生します。インストール先は
 > Arduino IDE の標準パッケージフォルダ（Windows: `%LOCALAPPDATA%\Arduino15\packages\UkiUkiCore\`）です。

@@ -1,17 +1,18 @@
 # =====================================================================
 #  UkiUkiCore - boards.txt
-#  The UkiUkiduino product board only (all other MCU/board families from
+#  The UkiUkiduino product boards only (all other MCU/board families from
 #  DxCore / WazamonoCore are removed):
-#    - UkiUkiduino  (AVR64DU32, Arduino Uno R3 form factor, USB-C)
+#    - UkiUkiduino           (AVR64DU32, Arduino Uno R3 form factor, USB-C)
+#    - UkiUkiduino ProMicro  (AVR64DU32, Pro Micro form factor, USB-C)
 #  Derived from DxCore's avrduusb (USB-CDC bootloader) definition via
 #  WazamonoCore; DxCore (C) Spence Konde, LGPL 2.1.
 #  Customizations (C) Workshop Asahi.
 #
-#  The UkiUkiduino is CRYSTAL-LESS by design and is aimed at beginners:
-#  there is no Clock menu - the system clock is fixed to the internal
-#  24 MHz OSCHF (build.speed / build.clocksource below), and PA0/PA1 are
-#  free GPIO (D7 / D20). USB CLK_USB (48 MHz) = OSCHF + PLL48M, SOF-tuned,
-#  independent of the system clock.
+#  Both boards are CRYSTAL-LESS by design and aimed at beginners: the
+#  system clock is the internal OSCHF (24 MHz default, 16 MHz selectable;
+#  build.speed / build.clocksource below). USB CLK_USB (48 MHz) = OSCHF +
+#  PLL48M, SOF-tuned, independent of the system clock. PA0/PA1 (the XTALHF
+#  pads) are used as on-board LED / button pins.
 # =====================================================================
 
 # =====================  UkiUkiduino (AVR64DU32)  =====================
@@ -110,3 +111,100 @@ ukiukiduino.build.highestcb=B2
 ukiukiduino.upload.maximum_size=61440
 ukiukiduino.upload.maximum_data_size=8192
 ukiukiduino.bootloader.class=usbcdcboot_ukiukiduino
+
+# =================  UkiUkiduino ProMicro (AVR64DU32)  =================
+#  Pro Micro form factor (derived from the Wazamono Tachi rev.5 layout).
+#  AVR64DU32 + USB-CDC bootloader, 5 V only (no regulator: RAW = VCC = +5V).
+#  On-board: WS2812B full-color LED (LED_BUILTIN = D17, mirrored from PF5 to
+#  PF4), user button BTN_BUILTIN = D22 (PF0, pull-down, pressed = HIGH),
+#  TX/RX activity LEDs on PA0/PA1 (active-LOW). Timer use: millis() on TCB0,
+#  TCB1 drives the exclusive D3/D4/D7 PWM outlet and tone(); TCA0 -> PORTD
+#  gives the classic Pro Micro PWM set D5/D6/D9/D10 (+ D14/D16).
+ukiukiduinopromicro.name=UkiUkiduino ProMicro
+
+ukiukiduinopromicro.upload.tool=avrdude
+ukiukiduinopromicro.upload.prog_interlock=
+# --- USB identity: pid.codes TEST-range placeholders (app 0x000E / boot 0x000D;
+#     distinct from the Uno-form UkiUkiduino so both can be plugged in at once).
+#     Replace with the official pid.codes VID/PID before release. Keep in sync
+#     with cores/dxcore/usb_descriptors.{h,c}, variants/UkiUkiduinoProMicro/
+#     pins_arduino.h and the bootloader build (build_ukiukiduino.sh/.bat). ---
+ukiukiduinopromicro.vid.0=0x1209
+ukiukiduinopromicro.pid.0=0x000E
+ukiukiduinopromicro.vid.1=0x1209
+ukiukiduinopromicro.pid.1=0x000D
+ukiukiduinopromicro.build.board=AVR_UKIUKIDUINO_PROMICRO
+ukiukiduinopromicro.build.core=dxcore
+ukiukiduinopromicro.build.f_cpu={build.speed}000000L
+ukiukiduinopromicro.build.text_section_start=.text=0x1000
+ukiukiduinopromicro.build.defaultswaps=
+ukiukiduinopromicro.build.extra_flags= {build.defaultswaps} -DUSING_AVRDU_CDC_BOOTLOADER -DUSING_USBBOOT -DUSB_VREG_INTERNAL {build.usbepflags}
+ukiukiduinopromicro.menu.usbeps.ep8=8 (EP0-EP7, standard)
+ukiukiduinopromicro.menu.usbeps.ep8.build.usbepflags=
+ukiukiduinopromicro.menu.usbeps.ep16=16 (EP0-EP15, extended)
+ukiukiduinopromicro.menu.usbeps.ep16.build.usbepflags=-DUSB_EP_SLOTS=16
+# Force-link the variant init TU (variants/UkiUkiduinoProMicro/
+# ukiukiduinopromicro_init.cpp): strong initVariant() (LED blanking) plus the
+# USB-CDC TX/RX activity-LED hooks would otherwise be dropped from core.a.
+ukiukiduinopromicro.compiler.c.elf.extra_flags=-Wl,-u,ukiukiduinopromicro_variant_keep -Wl,--defsym,__flmap_lock=1
+ukiukiduinopromicro.build.rodata_flags=
+ukiukiduinopromicro.build.export_merged_output=false
+ukiukiduinopromicro.build.printf=
+ukiukiduinopromicro.build.flmapopts=
+ukiukiduinopromicro.build.attachmode=-DCORE_ATTACH_ALL
+ukiukiduinopromicro.bootloader.tool=avrdude
+ukiukiduinopromicro.bootloader.WDTCFG=0b{bootloader.wdtwindowbits}{bootloader.wdttimeoutbits}
+ukiukiduinopromicro.bootloader.wdtwindowbits=0000
+ukiukiduinopromicro.bootloader.BODCFG=0x00
+ukiukiduinopromicro.bootloader.updipinbit=1
+ukiukiduinopromicro.bootloader.SYSCFG0=0b110{bootloader.updipinbit}{bootloader.resetpinbits}00{bootloader.eesavebit}
+ukiukiduinopromicro.bootloader.SYSCFG1=0b00001{bootloader.sutbits}
+ukiukiduinopromicro.bootloader.CODESIZE=0x00
+ukiukiduinopromicro.bootloader.BOOTSIZE=0x08
+ukiukiduinopromicro.bootloader.OSCCFG=0b00000000
+
+# ---- Locked option defaults (menus removed; values fixed for the product) ----
+# Bootloader fuse bits (burn-bootloader): WDT off, BOD off, EEPROM retained,
+#   reset pin = Hardware Reset, startup 8ms. (BODCFG fixed above = 0x00.)
+ukiukiduinopromicro.bootloader.wdttimeoutbits=0000
+ukiukiduinopromicro.bootloader.eesavebit=1
+ukiukiduinopromicro.bootloader.resetpinbit=1
+ukiukiduinopromicro.bootloader.sutbits=100
+# Compile-time options: millis=TCB0 (frees TCB1 for D3/D4/D7 PWM + tone), Wire=single.
+ukiukiduinopromicro.build.millistimer=B0
+ukiukiduinopromicro.build.wiremode=MORS_SINGLE
+ukiukiduinopromicro.bootloader.resetpinbits={bootloader.resetpinbit}
+ukiukiduinopromicro.bootloader.avrdudefuse5="-Ufuse5:w:{bootloader.SYSCFG0}:m"
+ukiukiduinopromicro.program.avrdudefuse5="-Ufuse5:w:{bootloader.SYSCFG0}:m"
+ukiukiduinopromicro.bootloader.avrdudestring=-Uflash:w:{runtime.platform.path}/bootloaders/{bootloader.file}:i
+ukiukiduinopromicro.bootloader.pymcuprogstring=-aerase
+ukiukiduinopromicro.build.mcupostfix=
+ukiukiduinopromicro.build.printfabr=
+ukiukiduinopromicro.build.flmapabr=.ful
+ukiukiduinopromicro.build.attachabr=
+ukiukiduinopromicro.build.wireabr=.wO
+ukiukiduinopromicro.build.appspmabr=
+ukiukiduinopromicro.upload.protocol=arduino
+ukiukiduinopromicro.upload.speed=115200
+ukiukiduinopromicro.upload.extra_params=-D
+ukiukiduinopromicro.upload.use_1200bps_touch=true
+ukiukiduinopromicro.upload.wait_for_upload_port=true
+ukiukiduinopromicro.bootloader.file=hex/{bootloader.class}.hex
+ukiukiduinopromicro.bootloader.appspm=
+
+# --- Clock: fixed 24 MHz internal OSCHF (crystal-less; no Clock menu). ---
+#  clocksource 0 = internal OSCHF. USB CLK_USB (48 MHz) = OSCHF + PLL48M, SOF-tuned.
+ukiukiduinopromicro.menu.clock.24internal=24 MHz internal
+ukiukiduinopromicro.menu.clock.24internal.build.speed=24
+ukiukiduinopromicro.menu.clock.24internal.build.clocksource=0
+ukiukiduinopromicro.menu.clock.16internal=16 MHz internal
+ukiukiduinopromicro.menu.clock.16internal.build.speed=16
+ukiukiduinopromicro.menu.clock.16internal.build.clocksource=0
+
+# --- Locked to AVR64DU32. Variant + bootloader hex fixed to UkiUkiduino ProMicro. ---
+ukiukiduinopromicro.build.mcu=avr64du32
+ukiukiduinopromicro.build.variant=UkiUkiduinoProMicro
+ukiukiduinopromicro.build.highestcb=B2
+ukiukiduinopromicro.upload.maximum_size=61440
+ukiukiduinopromicro.upload.maximum_data_size=8192
+ukiukiduinopromicro.bootloader.class=usbcdcboot_ukiukiduinopromicro

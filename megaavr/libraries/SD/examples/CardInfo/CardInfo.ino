@@ -11,6 +11,9 @@
  ** MISO - D12
  ** SCK  - D13
  ** CS   - PIN_SPI_SS (D10)
+ **
+ ** UkiUkiduino ProMicro の場合: MOSI=D16 / MISO=D14 / SCK=D15、
+ ** CS=PIN_SPI_SS=D18(A0)。スケッチ側はPIN_SPI_SSを使っているので変更不要です。
 
 
   原作: Limor Fried (2011) / Tom Igoe改変 (2012)
@@ -26,7 +29,7 @@ SdVolume volume;
 SdFile root;
 
 // SDモジュールの配線に合わせて変更する。PIN_SPI_SSは
-// 基板のハードウェアSSピン(UkiUkiduinoではD10)
+// 基板のハードウェアSSピン(UkiUkiduinoではD10、UkiUkiduino ProMicroではD18/A0)
 const int chipSelect = PIN_SPI_SS;
 
 void setup() {

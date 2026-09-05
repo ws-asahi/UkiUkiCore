@@ -3,6 +3,7 @@
    同時に駆動できます。その実演サンプルです。
 
    接続: D2~D13の12ピンにそれぞれサーボの信号線を接続します。
+   (UkiUkiduino ProMicroにはD11~D13が無いので、D2~D10とD14~D16の12ピンを使います)
    ※12個のサーボをUSB給電で動かすことはできません。必ずサーボ用の
      外部電源を用意し、GNDをボードと共通にしてください。
 
@@ -17,7 +18,11 @@ char dir[12] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}; // 各サーボの動く向
 
 void setup() {
   for (byte i = 0; i < 12; i++) {
+#if defined(ARDUINO_AVR_UKIUKIDUINO_PROMICRO)
+    myservos[i].attach(i < 9 ? i + 2 : i + 5);  // D2~D10, D14~D16へ順に割り当てる
+#else
     myservos[i].attach(i + 2);  // D2~D13へ順に割り当てる
+#endif
     pos[i] = i * 15;            // 開始角度をずらしてウェーブ状にする
   }
 }

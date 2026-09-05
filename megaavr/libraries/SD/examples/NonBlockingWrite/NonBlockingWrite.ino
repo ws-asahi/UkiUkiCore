@@ -13,6 +13,7 @@
   回路(UkiUkiduino):
   - SPIバスにmicroSDカードモジュールを接続
     (MOSI=D11 / MISO=D12 / SCK=D13、CSはPIN_SPI_SS=D10)
+    UkiUkiduino ProMicroでは MOSI=D16 / MISO=D14 / SCK=D15、CS=PIN_SPI_SS=D18(A0)
 
   この例はパブリックドメインです。
   UkiUkiduino向けに日本語化

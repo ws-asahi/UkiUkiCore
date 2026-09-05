@@ -15,7 +15,7 @@
  * 本来はフラグを立ててloop()側で表示します。より「正しい」書き方は
  * 「Slave Address Mask」サンプルを参照してください。
  *
- * 使い方: このボードのSCL(A5)/SDA(A4)を、対向ボードのSCL/SDAへ
+ * 使い方: このボードのSCL(A5)/SDA(A4)、UkiUkiduino ProMicroではSCL(D3)/SDA(D2)を、対向ボードのSCL/SDAへ
  * 接続します。SDA/SCLの両方に、Vccへのプルアップ抵抗が必要です。
  * 詳しくはWireライブラリのREADME.mdを参照してください。
  *

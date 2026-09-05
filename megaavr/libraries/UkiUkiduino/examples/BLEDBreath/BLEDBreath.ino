@@ -5,7 +5,7 @@
  * ボタン(BTN_BUILTIN)を押すと色が切り替わります。
  *
  * setBLEDColor(色名, 明るさ)の第2引数(0~255)を三角波で動かすだけで
- * 実現できます。LEDは点灯状態(D13=HIGH)のままにしておき、
+ * 実現できます。LEDは点灯状態(LED_BUILTIN=HIGH)のままにしておき、
  * 「点灯中の色変更は即時反映」される性質を利用します。
  *
  * ※明るさ変更1回ごとに約0.34msのLED通信が入るため、更新間隔は
@@ -20,7 +20,7 @@ int16_t level = 0;      // 現在の明るさ 0~255
 int8_t  dir = 1;        // +1=明るく / -1=暗く
 
 void setup() {
-  pinMode(BTN_BUILTIN, INPUT);          // 基板に5.5.1kΩプルダウン実装済み
+  pinMode(BTN_BUILTIN, INPUT);          // 基板に5.1kΩプルダウン実装済み
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, HIGH);      // 点灯状態を維持したまま明るさを動かす
 }

@@ -7,6 +7,7 @@
  *
  * CustomLogicユニットのピン(UkiUkiduino):
  *   IN0 = D5    IN1 = D6    OUT = D10
+ * (UkiUkiduino ProMicroでもピン番号は同じです: IN0=D5 / IN1=D6 / IN2=D9 / OUT=D10)
  *
  * 入力にはプルアップが効いているので、手軽に試すならIN0/IN1から
  * GNDへ押しボタンを2つ、OUTからGNDへLED(+抵抗)を配線して

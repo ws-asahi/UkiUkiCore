@@ -4,7 +4,7 @@
 // Wireライブラリを使って、Devantech製の超音波距離センサ
 // SRF08/SRF10からデータを読み出す例です。
 //
-// 接続: センサのSDAをA4へ、SCLをA5へ。SDA/SCLそれぞれと5Vの間に
+// 接続: センサのSDAをA4へ、SCLをA5へ(UkiUkiduino ProMicroではSDA=D2、SCL=D3)。SDA/SCLそれぞれと5Vの間に
 //       プルアップ抵抗(4.7kΩ程度)を接続してください。
 //
 // UkiUkiduino向けに日本語化

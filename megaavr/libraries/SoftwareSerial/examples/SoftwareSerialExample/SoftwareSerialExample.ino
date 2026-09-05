@@ -5,6 +5,7 @@
 
    接続: D10(RX)を相手機器のTXへ、D11(TX)を相手機器のRXへ、
          GND同士を接続します。
+   (UkiUkiduino ProMicroにはD11が無いので、TXはD9を使います)
 
    メモ: UkiUkiduinoではどのピンでも使えます。受信(RX)には
    ポート内でビット番号の小さいピンを使うと安定します。
@@ -16,7 +17,11 @@
 */
 #include <SoftwareSerial.h>
 
+#if defined(ARDUINO_AVR_UKIUKIDUINO_PROMICRO)
+SoftwareSerial mySerial(10, 9);  // RX = D10, TX = D9  (ProMicroにD11は無い)
+#else
 SoftwareSerial mySerial(10, 11); // RX = D10, TX = D11
+#endif
 
 void setup() {
   // USBシリアルを開き、ポートが開くまで待つ

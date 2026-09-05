@@ -18,6 +18,7 @@
  *   - CS  → D10 (任意のピンでよいがUno慣例のD10を使用)
  *   - SDI → D11 (MOSI)
  *   - CLK → D13 (SCK)
+ *   (UkiUkiduino ProMicroの場合: CS → D10、SDI → D16 (MOSI)、CLK → D15 (SCK))
  *
  * ※本来デジタルポテンショは基準電圧用の部品で、LEDの電源用途は
  *   適しませんが、動作が目で見えるデモとして採用しています。

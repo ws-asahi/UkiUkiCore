@@ -4,7 +4,7 @@
 // Wireライブラリの使用例です。
 // I2C接続のデジタルポテンショメータAD5171を制御します。
 //
-// 接続: AD5171のSDAをA4へ、SCLをA5へ。SDA/SCLそれぞれと5Vの間に
+// 接続: AD5171のSDAをA4へ、SCLをA5へ(UkiUkiduino ProMicroではSDA=D2、SCL=D3)。SDA/SCLそれぞれと5Vの間に
 //       プルアップ抵抗(4.7kΩ程度)を接続してください。
 //
 // UkiUkiduino向けに日本語化

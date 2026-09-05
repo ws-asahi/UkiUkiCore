@@ -8,6 +8,7 @@
  * CustomLogicユニットの出力ピン(UkiUkiduino。イベント出力ピンは
  * ボードのピン構成表で固定されています):
  *   OUT = D10 (PD3)    OUT(代替) = D13 (PD6)
+ *   (UkiUkiduino ProMicro: OUT = D10、OUT(代替) = D15、イベント出力 EVOUTA = D8)
  *   イベント出力に使えるピン = D2, D9, A2
  *
  * setOutput(pin)  - 結果をそのピンだけに出す

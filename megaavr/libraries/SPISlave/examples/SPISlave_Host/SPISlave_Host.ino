@@ -5,7 +5,7 @@
  * クライアントが用意した答えを読み出します。
  *
  * MOSI/MISO/SCKをクライアントのSPIピンへ、CS_PINをクライアントのSS
- * (UkiUkiduinoならAREF/D20)へ接続し、GNDを共通にしてください。
+ * (UkiUkiduinoならAREF/D20、UkiUkiduino ProMicroならA0/D18)へ接続し、GNDを共通にしてください。
  *
  * クライアントは答えをonData()の中 - つまり質問のトランザクションが
  * 終わった後 - で用意するため、答えは別の読み出しトランザクションで

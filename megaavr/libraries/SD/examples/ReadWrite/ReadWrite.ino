@@ -9,6 +9,9 @@
  ** MISO - D12
  ** SCK  - D13
  ** CS   - PIN_SPI_SS (D10)
+ **
+ ** UkiUkiduino ProMicro の場合: MOSI=D16 / MISO=D14 / SCK=D15、
+ ** CS=PIN_SPI_SS=D18(A0)。スケッチ側はPIN_SPI_SSを使っているので変更不要です。
 
   原作: David A. Mellis (2010) / Tom Igoe改変 (2012)
   この例はパブリックドメインです。

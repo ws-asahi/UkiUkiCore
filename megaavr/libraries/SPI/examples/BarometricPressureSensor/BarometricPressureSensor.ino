@@ -12,6 +12,7 @@
  *   - DRDY(データレディ) → D7 (任意のピンでよい)
  *   - CSB(チップセレクト) → D10 (任意のピンでよいがUno慣例のD10を使用)
  *   - MOSI → D11 / MISO → D12 / SCK → D13
+ *   (UkiUkiduino ProMicroの場合: CSB → D10、MOSI → D16 / MISO → D14 / SCK → D15)
  *
  * 原作: Nathan SeidleのPIC用SCP1000サンプルを元にTom Igoeが作成
  * UkiUkiduino向けに移植・日本語化

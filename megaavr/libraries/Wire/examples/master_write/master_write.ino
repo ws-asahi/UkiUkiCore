@@ -8,7 +8,7 @@
  * シリアルモニタから任意の文字列を(改行付きで)送ると、その内容が
  * スレーブへ送信され、スレーブ側のシリアルモニタに表示されます。
  *
- * 使い方: このボードのSCL(A5)/SDA(A4)を、Wire Slave Readサンプルを
+ * 使い方: このボードのSCL(A5)/SDA(A4)、UkiUkiduino ProMicroではSCL(D3)/SDA(D2)を、Wire Slave Readサンプルを
  * 実行しているもう1台のボードのSCL/SDAへ接続します。
  *
  * SDA/SCLの両方に、Vccへのプルアップ抵抗が必要です。

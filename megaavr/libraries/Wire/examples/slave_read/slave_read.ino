@@ -7,7 +7,7 @@
  *
  * I2Cバスで受信した内容をすべてシリアルモニタへ表示します。
  *
- * 使い方: このボードのSCL(A5)/SDA(A4)を、Master Writeサンプルを
+ * 使い方: このボードのSCL(A5)/SDA(A4)、UkiUkiduino ProMicroではSCL(D3)/SDA(D2)を、Master Writeサンプルを
  * 実行しているもう1台のボードのSCL/SDAへ接続します。
  *
  * SDA/SCLの両方に、Vccへのプルアップ抵抗が必要です。

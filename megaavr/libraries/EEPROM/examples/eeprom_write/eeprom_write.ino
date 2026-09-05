@@ -18,7 +18,7 @@
 int addr = 0;
 
 void setup() {
-  // 動作表示用にオンボードLED(D13)を出力に設定する
+  // 動作表示用にオンボードLED(LED_BUILTIN: UkiUkiduinoはD13、ProMicroはD17)を出力に設定する
   pinMode(LED_BUILTIN, OUTPUT);
 }
 

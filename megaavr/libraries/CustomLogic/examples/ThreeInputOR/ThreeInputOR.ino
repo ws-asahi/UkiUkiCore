@@ -12,6 +12,7 @@
  *
  * CustomLogicユニットのピン(UkiUkiduino):
  *   IN0 = D5    IN1 = D6    IN2 = D9    OUT = D10
+ * (UkiUkiduino ProMicroでもピン番号は同じです: IN0=D5 / IN1=D6 / IN2=D9 / OUT=D10)
  *
  * UkiUkiduino向けに日本語化
  */

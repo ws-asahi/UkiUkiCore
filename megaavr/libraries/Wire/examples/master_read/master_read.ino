@@ -9,7 +9,7 @@
  * スレーブへ4バイトを要求します。対のサンプルと組み合わせると、
  * スレーブのmillis()値が届き、シリアルモニタに表示されます。
  *
- * 使い方: このボードのSCL(A5)/SDA(A4)を、Wire Slave Writeサンプルを
+ * 使い方: このボードのSCL(A5)/SDA(A4)、UkiUkiduino ProMicroではSCL(D3)/SDA(D2)を、Wire Slave Writeサンプルを
  * 実行しているもう1台のボードのSCL/SDAへ接続します。
  *
  * SDA/SCLの両方に、Vccへのプルアップ抵抗が必要です。

@@ -25,7 +25,7 @@
  *   Kunai      D2  (PD6, AINP3)     D3  (PD7, AINN2)
  *
  * The comparator output can be driven onto PA7 with enableOutput()
- * (Tachi: D8 / Tsurugi: D2 / Kunai: D1 / UkiUkiduino: D2).
+ * (Tachi: D8 / Tsurugi: D2 / Kunai: D1 / UkiUkiduino: D2 / UkiUkiduino ProMicro: D8).
  */
 #ifndef ANALOGCOMP_H
 #define ANALOGCOMP_H
@@ -83,7 +83,7 @@ public:
   void setHysteresis(uint8_t level);
 
   /* Drive the comparator result onto the output pin PA7
-   * (Tachi: D8 / Tsurugi: D2 / Kunai: D1 / UkiUkiduino: D2). invert=true for active-low. */
+   * (Tachi: D8 / Tsurugi: D2 / Kunai: D1 / UkiUkiduino: D2 / UkiUkiduino ProMicro: D8). invert=true for active-low. */
   void enableOutput(bool invert = false);
   void disableOutput();
 

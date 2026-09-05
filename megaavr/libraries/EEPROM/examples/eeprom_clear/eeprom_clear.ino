@@ -9,7 +9,7 @@
 #include <EEPROM.h>
 
 void setup() {
-  // 完了表示用にオンボードLED(D13)を出力に設定する
+  // 完了表示用にオンボードLED(LED_BUILTIN: UkiUkiduinoはD13、ProMicroはD17)を出力に設定する
   pinMode(LED_BUILTIN, OUTPUT);
 
   /*

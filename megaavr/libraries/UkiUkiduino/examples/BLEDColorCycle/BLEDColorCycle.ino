@@ -5,7 +5,8 @@
  * 配線は不要です - 書き込んだらそのままボタンを押してみてください。
  *
  * オンボードLEDのしくみ:
- *   - LEDは今まで通りD13(LED_BUILTIN)で点灯/消灯します。
+ *   - LEDは今まで通りLED_BUILTIN(UkiUkiduinoはD13、UkiUkiduino ProMicroはD17)で
+ *     点灯/消灯します。
  *     digitalWrite(LED_BUILTIN, HIGH) = 点灯、LOW = 消灯。
  *     (だからBlinkスケッチも無改変で動きます)
  *   - setBLEDColor()は「点灯したときの色」を変えます:
@@ -31,7 +32,7 @@ uint8_t colorIdx = 0;
 
 void setup() {
   Serial.begin(115200);
-  pinMode(BTN_BUILTIN, INPUT);          // 基板に5.5.1kΩプルダウン実装済み
+  pinMode(BTN_BUILTIN, INPUT);          // 基板に5.1kΩプルダウン実装済み
   pinMode(LED_BUILTIN, OUTPUT);
 
   setBLEDColor(colors[colorIdx]);          // 最初の色(黄色)にして…

@@ -29,7 +29,7 @@
  * このサンプルは(第2アドレス版よりも)実用の出発点になるよう、
  * 網羅的に書いてあります。
  *
- * 使い方: このボードのSCL(A5)/SDA(A4)を、Multi Address Writeサンプルを
+ * 使い方: このボードのSCL(A5)/SDA(A4)、UkiUkiduino ProMicroではSCL(D3)/SDA(D2)を、Multi Address Writeサンプルを
  * 実行しているもう1台のボードのSCL/SDAへ接続します。
  * SDA/SCLの両方に、Vccへのプルアップ抵抗が必要です。
  * 詳しくはWireライブラリのREADME.mdを参照してください。

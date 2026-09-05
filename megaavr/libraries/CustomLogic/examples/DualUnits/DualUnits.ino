@@ -7,6 +7,7 @@
  * ピン(UkiUkiduino):
  *                 IN0   IN1   OUT
  *   CustomLogic   D5    D6    D10
+ *   (UkiUkiduino ProMicro: CustomLogic1 は IN0=D22(BTN_BUILTIN) / IN1=A1 / IN2=A2 / OUT=A3)
  *   CustomLogic1  A0    A1    A3
  *
  * UkiUkiduino向けに日本語化

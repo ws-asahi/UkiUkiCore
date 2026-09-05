@@ -11,6 +11,9 @@
  *   SCK  <- ホストのSCK      D13
  *   SS   <- ホストのCSピン   AREF (D20)
  *   GND  -- GND
+ * UkiUkiduino ProMicroの場合: MOSI=D16 / MISO=D14 / SCK=D15、SS=A0(D18)。
+ *   SPISlave使用中はA0をアナログ入力として使えません。
+ *
  * 注意: UkiUkiduinoではAREFヘッダピンがSS入力になります。
  *   SPISlave使用中はAREFに外部基準電圧を加えないでください。
  *   また同じピンを使うSerial2は同時に使えません。

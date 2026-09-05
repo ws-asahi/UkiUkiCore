@@ -6,7 +6,7 @@
  * millisが無効の場合は、代わりに常に1234567890
  * (16進で0x499602D2)を返します。
  *
- * 使い方: このボードのSCL(A5)/SDA(A4)を、Master Readサンプルを
+ * 使い方: このボードのSCL(A5)/SDA(A4)、UkiUkiduino ProMicroではSCL(D3)/SDA(D2)を、Master Readサンプルを
  * 実行しているもう1台のボードのSCL/SDAへ接続します。
  *
  * SDA/SCLの両方に、Vccへのプルアップ抵抗が必要です。

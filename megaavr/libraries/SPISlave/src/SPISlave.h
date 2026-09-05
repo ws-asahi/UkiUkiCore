@@ -56,7 +56,7 @@
 
 #include <Arduino.h>
 
-#if !defined(ARDUINO_AVR_TACHI) && !defined(ARDUINO_AVR_TSURUGI) && !defined(ARDUINO_AVR_KUNAI) && !defined(ARDUINO_AVR_UKIUKIDUINO)
+#if !defined(ARDUINO_AVR_TACHI) && !defined(ARDUINO_AVR_TSURUGI) && !defined(ARDUINO_AVR_KUNAI) && !defined(ARDUINO_AVR_UKIUKIDUINO) && !defined(ARDUINO_AVR_UKIUKIDUINO_PROMICRO)
   #error "SPISlave supports the Wazamono Tachi, Tsurugi, Kunai and the UkiUkiduino only."
 #endif
 

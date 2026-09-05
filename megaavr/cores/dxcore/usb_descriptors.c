@@ -129,11 +129,22 @@ const uint8_t g_string_manufacturer[2 + 14 * 2] PROGMEM = {
 };
 /* g_string_manufacturer_len replaced by a #define in usb_descriptors.h (sizeof at every call site, zero RAM). */
 
+#if defined(ARDUINO_AVR_UKIUKIDUINO_PROMICRO)
+/* "UkiUkiduino ProMicro" - 20 ASCII chars */
+const uint8_t g_string_product[2 + 20 * 2] PROGMEM = {
+    2 + 20 * 2, DESC_TYPE_STRING,
+    'U', 0, 'k', 0, 'i', 0, 'U', 0, 'k', 0, 'i', 0,
+    'd', 0, 'u', 0, 'i', 0, 'n', 0, 'o', 0, ' ', 0,
+    'P', 0, 'r', 0, 'o', 0, 'M', 0, 'i', 0, 'c', 0, 'r', 0, 'o', 0
+};
+#else
+/* "UkiUkiduino" - 11 ASCII chars */
 const uint8_t g_string_product[2 + 11 * 2] PROGMEM = {
     2 + 11 * 2, DESC_TYPE_STRING,
     'U', 0, 'k', 0, 'i', 0, 'U', 0, 'k', 0, 'i', 0,
     'd', 0, 'u', 0, 'i', 0, 'n', 0, 'o', 0
 };
+#endif
 /* g_string_product_len replaced by a #define in usb_descriptors.h (sizeof at every call site, zero RAM). */
 
 const uint8_t g_string_serial[2 + 8 * 2] PROGMEM = {

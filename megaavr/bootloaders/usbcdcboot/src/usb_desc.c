@@ -150,12 +150,22 @@ const uint8_t g_bl_string_manufacturer[] = {
 };
 const uint8_t g_bl_string_manufacturer_len = sizeof(g_bl_string_manufacturer);
 
+#if defined(BL_BOARD_UKIUKIDUINO_PROMICRO)
+/* Product "UkiUkiduino ProMicro Bootloader" - 31 ASCII chars */
+const uint8_t g_bl_string_product[] = {
+    2 + 2*31, DESC_TYPE_STRING,
+    'U',0, 'k',0, 'i',0, 'U',0, 'k',0, 'i',0, 'd',0, 'u',0, 'i',0, 'n',0, 'o',0, ' ',0,
+    'P',0, 'r',0, 'o',0, 'M',0, 'i',0, 'c',0, 'r',0, 'o',0, ' ',0,
+    'B',0, 'o',0, 'o',0, 't',0, 'l',0, 'o',0, 'a',0, 'd',0, 'e',0, 'r',0
+};
+#else
 /* Product "UkiUkiduino Bootloader" - 22 ASCII chars */
 const uint8_t g_bl_string_product[] = {
     2 + 2*22, DESC_TYPE_STRING,
     'U',0, 'k',0, 'i',0, 'U',0, 'k',0, 'i',0, 'd',0, 'u',0, 'i',0, 'n',0, 'o',0, ' ',0,
     'B',0, 'o',0, 'o',0, 't',0, 'l',0, 'o',0, 'a',0, 'd',0, 'e',0, 'r',0
 };
+#endif
 const uint8_t g_bl_string_product_len = sizeof(g_bl_string_product);
 
 /* Serial "BL00000001" - 10 ASCII chars (stable so the host caches the

@@ -1,8 +1,11 @@
 # usbcdcboot/Makefile
 # --------------------------------------------------------------------
-#   Build rules for the UkiUkiduino USB CDC bootloader (AVR64DU32).
-#   Produces usbcdcboot_ukiukiduino.hex, .elf, .lst, .map
-#   (invoked by build_ukiukiduino.sh / build_ukiukiduino.bat).
+#   Build rules for the UkiUkiduino family USB CDC bootloader (AVR64DU32).
+#   Produces usbcdcboot_ukiukiduino.hex / usbcdcboot_ukiukiduinopromicro.hex
+#   (+ .elf, .lst, .map); invoked by build_ukiukiduino.sh / .bat.
+#   BOARD= selects the board identity (USB PID / product string):
+#       BOARD=ukiukiduino          (default)  bootloader PID 0x000B
+#       BOARD=ukiukiduinopromicro             bootloader PID 0x000D
 #
 #   Usage from inside this directory:
 #
@@ -72,6 +75,23 @@ endif
 ifneq ($(strip $(LED_PIN)),)
 CFLAGS += -DBL_LED_PIN=$(LED_PIN)
 endif
+# WS2812 mode toggles the pin via SBI/CBI on the VPORT OUT register, which
+# needs the I/O address as an immediate: VPORTn base = 4*n, OUT = base + 1.
+ifeq ($(strip $(LED_PORT)),PORTA)
+CFLAGS += -DBL_LED_VPORT_OUT=0x01
+else ifeq ($(strip $(LED_PORT)),PORTC)
+CFLAGS += -DBL_LED_VPORT_OUT=0x09
+else ifeq ($(strip $(LED_PORT)),PORTD)
+CFLAGS += -DBL_LED_VPORT_OUT=0x0D
+else ifeq ($(strip $(LED_PORT)),PORTF)
+CFLAGS += -DBL_LED_VPORT_OUT=0x15
+endif
+
+# --- Board identity (per-build) --------------------------------------
+BOARD ?= ukiukiduino
+ifeq ($(BOARD),ukiukiduinopromicro)
+CFLAGS += -DBL_BOARD_UKIUKIDUINO_PROMICRO
+endif
 
 # --- VUSB regulator (per-build) --------------------------------------
 # VREG=1 (default): enable the internal 5V->3.3V USB voltage regulator at
@@ -97,6 +117,13 @@ endif
 LED_WS2812 ?= 1
 ifeq ($(LED_WS2812),1)
 CFLAGS += -DBL_LED_WS2812
+endif
+# LED_WS2812_GRB=1: the LED is a WS2812B-class part (GRB byte order, 24 cy/bit
+# timing) - UkiUkiduino ProMicro: XL-5050RGBC-WS2812B on PF4. Default 0 =
+# WS2812D-F5-12mA-C1 (RGB order, 30 cy/bit) as on the Uno-form UkiUkiduino.
+LED_WS2812_GRB ?= 0
+ifeq ($(LED_WS2812_GRB),1)
+CFLAGS += -DBL_LED_WS2812_GRB
 endif
 
 # --- LED polarity (per-build) ---------------------------------------

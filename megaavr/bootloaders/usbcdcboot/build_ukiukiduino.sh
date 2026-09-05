@@ -7,12 +7,14 @@
 #  The clean-room bootloader source is NOT modified. Board parameters
 #  are passed in at build time:
 #
-#    board        MCU         LED             VREG  USB ident (VID:PID)
-#    -----------  ----------  --------------  ----  -----------------------------
-#    UkiUkiduino  avr64du32   PA0 (WS2812D)   1     0x1209:0x000B (test placeholder)
+#    board                 MCU        LED              VREG  USB ident (VID:PID)
+#    --------------------  ---------  ---------------  ----  --------------------------------
+#    UkiUkiduino           avr64du32  PA0 (WS2812D-F5) 1     0x1209:0x000B (test placeholder)
+#    UkiUkiduino ProMicro  avr64du32  PF4 (WS2812B)    1     0x1209:0x000D (test placeholder)
 #
-#    The on-board LED is a WS2812D-F5 addressable RGB LED (LED_WS2812=1):
-#    DFU mode breathes yellow; the AH polarity flag is ignored in this mode.
+#    Both LEDs are addressable RGB LEDs (LED_WS2812=1): DFU mode breathes
+#    yellow; the AH polarity flag is ignored in this mode. The ProMicro's
+#    XL-5050RGBC-WS2812B is GRB-ordered with WS2812B timing (LED_WS2812_GRB=1).
 #
 #    - LED pin     : LED_PORT / LED_PIN
 #    - LED polarity: LED_AH=1 (active-HIGH) | LED_AL=1 (active-LOW)
@@ -104,23 +106,25 @@ fi
 MAKE="${MAKE:-make}"
 TOOLROOT="${TOOLROOT:-}"
 
-build() {            # $1=class  $2=mcu  $3=LEDport  $4=LEDpin  $5=LED polarity (AH | AL)  $6=VREG (0 | 1)
+build() {            # $1=class  $2=mcu  $3=LEDport  $4=LEDpin  $5=LED polarity (AH | AL)  $6=VREG (0 | 1)  $7=GRB (0 | 1)
   local polflag=""
   if [ "${5:-}" = "AH" ]; then polflag="LED_AH=1"; fi
   if [ "${5:-}" = "AL" ]; then polflag="LED_AL=1"; fi
   local vreg="${6:-1}"   # omitted -> 1 (UkiUkiduino: internal VUSB regulator)
+  local grb="${7:-0}"    # omitted -> 0 (WS2812D-F5, RGB order); 1 = WS2812B (GRB)
   echo ""
-  echo "------ building $2  ->  usbcdcboot_$1.hex  (LED $3 $4, pol ${5:-}, VREG $vreg) ------"
+  echo "------ building $2  ->  usbcdcboot_$1.hex  (LED $3 $4, pol ${5:-}, VREG $vreg, GRB $grb) ------"
   rm -f src/*.o "usbcdcboot_$1".{elf,hex,lst,map} 2>/dev/null || true
-  $MAKE ${TOOLROOT:+TOOLROOT="$TOOLROOT"} MCU="$2" TARGET="usbcdcboot_$1" LED_PORT="$3" LED_PIN="$4" VREG="$vreg" LED_WS2812=1 $polflag all
-  $MAKE ${TOOLROOT:+TOOLROOT="$TOOLROOT"} MCU="$2" TARGET="usbcdcboot_$1" VREG="$vreg" LED_WS2812=1 $polflag size
+  $MAKE ${TOOLROOT:+TOOLROOT="$TOOLROOT"} BOARD="$1" MCU="$2" TARGET="usbcdcboot_$1" LED_PORT="$3" LED_PIN="$4" VREG="$vreg" LED_WS2812=1 LED_WS2812_GRB="$grb" $polflag all
+  $MAKE ${TOOLROOT:+TOOLROOT="$TOOLROOT"} BOARD="$1" MCU="$2" TARGET="usbcdcboot_$1" VREG="$vreg" LED_WS2812=1 LED_WS2812_GRB="$grb" $polflag size
 }
 
-#     class        mcu        LEDport LEDpin LEDpol(AH|AL) VREG
-build ukiukiduino avr64du32   PORTA   0      AH            1
+#     class                mcu        LEDport LEDpin LEDpol(AH|AL) VREG GRB
+build ukiukiduino          avr64du32  PORTA   0      AH            1    0
+build ukiukiduinopromicro  avr64du32  PORTF   4      AH            1    1
 
 echo ""
 echo "=== collecting hex files into ../hex/ ==="
 mkdir -p ../hex
 mv -f usbcdcboot_*.hex ../hex/
-ls -1 ../hex/usbcdcboot_ukiukiduino.hex
+ls -1 ../hex/usbcdcboot_ukiukiduino.hex ../hex/usbcdcboot_ukiukiduinopromicro.hex

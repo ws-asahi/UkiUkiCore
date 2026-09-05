@@ -132,35 +132,76 @@ static uint16_t s_led_period_counts;   /* main-loop iters per toggle/step */
  *  (750-1000), T0L 23cy=958ns (750-1000), T1L 10cy=417ns (220-1000).
  *  Frames are sent from the DFU loop only (>= 1 ms apart >> RES 280 us).
  *  RGB order (this part is RGB, not GRB), MSB first. SBI/CBI keep the
- *  rest of PORTA untouched.
+ *  rest of the port untouched.
  *
- *  NOTE: WS2812 mode drives the pin on PORTA (VPORTA.OUT, I/O addr 0x01);
- *  the LED_AH/LED_AL polarity options do not apply. The 4 MHz double-tap
- *  window shows no LED in this mode (the bit timing is counted for 24 MHz).
+ *  BL_LED_WS2812_GRB (UkiUkiduino ProMicro: XL-5050RGBC-WS2812B on PF4)
+ *  selects the second timing set below - 24 cycles/bit = 1.00 us, which
+ *  meets EVERY figure of that part's table (T0H 0.20-0.35 / T1H 0.55-1.2 /
+ *  T0L 0.55-1.2 / T1L 0.20-0.35 us, period >= 0.89 us): T0H 7cy=292ns,
+ *  T1H 16cy=667ns, T0L 17cy=708ns, T1L 8cy=333ns - and GRB byte order.
+ *
+ *  NOTE: WS2812 mode drives the pin through the VPORT OUT register whose
+ *  I/O address is BL_LED_VPORT_OUT (VPORTn base = 4*n, OUT = base+1:
+ *  PORTA 0x01, PORTC 0x09, PORTD 0x0D, PORTF 0x15; the Makefile derives it
+ *  from LED_PORT). The LED_AH/LED_AL polarity options do not apply. The
+ *  4 MHz double-tap window shows no LED in this mode (the bit timing is
+ *  counted for 24 MHz).
  * -------------------------------------------------------------------- */
+#ifndef BL_LED_VPORT_OUT
+#define BL_LED_VPORT_OUT  0x01         /* VPORTA.OUT (UkiUkiduino: PA0)  */
+#endif
 #define BL_WS_BREATH_MAX  96u          /* peak brightness of the breath */
 
 static uint8_t s_ws_level;             /* current brightness 0..MAX     */
 static int8_t  s_ws_dir;               /* +1 rising / -1 falling        */
 
-/* One byte, MSB first, 30 cycles/bit ("rjmp .+0" = 2-cycle, 1-word nop). */
+#if defined(BL_LED_WS2812_GRB)
+/* One byte, MSB first, 24 cycles/bit (WS2812B timing, see above;
+ * "rjmp .+0" = 2-cycle, 1-word nop). */
 static void bl_ws_byte(uint8_t b) {
     uint8_t cnt = 8;
     __asm__ __volatile__(
         "1:                        \n\t"
-        "sbi  0x01, %[bit]         \n\t" /* c1    high (VPORTA.OUT)     */
+        "sbi  %[port], %[bit]      \n\t" /* c1    high (VPORTx.OUT)     */
         "rjmp .+0                  \n\t"
         "rjmp .+0                  \n\t"
         "nop                       \n\t" /* c2-c6                       */
         "sbrs %[b], 7              \n\t" /* c7 (c7-c8 when bit=1)       */
-        "cbi  0x01, %[bit]         \n\t" /* c8    bit=0: low, T0H=7cy   */
+        "cbi  %[port], %[bit]      \n\t" /* c8    bit=0: low, T0H=7cy   */
+        "rjmp .+0                  \n\t"
+        "rjmp .+0                  \n\t"
+        "rjmp .+0                  \n\t"
+        "rjmp .+0                  \n\t" /* c9-c16                      */
+        "cbi  %[port], %[bit]      \n\t" /* c17   bit=1: low, T1H=16cy  */
+        "lsl  %[b]                 \n\t" /* c18                         */
+        "rjmp .+0                  \n\t"
+        "nop                       \n\t" /* c19-c21                     */
+        "dec  %[c]                 \n\t" /* c22                         */
+        "brne 1b                   \n\t" /* c23-c24 -> 24 cycles/bit    */
+        : [b] "+r" (b), [c] "+r" (cnt)
+        : [port] "I" (BL_LED_VPORT_OUT), [bit] "I" (BL_LED_PIN)
+    );
+}
+#else
+/* One byte, MSB first, 30 cycles/bit (WS2812D-F5 timing, see above;
+ * "rjmp .+0" = 2-cycle, 1-word nop). */
+static void bl_ws_byte(uint8_t b) {
+    uint8_t cnt = 8;
+    __asm__ __volatile__(
+        "1:                        \n\t"
+        "sbi  %[port], %[bit]      \n\t" /* c1    high (VPORTx.OUT)     */
+        "rjmp .+0                  \n\t"
+        "rjmp .+0                  \n\t"
+        "nop                       \n\t" /* c2-c6                       */
+        "sbrs %[b], 7              \n\t" /* c7 (c7-c8 when bit=1)       */
+        "cbi  %[port], %[bit]      \n\t" /* c8    bit=0: low, T0H=7cy   */
         "rjmp .+0                  \n\t"
         "rjmp .+0                  \n\t"
         "rjmp .+0                  \n\t"
         "rjmp .+0                  \n\t"
         "rjmp .+0                  \n\t"
         "rjmp .+0                  \n\t" /* c9-c20                      */
-        "cbi  0x01, %[bit]         \n\t" /* c21   bit=1: low, T1H=20cy  */
+        "cbi  %[port], %[bit]      \n\t" /* c21   bit=1: low, T1H=20cy  */
         "lsl  %[b]                 \n\t" /* c22                         */
         "rjmp .+0                  \n\t"
         "rjmp .+0                  \n\t"
@@ -168,17 +209,23 @@ static void bl_ws_byte(uint8_t b) {
         "dec  %[c]                 \n\t" /* c28                         */
         "brne 1b                   \n\t" /* c29-c30 -> 30 cycles/bit    */
         : [b] "+r" (b), [c] "+r" (cnt)
-        : [bit] "I" (BL_LED_PIN)
+        : [port] "I" (BL_LED_VPORT_OUT), [bit] "I" (BL_LED_PIN)
     );
 }
+#endif
 
-/* One GRB frame with interrupts off (~31 us; USB runs polled, and even
+/* One 24-bit frame with interrupts off (~25-31 us; USB runs polled, and even
  * under interrupts a full-speed frame is 1 ms, so this is harmless). */
 static void bl_ws_frame(uint8_t r, uint8_t g, uint8_t b) {
     uint8_t s = SREG;
     __asm__ __volatile__("cli" ::: "memory");
+#if defined(BL_LED_WS2812_GRB)
+    bl_ws_byte(g);   /* GRB order (XL-5050RGBC-WS2812B) */
+    bl_ws_byte(r);
+#else
     bl_ws_byte(r);   /* RGB order (WS2812D-F5-12mA-C1) */
     bl_ws_byte(g);
+#endif
     bl_ws_byte(b);
     SREG = s;
 }

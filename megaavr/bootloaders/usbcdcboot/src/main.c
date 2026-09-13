@@ -134,7 +134,7 @@ static uint16_t s_led_period_counts;   /* main-loop iters per toggle/step */
  *  RGB order (this part is RGB, not GRB), MSB first. SBI/CBI keep the
  *  rest of the port untouched.
  *
- *  BL_LED_WS2812_GRB (UkiUkiduino ProMicro: XL-5050RGBC-WS2812B on PF4)
+ *  BL_LED_WS2812_GRB (UkiUkimicro: XL-5050RGBC-WS2812B on PF4)
  *  selects the second timing set below - 24 cycles/bit = 1.00 us, which
  *  meets EVERY figure of that part's table (T0H 0.20-0.35 / T1H 0.55-1.2 /
  *  T0L 0.55-1.2 / T1L 0.20-0.35 us, period >= 0.89 us): T0H 7cy=292ns,

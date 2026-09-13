@@ -1,14 +1,14 @@
-# UkiUkiduino ProMicro
+# UkiUkimicro
 
 **Pro Micro 互換機 — AVR64DU32 / USB-C**
 
-UkiUkiduino ProMicro は、UkiUkiduino シリーズの第二機種で、SparkFun Pro Micro と同じフォームファクタを  
+UkiUkimicro は、UkiUkiduino シリーズの第二機種で、SparkFun Pro Micro と同じフォームファクタを  
 USB ネイティブな AVR `AVR64DU32` で再設計したボードです。  
 MCU・クロック・USB・書き込み方式・オンボード LED / ボタンの API は UkiUkiduino と共通で、  
 ピン配置とフォームファクタを Pro Micro(ATmega32U4 版)に合わせてあります。  
 キーボード等の組み込み用途(HID)を主眼にしているため、**電源は USB 5V 専用**の簡素な構成です。  
 
-このページは UkiUkiduino ProMicro 専用のドキュメントです。コア全体の概要・インストール・共通 API は [README](../../README.md) を参照してください。  
+このページは UkiUkimicro 専用のドキュメントです。コア全体の概要・インストール・共通 API は [README](../../README.md) を参照してください。  
 **状態: 製造中** 初回ロット到着後に実機確認を行います。  
 
 ---
@@ -180,7 +180,7 @@ A0〜A3 は D18〜D21 を兼ね、その他のデジタルピンはアナログ 
 - ピン番号・`LED_BUILTIN` / `BTN_BUILTIN`・`Serial` / `Serial1` の意味は Pro Micro と揃えてあるので、  
   多くのスケッチは無改変で動きます。  
 - `A6`〜`A10` は Pro Micro と同じ物理ピン(D4 / D6 / D8 / D9 / D10)を指します。  
-- ボード判定は `#if defined(ARDUINO_AVR_UKIUKIDUINO_PROMICRO)` を使ってください。  
+- ボード判定は `#if defined(ARDUINO_AVR_UKIUKIMICRO)` を使ってください。  
 - 32U4 特有のレジスタ操作・`USBCON` の直接操作は動作しません。  
 
 

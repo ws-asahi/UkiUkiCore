@@ -11,10 +11,10 @@ REM
 REM    board                 MCU        LED              VREG  USB ident (VID:PID)
 REM    --------------------  ---------  ---------------  ----  --------------------------------
 REM    UkiUkiduino           avr64du32  PA0 (WS2812D-F5) 1     0x1209:0x000B (test placeholder)
-REM    UkiUkiduino ProMicro  avr64du32  PF4 (WS2812B)    1     0x1209:0x000D (test placeholder)
+REM    UkiUkimicro  avr64du32  PF4 (WS2812B)    1     0x1209:0x000D (test placeholder)
 REM
 REM    Both LEDs are addressable RGB LEDs (LED_WS2812=1): DFU mode breathes
-REM    yellow; the AH polarity flag is ignored in this mode. The ProMicro's
+REM    yellow; the AH polarity flag is ignored in this mode. The UkiUkimicro's
 REM    XL-5050RGBC-WS2812B is GRB-ordered with WS2812B timing (LED_WS2812_GRB=1).
 REM
 REM    - LED pin     : LED_PORT / LED_PIN
@@ -79,7 +79,7 @@ if not defined MAKE set MAKE=make
 
 REM            class                 mcu        LEDport LEDpin LEDpol(AH|AL) VREG(0|1) GRB(0|1)
 call :build ukiukiduino           avr64du32  PORTA   0      AH      1  0
-call :build ukiukiduinopromicro   avr64du32  PORTF   4      AH      1  1
+call :build ukiukimicro   avr64du32  PORTF   4      AH      1  1
 
 echo.
 echo === collecting hex files into ..\hex\ ===
@@ -88,7 +88,7 @@ move /y usbcdcboot_*.hex "..\hex\" >nul
 
 echo.
 echo === hex files in ..\hex\ ===
-dir /b "..\hex\usbcdcboot_ukiukiduino.hex" "..\hex\usbcdcboot_ukiukiduinopromicro.hex"
+dir /b "..\hex\usbcdcboot_ukiukiduino.hex" "..\hex\usbcdcboot_ukiukimicro.hex"
 popd
 endlocal
 goto :eof

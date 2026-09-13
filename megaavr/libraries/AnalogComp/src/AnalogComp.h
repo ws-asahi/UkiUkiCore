@@ -25,14 +25,14 @@
  *   Kunai      D2  (PD6, AINP3)     D3  (PD7, AINN2)
  *
  * The comparator output can be driven onto PA7 with enableOutput()
- * (Tachi: D8 / Tsurugi: D2 / Kunai: D1 / UkiUkiduino: D2 / UkiUkiduino ProMicro: D8).
+ * (Tachi: D8 / Tsurugi: D2 / Kunai: D1 / UkiUkiduino: D2 / UkiUkimicro: D8).
  */
 #ifndef ANALOGCOMP_H
 #define ANALOGCOMP_H
 
 #include <Arduino.h>
 
-#if !defined(ARDUINO_AVR_TACHI) && !defined(ARDUINO_AVR_TSURUGI) && !defined(ARDUINO_AVR_KUNAI) && !defined(ARDUINO_AVR_UKIUKIDUINO) && !defined(ARDUINO_AVR_UKIUKIDUINO_PROMICRO)
+#if !defined(ARDUINO_AVR_TACHI) && !defined(ARDUINO_AVR_TSURUGI) && !defined(ARDUINO_AVR_KUNAI) && !defined(ARDUINO_AVR_UKIUKIDUINO) && !defined(ARDUINO_AVR_UKIUKIMICRO)
   #error "AnalogComp supports Wazamono-family boards only."
 #endif
 
@@ -83,7 +83,7 @@ public:
   void setHysteresis(uint8_t level);
 
   /* Drive the comparator result onto the output pin PA7
-   * (Tachi: D8 / Tsurugi: D2 / Kunai: D1 / UkiUkiduino: D2 / UkiUkiduino ProMicro: D8). invert=true for active-low. */
+   * (Tachi: D8 / Tsurugi: D2 / Kunai: D1 / UkiUkiduino: D2 / UkiUkimicro: D8). invert=true for active-low. */
   void enableOutput(bool invert = false);
   void disableOutput();
 

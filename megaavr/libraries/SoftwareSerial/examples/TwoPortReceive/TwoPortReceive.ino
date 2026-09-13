@@ -3,7 +3,7 @@
    表示するサンプルです。
 
    接続: ポート1 = D10(RX)/D11(TX)、ポート2 = D8(RX)/D9(TX)。
-   (UkiUkiduino ProMicroにはD11が無いので、ポート1 = D10(RX)/D16(TX)になります)
+   (UkiUkimicroにはD11が無いので、ポート1 = D10(RX)/D16(TX)になります)
 
    重要: ソフトウェアシリアルを複数使う場合、同時に受信できるのは
    1ポートだけです。受信したいポートをlisten()で切り替えながら
@@ -19,8 +19,8 @@
 */
 
 #include <SoftwareSerial.h>
-// ソフトウェアシリアル1: RX = D10, TX = D11 (ProMicro: TX = D16)
-#if defined(ARDUINO_AVR_UKIUKIDUINO_PROMICRO)
+// ソフトウェアシリアル1: RX = D10, TX = D11 (UkiUkimicro: TX = D16)
+#if defined(ARDUINO_AVR_UKIUKIMICRO)
 SoftwareSerial portOne(10, 16);
 #else
 SoftwareSerial portOne(10, 11);

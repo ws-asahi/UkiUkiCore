@@ -7,7 +7,7 @@
  * このスケッチでは、オンボードボタン(BTN_BUILTIN = D32)の状態を
  * イベント出力ピンD2へ届けます。D2にLED(+抵抗、GNDへ)を接続すると、
  * ボタンを押している間だけLEDが点灯します。
- * (UkiUkiduino ProMicroでも BTN_BUILTIN = D32、イベント出力ピンは D8 です)
+ * (UkiUkimicroでも BTN_BUILTIN = D32、イベント出力ピンは D8 です)
  *
  * メモ: connect()は入力側ピンに内部プルアップを設定しますが、D32には
  * 基板上の5.1kΩプルダウンがあり、そちらが支配するため「押すとHIGH」の
@@ -16,7 +16,7 @@
  * どのピンが使える?
  *
  * 出力側 - イベント出力機能を持つ固定ピンのみ(1出力につき1本):
- *   D2, D9, A2   (UkiUkiduino ProMicro: D8, D9, A2)
+ *   D2, D9, A2   (UkiUkimicro: D8, D9, A2)
  *
  * 入力側 - 任意のピン。ただし同時に使えるのは「1ポートにつき2本まで」
  * (ポートごとのイベントジェネレータが2本というハードウェア制限で、
@@ -25,7 +25,7 @@
  *   PORTC: D4
  *   PORTD: D5  D6  D9  D10 D11 D12 D13 D20
  *   PORTF: D7  D8  A0  A1  A2  A3
- * UkiUkiduino ProMicroの場合:
+ * UkiUkimicroの場合:
  *   PORTA: D0  D1  D2  D3  D7  D8  D30 D31
  *   PORTC: D4
  *   PORTD: D5  D6  D9  D10 D14 D15 D16 A0
@@ -38,7 +38,7 @@
 void setup() {
   Serial.begin(115200);
 
-  // ボタン -> EVOUTA。EVOUTAはUkiUkiduinoでD2、UkiUkiduino ProMicroでD8。
+  // ボタン -> EVOUTA。EVOUTAはUkiUkiduinoでD2、UkiUkimicroでD8。
   bool ok = EventSystem.connect(BTN_BUILTIN, WAZAMONO_EVOUTA_PIN);
 
   Serial.println(ok ? F("connected - EVOUTA pin now follows the button")

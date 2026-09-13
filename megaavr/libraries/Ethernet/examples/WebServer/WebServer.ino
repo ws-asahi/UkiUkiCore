@@ -7,7 +7,7 @@
  回路(UkiUkiduino):
  * イーサネットシールド(WIZnet W5100/W5200/W5500)を Uno ヘッダに直挿し
    CS=D10 / MOSI=D11 / MISO=D12 / SCK=D13 (シールド上の SD カードは CS=D4)
- * UkiUkiduino ProMicro の場合: シールドは直挿しできないので配線する
+ * UkiUkimicro の場合: シールドは直挿しできないので配線する
    MOSI=D16 / MISO=D14 / SCK=D15、CS は任意のピン(Ethernet.init(pin) で指定)
  * D13(SCK) は Serial2 の TX と共用のため、Ethernet 使用中は Serial2 を開かないこと
  * アナログ入力を A0〜A5 に接続(任意)
@@ -34,7 +34,7 @@ EthernetServer server(80);
 void setup() {
   // CS ピンは Ethernet.init(pin) で変更できる(既定は D10 = Uno 用シールドの配線)
   //Ethernet.init(10);  // UkiUkiduino + Uno 用イーサネットシールド(既定値なので省略可)
-  //Ethernet.init(10);  // UkiUkiduino ProMicro: 配線した CS ピンの番号を指定する
+  //Ethernet.init(10);  // UkiUkimicro: 配線した CS ピンの番号を指定する
 
   // シリアル通信を開き、ポートが開くのを待つ:
   Serial.begin(9600);

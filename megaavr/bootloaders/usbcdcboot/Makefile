@@ -1,11 +1,11 @@
 # usbcdcboot/Makefile
 # --------------------------------------------------------------------
 #   Build rules for the UkiUkiduino family USB CDC bootloader (AVR64DU32).
-#   Produces usbcdcboot_ukiukiduino.hex / usbcdcboot_ukiukiduinopromicro.hex
+#   Produces usbcdcboot_ukiukiduino.hex / usbcdcboot_ukiukimicro.hex
 #   (+ .elf, .lst, .map); invoked by build_ukiukiduino.sh / .bat.
 #   BOARD= selects the board identity (USB PID / product string):
 #       BOARD=ukiukiduino          (default)  bootloader PID 0x000B
-#       BOARD=ukiukiduinopromicro             bootloader PID 0x000D
+#       BOARD=ukiukimicro             bootloader PID 0x000D
 #
 #   Usage from inside this directory:
 #
@@ -89,8 +89,8 @@ endif
 
 # --- Board identity (per-build) --------------------------------------
 BOARD ?= ukiukiduino
-ifeq ($(BOARD),ukiukiduinopromicro)
-CFLAGS += -DBL_BOARD_UKIUKIDUINO_PROMICRO
+ifeq ($(BOARD),ukiukimicro)
+CFLAGS += -DBL_BOARD_UKIUKIMICRO
 endif
 
 # --- VUSB regulator (per-build) --------------------------------------
@@ -119,7 +119,7 @@ ifeq ($(LED_WS2812),1)
 CFLAGS += -DBL_LED_WS2812
 endif
 # LED_WS2812_GRB=1: the LED is a WS2812B-class part (GRB byte order, 24 cy/bit
-# timing) - UkiUkiduino ProMicro: XL-5050RGBC-WS2812B on PF4. Default 0 =
+# timing) - UkiUkimicro: XL-5050RGBC-WS2812B on PF4. Default 0 =
 # WS2812D-F5-12mA-C1 (RGB order, 30 cy/bit) as on the Uno-form UkiUkiduino.
 LED_WS2812_GRB ?= 0
 ifeq ($(LED_WS2812_GRB),1)

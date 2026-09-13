@@ -5,7 +5,7 @@
  * 配線は不要です - 書き込んだらそのままボタンを押してみてください。
  *
  * オンボードLEDのしくみ:
- *   - LEDは今まで通りLED_BUILTIN(UkiUkiduinoはD13、UkiUkiduino ProMicroはD17)で
+ *   - LEDは今まで通りLED_BUILTIN(UkiUkiduinoはD13、UkiUkimicroはD17)で
  *     点灯/消灯します。
  *     digitalWrite(LED_BUILTIN, HIGH) = 点灯、LOW = 消灯。
  *     (だからBlinkスケッチも無改変で動きます)

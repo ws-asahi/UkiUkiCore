@@ -24,7 +24,7 @@ UkiUkiCore は、これらのボードを Arduino IDE で開発するための�
 | ボード | MCU | フォームファクタ | 状態 |
 |--------|-----|------------------|------|
 | [**UkiUkiduino**](megaavr/extras/UkiUkiduino.md) | AVR64DU32 | Arduino Uno R3 互換 / USB-C | 🔧 試作中 |
-| [**UkiUkiduino ProMicro**](megaavr/extras/UkiUkiduinoProMicro.md) | AVR64DU32 | Pro Micro 互換 / USB-C | 🔧 製造中 |
+| [**UkiUkimicro**](megaavr/extras/UkiUkimicro.md) | AVR64DU32 | Pro Micro 互換 / USB-C | 🔧 製造中 |
 
 > ピン配置・オンボード LED / ボタン・電源など、ボードごとの詳細は上記の各ページを参照してください。  
 > このページにはコア全体に共通する内容をまとめています。  
@@ -74,7 +74,7 @@ UkiUkiCore は、これらのボードを Arduino IDE で開発するための�
 - **全ピンアナログ入力対応** - 全てのデジタル入出力ピンでアナログ値の読取りが可能。  
 - **拡張された PWM 出力** - TCA0 の 6 本に加え、LUT を使用した択一式 PWM(TCB1)を備え、  
   Uno R3 / Pro Micro 本来の PWM ピンをすべて再現した上で追加の PWM ピンを提供。  
-- **UPDI 対応** - UPDI デバッガーで動作中の MCU にアクセス可能(UkiUkiduino: Power ヘッダ 1 番ピン / ProMicro: UPDI ヘッダ)。  
+- **UPDI 対応** - UPDI デバッガーで動作中の MCU にアクセス可能(UkiUkiduino: Power ヘッダ 1 番ピン / UkiUkimicro: UPDI ヘッダ)。  
 - **ネイティブ avr-gcc 対応** - DxCore と異なる点として最新の avr-gcc コンパイラを使用（今後も順次更新されます）。  
 - **追加の シリアル通信** — 2 系統の UART シリアル通信と2系統の SPI を利用可能です。  
 - **フルカラーLED搭載** - `LED_BUILTIN` と連動して `setBLEDColor()` で色指定できる LED を両機種に搭載。  
@@ -120,7 +120,7 @@ UkiUkiCore は、これらのボードを Arduino IDE で開発するための�
 
 ## クイックスタート
 
-1. **ツール > ボード > UkiUkiCore** から **UkiUkiduino** または **UkiUkiduino ProMicro** を選択
+1. **ツール > ボード > UkiUkiCore** から **UkiUkiduino** または **UkiUkimicro** を選択
 2. USB ケーブルで接続し、ボードが接続された COM ポートを選択して書き込み
 
 以下のスケッチは両機種で無改変で動作します(`LED_BUILTIN` / `BTN_BUILTIN` の番号はボードごとに異なりますが、名前で指定すれば共通です)。
@@ -247,13 +247,13 @@ Arduino IDE の「ツール > Clock Speed」で次の 2 つを選べます。
 | マクロ |  用途 |
 |--------|------|
 | `ARDUINO_AVR_UKIUKIDUINO` | ボード識別用(UkiUkiduino) |
-| `ARDUINO_AVR_UKIUKIDUINO_PROMICRO` | ボード識別用(UkiUkiduino ProMicro) |
+| `ARDUINO_AVR_UKIUKIMICRO` | ボード識別用(UkiUkimicro) |
 | `__AVR_AVR64DU32__` | MCU 識別用 |
 | `__AVR_DU__` | 製品グループ `"DU"` 識別用 |
 
 ```cpp
-#if defined(ARDUINO_AVR_UKIUKIDUINO_PROMICRO)
-  // ProMicro 固有の処理
+#if defined(ARDUINO_AVR_UKIUKIMICRO)
+  // UkiUkimicro 固有の処理
 #elif defined(ARDUINO_AVR_UKIUKIDUINO)
   // Uno R3 形 UkiUkiduino 固有の処理
 #endif

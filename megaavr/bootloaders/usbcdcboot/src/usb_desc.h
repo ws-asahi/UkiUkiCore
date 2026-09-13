@@ -17,8 +17,8 @@
  *      IF 0   CDC Communication
  *      IF 1   CDC Data
  *
- *    VID / PID = 0x1209 / 0x000B (UkiUkiduino) or 0x000D (UkiUkiduino
- *                ProMicro) - pid.codes test range placeholders; see
+ *    VID / PID = 0x1209 / 0x000B (UkiUkiduino) or 0x000D (UkiUkimicro)
+ *                - pid.codes test range placeholders; see
  *                Identity below
  */
 #ifndef AVRDU_BL_USB_DESC_H
@@ -32,11 +32,11 @@
  * sync with boards.txt (vid.1/pid.1) and the sketch-side identity
  * (cores/dxcore/usb_descriptors.h: app PID 0x000C / 0x000E).
  *   UkiUkiduino           bootloader 0x000B  (default build)
- *   UkiUkiduino ProMicro  bootloader 0x000D  (-DBL_BOARD_UKIUKIDUINO_PROMICRO,
+ *   UkiUkimicro  bootloader 0x000D  (-DBL_BOARD_UKIUKIMICRO,
  *                                             set by the Makefile from BOARD=) */
 #define USB_BL_VID              0x1209
-#if defined(BL_BOARD_UKIUKIDUINO_PROMICRO)
-#define USB_BL_PID              0x000D   /* UkiUkiduino ProMicro bootloader (test range) */
+#if defined(BL_BOARD_UKIUKIMICRO)
+#define USB_BL_PID              0x000D   /* UkiUkimicro bootloader (test range) */
 #else
 #define USB_BL_PID              0x000B   /* UkiUkiduino bootloader (test range) */
 #endif

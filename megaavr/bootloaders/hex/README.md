@@ -13,7 +13,7 @@ Build logs are now included of both normal output and error output.
 | File | Board | LED (DFU) | USB (VID:PID) |
 |------|-------|-----------|---------------|
 | `usbcdcboot_ukiukiduino.hex` | UkiUkiduino (Uno R3 form) | WS2812D-F5 on PA0, RGB order | 0x1209:0x000B |
-| `usbcdcboot_ukiukiduinopromicro.hex` | UkiUkiduino ProMicro | XL-5050RGBC-WS2812B on PF4, GRB order | 0x1209:0x000D |
+| `usbcdcboot_ukiukimicro.hex` | UkiUkimicro | XL-5050RGBC-WS2812B on PF4, GRB order | 0x1209:0x000D |
 
 Both are produced by `../usbcdcboot/build_ukiukiduino.sh` (or `.bat`); the PIDs are
 pid.codes test-range placeholders until the official assignment is made.

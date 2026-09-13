@@ -1,4 +1,4 @@
-/* ukiukiduinopromicro_init.cpp - board-specific init for the UkiUkiduino ProMicro
+/* ukiukimicro_init.cpp - board-specific init for the UkiUkimicro
  * ---------------------------------------------------------------------------
  * Part of UkiUkiCore (a product-specific fork of WazamonoCore / SpenceKonde's
  * DxCore). (C) Workshop Asahi 2026. DxCore is (C) Spence Konde, LGPL 2.1
@@ -13,7 +13,7 @@
  *      LED_BUILTIN = D17 (PF5, an otherwise unused pin used as the LED's
  *      state pin): the core's mirror hook reads the resulting PF5 OUT bit and
  *      sends the matching WS2812 frame on PF4 (see LED_BUILTIN_MIRROR in
- *      pins_arduino.h and ukiukiduinopromicro_led.cpp). This keeps the classic
+ *      pins_arduino.h and ukiukimicro_led.cpp). This keeps the classic
  *      "LED_BUILTIN = LED" experience - the stock Blink sketch blinks the LED
  *      (yellow by default) unmodified - while digitalRead(LED_BUILTIN) still
  *      returns the LED state (the data line itself must idle LOW for the
@@ -40,16 +40,16 @@
 
 #include <Arduino.h>
 
-#if defined(UKIUKIDUINO_PROMICRO_PINOUT)
+#if defined(UKIUKIMICRO_PINOUT)
 
 /* ---- Force-link marker ----------------------------------------------------
  * Arduino archives variant-folder objects into core.a, and the core's main.cpp
  * supplies a *weak* initVariant(). An archived strong symbol does NOT override
  * a weak one already provided by a linked object, so without help this entire
  * translation unit is silently dropped at link time. boards.txt passes
- *     -Wl,-u,ukiukiduinopromicro_variant_keep
+ *     -Wl,-u,ukiukimicro_variant_keep
  * which forces the linker to pull this member. */
-extern "C" { __attribute__((used)) char ukiukiduinopromicro_variant_keep = 0; }
+extern "C" { __attribute__((used)) char ukiukimicro_variant_keep = 0; }
 
 /* On-board activity LEDs (Pro Micro convention), both active-LOW, both in PORTA:
  *   TX LED = PA0 (= D30 / LED_BUILTIN_TX)
@@ -103,4 +103,4 @@ void usb_cdc_on_led_tick(void) {
 
 } /* extern "C" */
 
-#endif /* UKIUKIDUINO_PROMICRO_PINOUT */
+#endif /* UKIUKIMICRO_PINOUT */

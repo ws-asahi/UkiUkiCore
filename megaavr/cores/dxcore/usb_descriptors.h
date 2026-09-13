@@ -20,8 +20,8 @@
  *
  *  VID/PID: pid.codes test VID 0x1209.
  *             UkiUkiduino          app PID 0x000C (bootloader 0x000B)
- *             UkiUkiduino ProMicro app PID 0x000E (bootloader 0x000D)
- *           The board is selected by the ARDUINO_AVR_UKIUKIDUINO_PROMICRO
+ *             UkiUkimicro app PID 0x000E (bootloader 0x000D)
+ *           The board is selected by the ARDUINO_AVR_UKIUKIMICRO
  *           macro (boards.txt build.board). These are pid.codes TEST-range
  *           placeholders; replace with the officially assigned pid.codes
  *           VID/PID before product release. Keep in sync with boards.txt
@@ -45,8 +45,8 @@ extern "C" {
   #define USB_VID               0x1209
 #endif
 #ifndef USB_PID
-  #if defined(ARDUINO_AVR_UKIUKIDUINO_PROMICRO)
-    #define USB_PID             0x000E   /* UkiUkiduino ProMicro application (test range) */
+  #if defined(ARDUINO_AVR_UKIUKIMICRO)
+    #define USB_PID             0x000E   /* UkiUkimicro application (test range) */
   #else
     #define USB_PID             0x000C   /* UkiUkiduino application (test range) */
   #endif
@@ -157,8 +157,8 @@ extern const uint8_t g_device_descriptor[18] PROGMEM;
 extern const uint8_t g_config_descriptor[CONFIG_TOTAL_LEN] PROGMEM;
 extern const uint8_t g_string_langid[4] PROGMEM;
 extern const uint8_t g_string_manufacturer[2 + 14 * 2] PROGMEM;
-#if defined(ARDUINO_AVR_UKIUKIDUINO_PROMICRO)
-extern const uint8_t g_string_product[2 + 20 * 2] PROGMEM;   /* "UkiUkiduino ProMicro" */
+#if defined(ARDUINO_AVR_UKIUKIMICRO)
+extern const uint8_t g_string_product[2 + 11 * 2] PROGMEM;   /* "UkiUkimicro" */
 #else
 extern const uint8_t g_string_product[2 + 11 * 2] PROGMEM;   /* "UkiUkiduino" */
 #endif

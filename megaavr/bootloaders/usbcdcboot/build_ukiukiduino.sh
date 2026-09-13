@@ -10,10 +10,10 @@
 #    board                 MCU        LED              VREG  USB ident (VID:PID)
 #    --------------------  ---------  ---------------  ----  --------------------------------
 #    UkiUkiduino           avr64du32  PA0 (WS2812D-F5) 1     0x1209:0x000B (test placeholder)
-#    UkiUkiduino ProMicro  avr64du32  PF4 (WS2812B)    1     0x1209:0x000D (test placeholder)
+#    UkiUkimicro  avr64du32  PF4 (WS2812B)    1     0x1209:0x000D (test placeholder)
 #
 #    Both LEDs are addressable RGB LEDs (LED_WS2812=1): DFU mode breathes
-#    yellow; the AH polarity flag is ignored in this mode. The ProMicro's
+#    yellow; the AH polarity flag is ignored in this mode. The UkiUkimicro's
 #    XL-5050RGBC-WS2812B is GRB-ordered with WS2812B timing (LED_WS2812_GRB=1).
 #
 #    - LED pin     : LED_PORT / LED_PIN
@@ -121,10 +121,10 @@ build() {            # $1=class  $2=mcu  $3=LEDport  $4=LEDpin  $5=LED polarity 
 
 #     class                mcu        LEDport LEDpin LEDpol(AH|AL) VREG GRB
 build ukiukiduino          avr64du32  PORTA   0      AH            1    0
-build ukiukiduinopromicro  avr64du32  PORTF   4      AH            1    1
+build ukiukimicro  avr64du32  PORTF   4      AH            1    1
 
 echo ""
 echo "=== collecting hex files into ../hex/ ==="
 mkdir -p ../hex
 mv -f usbcdcboot_*.hex ../hex/
-ls -1 ../hex/usbcdcboot_ukiukiduino.hex ../hex/usbcdcboot_ukiukiduinopromicro.hex
+ls -1 ../hex/usbcdcboot_ukiukiduino.hex ../hex/usbcdcboot_ukiukimicro.hex

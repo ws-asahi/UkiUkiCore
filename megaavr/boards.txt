@@ -95,14 +95,22 @@ ukiukiduino.upload.wait_for_upload_port=true
 ukiukiduino.bootloader.file=hex/{bootloader.class}.hex
 ukiukiduino.bootloader.appspm=
 
-# --- Clock: fixed 24 MHz internal OSCHF (crystal-less; no Clock menu). ---
-#  clocksource 0 = internal OSCHF. USB CLK_USB (48 MHz) = OSCHF + PLL48M, SOF-tuned.
+# --- Clock: internal OSCHF (crystal-less), 24 MHz default; 12/16/20 MHz selectable. ---
+#  clocksource 0 = internal OSCHF. USB CLK_USB (48 MHz) = OSCHF's fixed 4 MHz tap + PLL48M,
+#  SOF-tuned, so it is independent of the main clock (CLK_PER only needs to be >= 12 MHz,
+#  DS40002548B 28.3.1.1). The on-board WS2812 drivers are cycle-counted for all four speeds.
 ukiukiduino.menu.clock.24internal=24 MHz internal
 ukiukiduino.menu.clock.24internal.build.speed=24
 ukiukiduino.menu.clock.24internal.build.clocksource=0
 ukiukiduino.menu.clock.16internal=16 MHz internal
 ukiukiduino.menu.clock.16internal.build.speed=16
 ukiukiduino.menu.clock.16internal.build.clocksource=0
+ukiukiduino.menu.clock.20internal=20 MHz internal
+ukiukiduino.menu.clock.20internal.build.speed=20
+ukiukiduino.menu.clock.20internal.build.clocksource=0
+ukiukiduino.menu.clock.12internal=12 MHz internal
+ukiukiduino.menu.clock.12internal.build.speed=12
+ukiukiduino.menu.clock.12internal.build.clocksource=0
 
 # --- Locked to AVR64DU32. Variant + bootloader hex fixed to UkiUkiduino. ---
 ukiukiduino.build.mcu=avr64du32
@@ -192,14 +200,22 @@ ukiukiduinopromicro.upload.wait_for_upload_port=true
 ukiukiduinopromicro.bootloader.file=hex/{bootloader.class}.hex
 ukiukiduinopromicro.bootloader.appspm=
 
-# --- Clock: fixed 24 MHz internal OSCHF (crystal-less; no Clock menu). ---
-#  clocksource 0 = internal OSCHF. USB CLK_USB (48 MHz) = OSCHF + PLL48M, SOF-tuned.
+# --- Clock: internal OSCHF (crystal-less), 24 MHz default; 12/16/20 MHz selectable. ---
+#  clocksource 0 = internal OSCHF. USB CLK_USB (48 MHz) = OSCHF's fixed 4 MHz tap + PLL48M,
+#  SOF-tuned, so it is independent of the main clock (CLK_PER only needs to be >= 12 MHz,
+#  DS40002548B 28.3.1.1). The on-board WS2812 drivers are cycle-counted for all four speeds.
 ukiukiduinopromicro.menu.clock.24internal=24 MHz internal
 ukiukiduinopromicro.menu.clock.24internal.build.speed=24
 ukiukiduinopromicro.menu.clock.24internal.build.clocksource=0
 ukiukiduinopromicro.menu.clock.16internal=16 MHz internal
 ukiukiduinopromicro.menu.clock.16internal.build.speed=16
 ukiukiduinopromicro.menu.clock.16internal.build.clocksource=0
+ukiukiduinopromicro.menu.clock.20internal=20 MHz internal
+ukiukiduinopromicro.menu.clock.20internal.build.speed=20
+ukiukiduinopromicro.menu.clock.20internal.build.clocksource=0
+ukiukiduinopromicro.menu.clock.12internal=12 MHz internal
+ukiukiduinopromicro.menu.clock.12internal.build.speed=12
+ukiukiduinopromicro.menu.clock.12internal.build.clocksource=0
 
 # --- Locked to AVR64DU32. Variant + bootloader hex fixed to UkiUkiduino ProMicro. ---
 ukiukiduinopromicro.build.mcu=avr64du32

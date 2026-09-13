@@ -34,13 +34,17 @@
  *      and has different limits, which is why the two variants have separate
  *      drivers.
  *
- * At F_CPU = 24 MHz (41.67 ns/cycle) the bit loop below runs 24 cycles/bit
- * (= 1.00 us), chosen so that EVERY figure in the table above is met -
+ * The bit loop is cycle-counted per F_CPU. Each bit is P cycles; the line is
+ * high for H0 cycles (bit 0) or H1 cycles (bit 1); the low time is P-H0 / P-H1.
+ * The values are chosen so that EVERY figure in the table above is met -
  * including the tight T1L maximum of 0.35 us:
- *      T0H =  7 cycles = 292 ns   (0.20 - 0.35)
- *      T1H = 16 cycles = 667 ns   (0.55 - 1.2)
- *      T0L = 17 cycles = 708 ns   (0.55 - 1.2)
- *      T1L =  8 cycles = 333 ns   (0.20 - 0.35)
+ *
+ *   F_CPU  ns/cy   P     H0 (T0H)      H1 (T1H)      T0L=P-H0      T1L=P-H1
+ *   24 MHz 41.67  24   7 = 292 ns   16 = 667 ns   17 = 708 ns    8 = 333 ns
+ *   20 MHz 50.00  20   6 = 300 ns   14 = 700 ns   14 = 700 ns    6 = 300 ns
+ *   16 MHz 62.50  16   5 = 312 ns   11 = 687 ns   11 = 687 ns    5 = 312 ns
+ *   12 MHz 83.33  12   3 = 250 ns    8 = 667 ns    9 = 750 ns    4 = 333 ns
+ *
  * The frame (24 bits + inter-byte call overhead) takes ~25 us with interrupts
  * disabled. Before every frame we busy-wait 300 us so the PREVIOUS frame has
  * latched (RESET >= 80 us; the same guard the Uno variant uses). A mirrored
@@ -55,9 +59,46 @@
 
 #if defined(UKIUKIDUINO_PROMICRO_PINOUT)
 
-#if F_CPU != 24000000UL
-  #error "ukiukiduinopromicro_led.cpp: the WS2812B bit timing below is cycle-counted for 24 MHz."
+/* Per-F_CPU loop constants (see the timing table in the header):
+ *   WS_NA = H0 - 2       nops between SBI and SBRS
+ *   WS_NB = H1 - H0 - 3  nops before LSL/DEC/CBI(1)
+ *   WS_NC = P  - H1 - 3  nops before BRNE                                   */
+#if   F_CPU == 24000000UL   /* P=24 H0=7  H1=16 */
+  #define WS_NA 5
+  #define WS_NB 6
+  #define WS_NC 5
+#elif F_CPU == 20000000UL   /* P=20 H0=6  H1=14 */
+  #define WS_NA 4
+  #define WS_NB 5
+  #define WS_NC 3
+#elif F_CPU == 16000000UL   /* P=16 H0=5  H1=11 */
+  #define WS_NA 3
+  #define WS_NB 3
+  #define WS_NC 2
+#elif F_CPU == 12000000UL   /* P=12 H0=3  H1=8  */
+  #define WS_NA 1
+  #define WS_NB 2
+  #define WS_NC 1
+#else
+  #error "ukiukiduinopromicro_led.cpp: no WS2812B bit timing for this F_CPU (supported: 12/16/20/24 MHz)."
 #endif
+
+/* ---- NOP string builders (n = 0..12) ----------------------------------- */
+#define WS_NOP0  ""
+#define WS_NOP1  "nop\n\t"
+#define WS_NOP2  WS_NOP1  WS_NOP1
+#define WS_NOP3  WS_NOP2  WS_NOP1
+#define WS_NOP4  WS_NOP3  WS_NOP1
+#define WS_NOP5  WS_NOP4  WS_NOP1
+#define WS_NOP6  WS_NOP5  WS_NOP1
+#define WS_NOP7  WS_NOP6  WS_NOP1
+#define WS_NOP8  WS_NOP7  WS_NOP1
+#define WS_NOP9  WS_NOP8  WS_NOP1
+#define WS_NOP10 WS_NOP9  WS_NOP1
+#define WS_NOP11 WS_NOP10 WS_NOP1
+#define WS_NOP12 WS_NOP11 WS_NOP1
+#define WS_NOPS_(n) WS_NOP##n
+#define WS_NOPS(n)  WS_NOPS_(n)
 
 /* VPORTF.OUT I/O address: VPORTn base = 4*n (A=0x00, C=0x08, D=0x0C, F=0x14),
  * OUT = base + 1. Kept as a literal because SBI/CBI need an immediate. */
@@ -75,24 +116,26 @@ static inline uint8_t scale8(uint8_t c, uint8_t brightness) {
   return (uint8_t)(((uint16_t)c * (uint16_t)(brightness + 1)) >> 8);
 }
 
-/* One byte, MSB first, 24 cycles/bit. Cycle numbers in comments count from
- * the SBI that raises the line. Both bit values re-align at cycle 9 because
- * SBRS takes 2 cycles when it skips the (1-word) CBI. */
+/* One byte, MSB first, P cycles/bit. Cycle numbers count from the SBI that
+ * raises the line. Both bit values re-align after the SBRS because SBRS takes
+ * 2 cycles when it skips the (1-word) CBI. LSL and DEC are placed in the
+ * "line high" stretch so that only BRNE follows the bit-1 CBI, which keeps
+ * the loop short enough for 12 MHz. CBI does not touch SREG, so the Z flag
+ * set by DEC survives until BRNE. */
 static void ws2812_byte(uint8_t b) {
   uint8_t cnt = 8;
   __asm__ __volatile__(
     "1:                          \n\t"
-    "sbi  %[port], %[bit]        \n\t" /* c1        line HIGH (VPORTF.OUT.4) */
-    "nop \n\t nop \n\t nop \n\t nop \n\t nop \n\t" /* c2-c6              */
-    "sbrs %[b], 7                \n\t" /* c7 (c7-c8 when bit=1: skips CBI)  */
-    "cbi  %[port], %[bit]        \n\t" /* c8        bit=0: LOW, T0H=7cy     */
-    "nop \n\t nop \n\t nop \n\t nop \n\t"
-    "nop \n\t nop \n\t nop \n\t nop \n\t" /* c9-c16                        */
-    "cbi  %[port], %[bit]        \n\t" /* c17       bit=1: LOW, T1H=16cy    */
-    "lsl  %[b]                   \n\t" /* c18                              */
-    "nop \n\t nop \n\t nop \n\t"       /* c19-c21                          */
-    "dec  %[c]                   \n\t" /* c22                              */
-    "brne 1b                     \n\t" /* c23-c24   -> 24 cycles/bit       */
+    "sbi  %[port], %[bit]        \n\t" /* c1          line HIGH (VPORTF.OUT.4) */
+    WS_NOPS(WS_NA)                      /* c2..c(H0-1)                        */
+    "sbrs %[b], 7                \n\t" /* c(H0)       (2 cycles when bit=1)  */
+    "cbi  %[port], %[bit]        \n\t" /* c(H0+1)     bit=0: LOW, T0H=H0 cy  */
+    WS_NOPS(WS_NB)                      /* c(H0+2)..                          */
+    "lsl  %[b]                   \n\t"
+    "dec  %[c]                   \n\t"
+    "cbi  %[port], %[bit]        \n\t" /* c(H1+1)     bit=1: LOW, T1H=H1 cy  */
+    WS_NOPS(WS_NC)
+    "brne 1b                     \n\t" /* 2 cycles    -> P cycles/bit        */
     : [b] "+r" (b), [c] "+r" (cnt)
     : [port] "I" (UUPM_WS_VPORT_OUT), [bit] "I" (UUPM_WS_BIT)
   );

@@ -138,6 +138,15 @@ A0–A5 はデジタル D14–D19 、D0～D13 は アナログ A6–A19 を兼�
 >  
 > 詳細は [libraries/SPISlave](../libraries/SPISlave/README.md) を参照。  
 
+> **SPI クロックの注意:** AVR DU の SPI 分周は /2, /4, /8 … のみのため、24 MHz 動作では  
+> `SPISettings(14000000, …)` のような要求が **12 MHz** に丸められます。Uno R3(16 MHz → 8 MHz)より速くなるので、  
+> W5100 など古い 5V 系デバイスでは応答しないことがあります。8 MHz 以下を要求すれば  
+> F_CPU = 12/16/20/24 MHz でそれぞれ 6/8/5/6 MHz となり安全です。  
+>  
+> **Ethernet シールド(W5100/W5200/W5500):** 同梱の **Ethernet ライブラリ**(公式 2.0.2 の SPI クロックを  
+> 8 MHz 要求に調整したもの)を使ってください。CS は D10(W5100) / D4(SD) の標準配線のままで動作します。  
+> D13(SCK) は Serial2 TX と共用のため、Ethernet/SD 使用中は Serial2 を開かないでください。  
+
 ---
 
 ### I2C(Wire)

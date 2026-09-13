@@ -40,16 +40,16 @@
  *   D19  PF1   A1 | LUT3-IN1                                        AIN17
  *   D20  PF2   A2 | LUT3-IN2 | EVOUTF                               AIN18
  *   D21  PF3   A3 | LUT3-OUT                                        AIN19
- *   D22  PF0   BTN_BUILTIN (on-board button, 5.1 kOhm pull-down,
- *              pressed = HIGH; no header) | LUT3-IN0                AIN16
+ *   D22..D29   (do not exist - gap)
  *        PF4   WS2812B LED data-in (index 23; driven by the D17 software
  *              mirror - not a user pin, no Dn alias)
- *   D24..D29   (do not exist - gap)
  *   D30  PA0   TX LED = LED_BUILTIN_TX (on-board, active-LOW, no header)
  *   D31  PA1   RX LED = LED_BUILTIN_RX (on-board, active-LOW, no header)
+ *   D32  PF0   BTN_BUILTIN (on-board button, 5.1 kOhm pull-down,
+ *              pressed = HIGH; no ADC channel) - the family-wide number
  *   --- not exposed as a numbered Dn (appended so the arrays are complete) ---
- *        PF6   RESET                                   index 32
- *        PF7   UPDI                                    index 33  (== PIN_PF7, highest)
+ *        PF6   RESET                                   index 33
+ *        PF7   UPDI                                    index 34  (== PIN_PF7, highest)
  *
  *  ===== Peripheral routing (set by this variant + boards.txt) =====
  *   TCA0  -> PORTD (WO0..WO5 = PD0..PD5 = D5/D6/D9/D10/D16/D14) : TCA0_PINS below
@@ -73,7 +73,7 @@
  *   CCL   -> LUT0: OUT = D7 (alt; IN0/IN1 = PA0/PA1 are the TX/RX LEDs);
  *            LUT1: OUT = D4 (IN0..IN2 = PC0..PC2 do not exist on the 32-pin part);
  *            LUT2: IN0/IN1/IN2 = D5/D6/D9, OUT = D10, alt OUT = D15;
- *            LUT3: IN0 = D22 (BTN_BUILTIN), IN1/IN2 = A1/A2, OUT = A3 (D21).
+ *            LUT3: IN0 = D32 (BTN_BUILTIN), IN1/IN2 = A1/A2, OUT = A3 (D21).
  *   AREF  -> PD7 (VREFA) doubles as analog input A0 (D18). The Pro Micro has
  *            no AREF header; an external reference would have to be fed into
  *            the A0 pin and costs A0 / SPI SS / Serial2 RX.
@@ -93,7 +93,7 @@
  *            TX/RX activity LEDs: PA0 (D30) / PA1 (D31), active-LOW (anode to
  *            +5V via 1 kOhm), driven from the USB-CDC hooks
  *            (ukiukiduinopromicro_init.cpp), Pro Micro convention.
- *   BUTTON-> BTN_BUILTIN = D22 (PF0). 5.1 kOhm pull-down on the board;
+ *   BUTTON-> BTN_BUILTIN = D32 (PF0). Same number on every UkiUkiduino board. 5.1 kOhm pull-down on the board;
  *            pressed = HIGH. Use pinMode(BTN_BUILTIN, INPUT) - no pullup needed.
  *   Serial-> native USB CDC (USBSerial), Leonardo/Micro convention.
  *
@@ -153,25 +153,25 @@
 #define PIN_PF1 (19)  // D19 A1 / LUT3-IN1
 #define PIN_PF2 (20)  // D20 A2 / LUT3-IN2 / EVOUTF
 #define PIN_PF3 (21)  // D21 A3 / LUT3-OUT
-#define PIN_PF0 (22)  // D22 BTN_BUILTIN (on-board button, 5.1k pull-down, pressed = HIGH) / LUT3-IN0
 #define PIN_PF4 (23)  // WS2812B LED data-in (driven by the D17 software mirror); no Dn alias
-//  no  D24..D29              (gap)
+//  no  D22..D29              (gap)
 #define PIN_PA0 (30)  // D30 TX LED = LED_BUILTIN_TX (active-LOW, on-board only)
 #define PIN_PA1 (31)  // D31 RX LED = LED_BUILTIN_RX (active-LOW, on-board only)
-#define PIN_PF6 (32)  // RESET
-#define PIN_PF7 (33)  // UPDI  (highest index -> sets NUM_DIGITAL_PINS = 34)
+#define PIN_PF0 (32)  // D32 BTN_BUILTIN (on-board button, 5.1k pull-down, pressed = HIGH) / LUT3-IN0
+#define PIN_PF6 (33)  // RESET
+#define PIN_PF7 (34)  // UPDI  (highest index -> sets NUM_DIGITAL_PINS = 35)
 
 /* ---- Counts ---- */
-#define PINS_COUNT                     (34)  // length of the pin tables (incl. gaps/reserved)
+#define PINS_COUNT                     (35)  // length of the pin tables (incl. gaps/reserved)
 #define NUM_ANALOG_INPUTS              (31)  // highest ADC channel in use is AIN31 (PC3)
-// NUM_DIGITAL_PINS / NUM_TOTAL_PINS  -> auto = PIN_PF7 + 1 = 34
+// NUM_DIGITAL_PINS / NUM_TOTAL_PINS  -> auto = PIN_PF7 + 1 = 35
 // NUM_INTERNALLY_USED_PINS           -> auto = 0 (crystal-less: no reserved GPIO)
 
 #if !defined(LED_BUILTIN)
   #define LED_BUILTIN                  (PIN_PF5)   // D17, on-board full-color LED (WS2812B mirror; Active-HIGH)
 #endif
 #if !defined(BTN_BUILTIN)
-  #define BTN_BUILTIN                  (PIN_PF0)   // D22, on-board button (pull-down, pressed = HIGH)
+  #define BTN_BUILTIN                  (PIN_PF0)   // D32, on-board button (pull-down, pressed = HIGH)
 #endif
 #define LED_BUILTIN_TX                 (PIN_PA0)   // D30 = USB-CDC TX activity LED (active-LOW)
 #define LED_BUILTIN_RX                 (PIN_PA1)   // D31 = USB-CDC RX activity LED (active-LOW)
@@ -412,7 +412,7 @@ void setBLEDColor(LEDColorName color, uint8_t brightness = BLED_DEFAULT_BRIGHTNE
 /* --- Uno R4 style number-prefixed digital pin aliases ---
  * D-number == Arduino digital pin number. Internal-only pins (PF4 LED data,
  * PF6 RESET, PF7 UPDI) are intentionally NOT exposed as Dn. The on-board
- * LED_BUILTIN (D17), button (D22) and TX/RX LEDs (D30/D31) ARE exposed. */
+ * LED_BUILTIN (D17), button (D32) and TX/RX LEDs (D30/D31) ARE exposed. */
 #undef D0
 #undef D1
 #undef D2
@@ -432,7 +432,7 @@ void setBLEDColor(LEDColorName color, uint8_t brightness = BLED_DEFAULT_BRIGHTNE
 #undef D19
 #undef D20
 #undef D21
-#undef D22
+#undef D32
 #undef D30
 #undef D31
 static const uint8_t D0  = PIN_PA5;  // RX (Serial1)
@@ -454,7 +454,7 @@ static const uint8_t D18 = PIN_PD7;  // A0 / SPI SS / Serial2 RX
 static const uint8_t D19 = PIN_PF1;  // A1
 static const uint8_t D20 = PIN_PF2;  // A2 / EVOUTF
 static const uint8_t D21 = PIN_PF3;  // A3 / LUT3-OUT
-static const uint8_t D22 = PIN_PF0;  // BTN_BUILTIN (on-board button, pressed = HIGH)
+static const uint8_t D32 = PIN_PF0;  // BTN_BUILTIN (on-board button, pressed = HIGH)
 static const uint8_t D30 = PIN_PA0;  // TX LED = LED_BUILTIN_TX (active-LOW, on-board only)
 static const uint8_t D31 = PIN_PA1;  // RX LED = LED_BUILTIN_RX (active-LOW, on-board only)
 
@@ -500,7 +500,7 @@ static const uint8_t A19  = PIN_A19;
 #define AIN27  ADC_CH(27)
 #define AIN31  ADC_CH(31)
 
-/* ---- Pin arrays (ARDUINO_MAIN). Indexed by digital pin number (0..33). Gaps are NOT_A_PORT. ---- */
+/* ---- Pin arrays (ARDUINO_MAIN). Indexed by digital pin number (0..34). Gaps are NOT_A_PORT. ---- */
 #ifdef ARDUINO_MAIN
   const uint8_t digital_pin_to_port[] = {
     PA,         //  0 PA5  D0 RX (Serial1)
@@ -525,7 +525,7 @@ static const uint8_t A19  = PIN_A19;
     PF,         // 19 PF1  D19 A1
     PF,         // 20 PF2  D20 A2/EVOUTF
     PF,         // 21 PF3  D21 A3/LUT3-OUT
-    PF,         // 22 PF0  D22 BTN_BUILTIN
+    NOT_A_PORT, // 22 (gap)
     PF,         // 23 PF4  WS2812B LED data-in
     NOT_A_PORT, // 24 (gap)
     NOT_A_PORT, // 25 (gap)
@@ -535,8 +535,9 @@ static const uint8_t A19  = PIN_A19;
     NOT_A_PORT, // 29 (gap)
     PA,         // 30 PA0  D30 TX LED
     PA,         // 31 PA1  D31 RX LED
-    PF,         // 32 PF6  RESET
-    PF          // 33 PF7  UPDI
+    PF,         // 32 PF0  D32 BTN_BUILTIN
+    PF,         // 33 PF6  RESET
+    PF          // 34 PF7  UPDI
   };
 
   const uint8_t digital_pin_to_bit_position[] = {
@@ -562,7 +563,7 @@ static const uint8_t A19  = PIN_A19;
     PIN1_bp,   // 19 PF1  D19
     PIN2_bp,   // 20 PF2  D20
     PIN3_bp,   // 21 PF3  D21
-    PIN0_bp,   // 22 PF0  D22 BTN_BUILTIN
+    NOT_A_PIN, // 22 (gap)
     PIN4_bp,   // 23 PF4  WS2812B data
     NOT_A_PIN, // 24 (gap)
     NOT_A_PIN, // 25 (gap)
@@ -572,8 +573,9 @@ static const uint8_t A19  = PIN_A19;
     NOT_A_PIN, // 29 (gap)
     PIN0_bp,   // 30 PA0  D30 TX LED
     PIN1_bp,   // 31 PA1  D31 RX LED
-    PIN6_bp,   // 32 PF6  RESET
-    PIN7_bp    // 33 PF7  UPDI
+    PIN0_bp,   // 32 PF0  D32 BTN_BUILTIN
+    PIN6_bp,   // 33 PF6  RESET
+    PIN7_bp    // 34 PF7  UPDI
   };
 
   const uint8_t digital_pin_to_bit_mask[] = {
@@ -599,7 +601,7 @@ static const uint8_t A19  = PIN_A19;
     PIN1_bm,   // 19 PF1  D19
     PIN2_bm,   // 20 PF2  D20
     PIN3_bm,   // 21 PF3  D21
-    PIN0_bm,   // 22 PF0  D22 BTN_BUILTIN
+    NOT_A_PIN, // 22 (gap)
     PIN4_bm,   // 23 PF4  WS2812B data
     NOT_A_PIN, // 24 (gap)
     NOT_A_PIN, // 25 (gap)
@@ -609,8 +611,9 @@ static const uint8_t A19  = PIN_A19;
     NOT_A_PIN, // 29 (gap)
     PIN0_bm,   // 30 PA0  D30 TX LED
     PIN1_bm,   // 31 PA1  D31 RX LED
-    PIN6_bm,   // 32 PF6  RESET
-    PIN7_bm    // 33 PF7  UPDI
+    PIN0_bm,   // 32 PF0  D32 BTN_BUILTIN
+    PIN6_bm,   // 33 PF6  RESET
+    PIN7_bm    // 34 PF7  UPDI
   };
 
   /* TCA0 PWM is resolved dynamically from PORTMUX, so TCA0 pins are NOT_ON_TIMER
@@ -640,7 +643,7 @@ static const uint8_t A19  = PIN_A19;
     NOT_ON_TIMER, // 19 PF1  D19
     NOT_ON_TIMER, // 20 PF2  D20
     NOT_ON_TIMER, // 21 PF3  D21
-    NOT_ON_TIMER, // 22 PF0  D22 BTN_BUILTIN
+    NOT_ON_TIMER, // 22 (gap)
     NOT_ON_TIMER, // 23 PF4  WS2812B data
     NOT_ON_TIMER, // 24 (gap)
     NOT_ON_TIMER, // 25 (gap)
@@ -650,8 +653,9 @@ static const uint8_t A19  = PIN_A19;
     NOT_ON_TIMER, // 29 (gap)
     NOT_ON_TIMER, // 30 PA0  D30 TX LED
     NOT_ON_TIMER, // 31 PA1  D31 RX LED
-    NOT_ON_TIMER, // 32 PF6  RESET
-    NOT_ON_TIMER  // 33 PF7  UPDI
+    NOT_ON_TIMER, // 32 PF0  D32 BTN_BUILTIN
+    NOT_ON_TIMER, // 33 PF6  RESET
+    NOT_ON_TIMER  // 34 PF7  UPDI
   };
 #endif
 

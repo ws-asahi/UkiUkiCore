@@ -14,7 +14,7 @@
  * ボタンはGNDへ接続します(入力はプルアップされるため、未押下=HIGH。
  * つまり両方とも押していない間LEDが点灯し、どちらかを押すと消えます)。
  *
- * メモ: 任意ピン側にはオンボードボタン(BTN_BUILTIN = D21、UkiUkiduino ProMicroではD22)も
+ * メモ: 任意ピン側にはオンボードボタン(BTN_BUILTIN = D32、UkiUkiduino ProMicroも同じ)も
  * 使えます。その場合はプルダウンのため論理が逆(押下=HIGH)になる点に注意。
  */
 #include <CustomLogic.h>

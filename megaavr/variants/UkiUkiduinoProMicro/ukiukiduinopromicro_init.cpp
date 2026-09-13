@@ -33,7 +33,7 @@
  * Resource use
  *   None. No EVSYS channel and no CCL LUT is consumed.
  *
- * Note: BTN_BUILTIN (D22 = PF0) needs no init here - it has an external
+ * Note: BTN_BUILTIN (D32 = PF0) needs no init here - it has an external
  *   5.1 kOhm pull-down on the board (pressed = HIGH) and is read as a plain
  *   input.
  */

@@ -40,7 +40,8 @@
  *   D20  PD7   AREF | GPIO | SPI0 SS(ALT4) | Serial2 RX      A20, AIN7
  *        (usable as plain GPIO whenever no external reference is applied
  *         to the AREF header pin - a modern-AVR capability the Uno R3 lacks)
- *   D21  PA1   BTN_BUILTIN (on-board button, 5.1 kOhm pull-down,
+ *   D21..D29   (do not exist - gap)
+ *   D32  PA1   BTN_BUILTIN (on-board button, 5.1 kOhm pull-down,
  *              pressed = HIGH; no ADC channel)
  *        PA0   WS2812D-F5-12mA-C1 LED data-in (index 22; driven by the D13
  *              software mirror - not a user pin, no Dn alias)
@@ -84,7 +85,7 @@
  *           blink the LED (a deliberate difference from the Uno R3). Each
  *           mirrored write costs ~340 us (300 us WS2812 latch guard + 30 us
  *           frame).
- *   BUTTON-> BTN_BUILTIN = D21 (PA1). 5.1 kOhm pull-down on the board;
+ *   BUTTON-> BTN_BUILTIN = D32 (PA1). Same number on every UkiUkiduino board. 5.1 kOhm pull-down on the board;
  *           pressed = HIGH. Use pinMode(BTN_BUILTIN, INPUT) - no pullup needed.
  *   AREF  -> PD7 (VREFA) is wired to the AREF header pin for an external analog
  *           reference; it has no digital pin number.
@@ -141,22 +142,28 @@
 #define PIN_PA2 (18)  // D18 A4 / SDA
 #define PIN_PA3 (19)  // D19 A5 / SCL
 #define PIN_PD7 (20)  // D20/A20 = AREF (VREFA) | GPIO | SPI0 SS(ALT4) | Serial2 RX
-#define PIN_PA1 (21)  // D21 BTN_BUILTIN (on-board button, 5.1k pull-down, pressed = HIGH; no ADC)
+//  no  D21..D29              (gap)
 #define PIN_PA0 (22)  // WS2812D-F5-12mA-C1 LED data-in (driven by the D13 software mirror); no Dn alias
 #define PIN_PF6 (23)  // RESET
-#define PIN_PF7 (24)  // UPDI  (highest index -> sets NUM_DIGITAL_PINS = 25)
+#define PIN_PF7 (24)  // UPDI
+//  no  D25..D31              (gap)
+#define PIN_PA1 (32)  // D32 BTN_BUILTIN (on-board button, 5.1k pull-down, pressed = HIGH; no ADC)
+                      //     - highest index -> sets NUM_DIGITAL_PINS = 33. D32 is the common
+                      //       BTN_BUILTIN number across the UkiUkiduino family.
 
 /* ---- Counts ---- */
-#define PINS_COUNT                     (25)  // length of the pin tables
+#define PINS_COUNT                     (33)  // length of the pin tables (incl. gaps)
 #define NUM_ANALOG_INPUTS              (31)  // highest ADC channel in use is AIN31 (PC3)
-// NUM_DIGITAL_PINS / NUM_TOTAL_PINS  -> auto = PIN_PF7 + 1 = 25
+// NUM_DIGITAL_PINS / NUM_TOTAL_PINS: the core would derive PIN_PF7 + 1 (= 25), but
+// BTN_BUILTIN (PA1) sits at index 32 beyond UPDI, so set it explicitly.
+#define NUM_DIGITAL_PINS               (33)
 // NUM_INTERNALLY_USED_PINS           -> auto = 0 (no crystal; PA0 = LED data, PA1 = button)
 
 #if !defined(LED_BUILTIN)
   #define LED_BUILTIN                  (PIN_PD6)   // D13, on-board LED (Uno convention; WS2812 mirror)
 #endif
 #if !defined(BTN_BUILTIN)
-  #define BTN_BUILTIN                  (PIN_PA1)   // D21, on-board button (pull-down, pressed = HIGH)
+  #define BTN_BUILTIN                  (PIN_PA1)   // D32, on-board button (pull-down, pressed = HIGH)
 #endif
 
 /* ---- LED_BUILTIN software mirror (see wiring_digital.c) ----
@@ -407,8 +414,8 @@ void setBLEDColor(LEDColorName color, uint8_t brightness = BLED_DEFAULT_BRIGHTNE
 #define PIN_A20  (PIN_PD7)   // D20 / AREF
 
 /* --- Uno R4 style number-prefixed digital pin aliases (header pins D0..D19) ---
- * D-number == Arduino digital pin number. D20 (AREF/PD7) and D21 (button/PA1)
- * are appended beyond the Uno R3 header numbering. Internal-only pins (PA0
+ * D-number == Arduino digital pin number. D20 (AREF/PD7) and D32 (button/PA1,
+ * the family-wide BTN_BUILTIN number) are appended beyond the Uno R3 header numbering. Internal-only pins (PA0
  * LED data, PF6 RESET, PF7 UPDI) are intentionally NOT exposed as Dn. */
 #undef D0
 #undef D1
@@ -431,7 +438,7 @@ void setBLEDColor(LEDColorName color, uint8_t brightness = BLED_DEFAULT_BRIGHTNE
 #undef D18
 #undef D19
 #undef D20
-#undef D21
+#undef D32
 static const uint8_t D0  = PIN_PA5;  // RX
 static const uint8_t D1  = PIN_PA4;  // TX
 static const uint8_t D2  = PIN_PA7;
@@ -453,7 +460,7 @@ static const uint8_t D17 = PIN_PF3;  // A3
 static const uint8_t D18 = PIN_PA2;  // A4 / SDA
 static const uint8_t D19 = PIN_PA3;  // A5 / SCL
 static const uint8_t D20 = PIN_PD7;  // AREF (VREFA | GPIO | SPI0 SS | Serial2 RX)
-static const uint8_t D21 = PIN_PA1;  // BTN_BUILTIN (on-board button, pressed = HIGH)
+static const uint8_t D32 = PIN_PA1;  // BTN_BUILTIN (on-board button, pressed = HIGH)
 
 static const uint8_t A0   = PIN_A0;
 static const uint8_t A1   = PIN_A1;
@@ -500,7 +507,7 @@ static const uint8_t A20  = PIN_A20;
 #define AIN27  ADC_CH(27)
 #define AIN31  ADC_CH(31)
 
-/* ---- Pin arrays (ARDUINO_MAIN). Indexed by digital pin number (0..24). ---- */
+/* ---- Pin arrays (ARDUINO_MAIN). Indexed by digital pin number (0..32). Gaps are NOT_A_PORT/NOT_A_PIN. ---- */
 #ifdef ARDUINO_MAIN
   const uint8_t digital_pin_to_port[] = {
     PA,         //  0 PA5  D0  RX/USART0 RX
@@ -524,10 +531,18 @@ static const uint8_t A20  = PIN_A20;
     PA,         // 18 PA2  A4 / SDA
     PA,         // 19 PA3  A5 / SCL
     PD,         // 20 PD7  AREF (VREFA)
-    PA,         // 21 PA1  D21 BTN_BUILTIN
+    NOT_A_PORT, // 21 (gap)
     PA,         // 22 PA0  WS2812 LED data-in
     PF,         // 23 PF6  RESET
-    PF          // 24 PF7  UPDI
+    PF,         // 24 PF7  UPDI
+    NOT_A_PORT, // 25 (gap)
+    NOT_A_PORT, // 26 (gap)
+    NOT_A_PORT, // 27 (gap)
+    NOT_A_PORT, // 28 (gap)
+    NOT_A_PORT, // 29 (gap)
+    NOT_A_PORT, // 30 (gap)
+    NOT_A_PORT, // 31 (gap)
+    PA          // 32 PA1  D32 BTN_BUILTIN
   };
 
   const uint8_t digital_pin_to_bit_position[] = {
@@ -552,10 +567,18 @@ static const uint8_t A20  = PIN_A20;
     PIN2_bp,   // 18 PA2  A4
     PIN3_bp,   // 19 PA3  A5
     PIN7_bp,   // 20 PD7  D20/AREF
-    PIN1_bp,   // 21 PA1  D21 BTN_BUILTIN
+    NOT_A_PIN,  // 21 (gap)
     PIN0_bp,   // 22 PA0  WS2812 LED data-in
     PIN6_bp,   // 23 PF6 RESET
-    PIN7_bp    // 24 PF7 UPDI
+    PIN7_bp,   // 24 PF7 UPDI
+    NOT_A_PIN,  // 25 (gap)
+    NOT_A_PIN,  // 26 (gap)
+    NOT_A_PIN,  // 27 (gap)
+    NOT_A_PIN,  // 28 (gap)
+    NOT_A_PIN,  // 29 (gap)
+    NOT_A_PIN,  // 30 (gap)
+    NOT_A_PIN,  // 31 (gap)
+    PIN1_bp    // 32 PA1  D32 BTN_BUILTIN
   };
 
   const uint8_t digital_pin_to_bit_mask[] = {
@@ -580,10 +603,18 @@ static const uint8_t A20  = PIN_A20;
     PIN2_bm,   // 18 PA2  A4
     PIN3_bm,   // 19 PA3  A5
     PIN7_bm,   // 20 PD7  D20/AREF
-    PIN1_bm,   // 21 PA1  D21 BTN_BUILTIN
+    NOT_A_PIN,  // 21 (gap)
     PIN0_bm,   // 22 PA0  WS2812 LED data-in
     PIN6_bm,   // 23 PF6 RESET
-    PIN7_bm    // 24 PF7 UPDI
+    PIN7_bm,   // 24 PF7 UPDI
+    NOT_A_PIN,  // 25 (gap)
+    NOT_A_PIN,  // 26 (gap)
+    NOT_A_PIN,  // 27 (gap)
+    NOT_A_PIN,  // 28 (gap)
+    NOT_A_PIN,  // 29 (gap)
+    NOT_A_PIN,  // 30 (gap)
+    NOT_A_PIN,  // 31 (gap)
+    PIN1_bm    // 32 PA1  D32 BTN_BUILTIN
   };
 
   /* TCA0 PWM is resolved dynamically from PORTMUX, so TCA0 pins are NOT_ON_TIMER
@@ -611,10 +642,18 @@ static const uint8_t A20  = PIN_A20;
     NOT_ON_TIMER, // 18 PA2  A4
     NOT_ON_TIMER, // 19 PA3  A5
     NOT_ON_TIMER, // 20 PD7  D20/AREF
-    NOT_ON_TIMER, // 21 PA1  D21 BTN_BUILTIN
+    NOT_ON_TIMER, // 21 (gap)
     NOT_ON_TIMER, // 22 PA0  WS2812 LED data-in
     NOT_ON_TIMER, // 23 PF6 RESET
-    NOT_ON_TIMER  // 24 PF7 UPDI
+    NOT_ON_TIMER, // 24 PF7 UPDI
+    NOT_ON_TIMER, // 25 (gap)
+    NOT_ON_TIMER, // 26 (gap)
+    NOT_ON_TIMER, // 27 (gap)
+    NOT_ON_TIMER, // 28 (gap)
+    NOT_ON_TIMER, // 29 (gap)
+    NOT_ON_TIMER, // 30 (gap)
+    NOT_ON_TIMER, // 31 (gap)
+    NOT_ON_TIMER  // 32 PA1  D32 BTN_BUILTIN
   };
 #endif
 

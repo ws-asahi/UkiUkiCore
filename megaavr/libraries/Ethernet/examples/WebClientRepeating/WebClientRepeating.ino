@@ -1,78 +1,73 @@
 /*
- Repeating Web client
+ 繰り返し接続する Web クライアント
 
- This sketch connects to a web server and makes a request
- using a WIZnet Ethernet shield. You can use the Arduino Ethernet Shield, or
- the Adafruit Ethernet shield, either one will work, as long as it's got
- a WIZnet Ethernet module on board.
+ WIZnet イーサネットシールドを使って Web サーバーに接続し、定期的にリクエストを送ります。
+ Arduino イーサネットシールドでも Adafruit のイーサネットシールドでも、
+ WIZnet のイーサネットモジュールが載っていれば動作します。
 
- This example uses DNS, by assigning the Ethernet client with a MAC address,
- IP address, and DNS address.
+ この例はイーサネットクライアントに MAC アドレス・IP アドレス・DNS アドレスを
+ 割り当てて DNS を使います。
 
- Circuit:
- * Ethernet shield attached to pins 10, 11, 12, 13
+ 回路(UkiUkiduino):
+ * イーサネットシールド(WIZnet W5100/W5200/W5500)を Uno ヘッダに直挿し
+   CS=D10 / MOSI=D11 / MISO=D12 / SCK=D13 (シールド上の SD カードは CS=D4)
+ * UkiUkiduino ProMicro の場合: シールドは直挿しできないので配線する
+   MOSI=D16 / MISO=D14 / SCK=D15、CS は任意のピン(Ethernet.init(pin) で指定)
+ * D13(SCK) は Serial2 の TX と共用のため、Ethernet 使用中は Serial2 を開かないこと
 
- created 19 Apr 2012
- by Tom Igoe
- modified 21 Jan 2014
- by Federico Vanzati
-
+ 原作: Tom Igoe (2012)、Federico Vanzati 改変 (2014)
  https://www.arduino.cc/en/Tutorial/WebClientRepeating
- This code is in the public domain.
-
+ このコードはパブリックドメインです。
+ UkiUkiduino向けに日本語化
  */
 
 #include <SPI.h>
 #include <Ethernet.h>
 
-// assign a MAC address for the Ethernet controller.
-// fill in your address here:
+// イーサネットコントローラの MAC アドレスを割り当てる。
+// ここに自分のアドレスを入れる:
 byte mac[] = {
   0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED
 };
-// Set the static IP address to use if the DHCP fails to assign
+// DHCP で取得できなかったときに使う固定 IP アドレス
 IPAddress ip(192, 168, 0, 177);
 IPAddress myDns(192, 168, 0, 1);
 
-// initialize the library instance:
+// ライブラリのインスタンスを初期化する:
 EthernetClient client;
 
-char server[] = "www.arduino.cc";  // also change the Host line in httpRequest()
+char server[] = "www.arduino.cc";  // 変更するときは httpRequest() の Host 行も変える
 //IPAddress server(64,131,82,241);
 
-unsigned long lastConnectionTime = 0;           // last time you connected to the server, in milliseconds
-const unsigned long postingInterval = 10*1000;  // delay between updates, in milliseconds
+unsigned long lastConnectionTime = 0;           // 最後にサーバーへ接続した時刻(ミリ秒)
+const unsigned long postingInterval = 10*1000;  // 更新の間隔(ミリ秒)
 
 void setup() {
-  // You can use Ethernet.init(pin) to configure the CS pin
-  //Ethernet.init(10);  // Most Arduino shields
-  //Ethernet.init(5);   // MKR ETH Shield
-  //Ethernet.init(0);   // Teensy 2.0
-  //Ethernet.init(20);  // Teensy++ 2.0
-  //Ethernet.init(15);  // ESP8266 with Adafruit FeatherWing Ethernet
-  //Ethernet.init(33);  // ESP32 with Adafruit FeatherWing Ethernet
+  // CS ピンは Ethernet.init(pin) で変更できる(既定は D10 = Uno 用シールドの配線)
+  //Ethernet.init(10);  // UkiUkiduino + Uno 用イーサネットシールド(既定値なので省略可)
+  //Ethernet.init(10);  // UkiUkiduino ProMicro: 配線した CS ピンの番号を指定する
 
-  // start serial port:
+  // シリアルポートを開く:
   Serial.begin(9600);
   while (!Serial) {
-    ; // wait for serial port to connect. Needed for native USB port only
+    ; // シリアルポートの接続を待つ(ネイティブUSBポートでのみ必要)
   }
 
-  // start the Ethernet connection:
+  // イーサネット接続を開始する:
   Serial.println("Initialize Ethernet with DHCP:");
   if (Ethernet.begin(mac) == 0) {
     Serial.println("Failed to configure Ethernet using DHCP");
-    // Check for Ethernet hardware present
+    // イーサネットのハードウェアがあるか確認する
     if (Ethernet.hardwareStatus() == EthernetNoHardware) {
       Serial.println("Ethernet shield was not found.  Sorry, can't run without hardware. :(");
       while (true) {
-        delay(1); // do nothing, no point running without Ethernet hardware
+        delay(1); // ハードウェアが無ければ動かしようがないので何もしない
       }
     }
     if (Ethernet.linkStatus() == LinkOFF) {
       Serial.println("Ethernet cable is not connected.");
     }
-    // try to configure using IP address instead of DHCP:
+    // DHCP の代わりに固定 IP アドレスで設定を試みる:
     Ethernet.begin(mac, ip, myDns);
     Serial.print("My IP address: ");
     Serial.println(Ethernet.localIP());
@@ -80,47 +75,46 @@ void setup() {
     Serial.print("  DHCP assigned IP ");
     Serial.println(Ethernet.localIP());
   }
-  // give the Ethernet shield a second to initialize:
+  // イーサネットシールドの初期化に 1 秒ほど猶予を与える:
   delay(1000);
 }
 
 void loop() {
-  // if there's incoming data from the net connection.
-  // send it out the serial port.  This is for debugging
-  // purposes only:
+  // ネットワーク接続から受信データがあればシリアルポートへ出力する。
+  // デバッグ用途のみ:
   if (client.available()) {
     char c = client.read();
     Serial.write(c);
   }
 
-  // if ten seconds have passed since your last connection,
-  // then connect again and send data:
+  // 前回の接続から 10 秒経過していたら
+  // 再接続してリクエストを送る:
   if (millis() - lastConnectionTime > postingInterval) {
     httpRequest();
   }
 
 }
 
-// this method makes a HTTP connection to the server:
+// サーバーへ HTTP 接続する関数:
 void httpRequest() {
-  // close any connection before send a new request.
-  // This will free the socket on the Ethernet shield
+  // 新しいリクエストを送る前に既存の接続を閉じる。
+  // これでイーサネットシールド上のソケットが解放される
   client.stop();
 
-  // if there's a successful connection:
+  // 接続に成功したら:
   if (client.connect(server, 80)) {
     Serial.println("connecting...");
-    // send the HTTP GET request:
+    // HTTP GET リクエストを送る:
     client.println("GET /latest.txt HTTP/1.1");
     client.println("Host: www.arduino.cc");
     client.println("User-Agent: arduino-ethernet");
     client.println("Connection: close");
     client.println();
 
-    // note the time that the connection was made:
+    // 接続した時刻を記録する:
     lastConnectionTime = millis();
   } else {
-    // if you couldn't make a connection:
+    // 接続できなかった場合:
     Serial.println("connection failed");
   }
 }

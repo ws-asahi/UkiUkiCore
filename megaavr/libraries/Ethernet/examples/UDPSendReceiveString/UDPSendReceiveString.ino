@@ -1,73 +1,75 @@
 /*
  UDPSendReceiveString
 
- This sketch receives UDP message strings, prints them to the serial port
- and sends an "acknowledge" string back to the sender
+ UDP のメッセージ文字列を受信してシリアルポートに表示し、
+ 送信元へ "acknowledged" という文字列を返します。
 
- A Processing sketch is included at the end of file that can be used to send
- and receive messages for testing with a computer.
+ パソコンからテスト用にメッセージを送受信できる Processing のスケッチを
+ ファイル末尾に付けています。
 
- created 21 Aug 2010
- by Michael Margolis
+ 回路(UkiUkiduino):
+ * イーサネットシールド(WIZnet W5100/W5200/W5500)を Uno ヘッダに直挿し
+   CS=D10 / MOSI=D11 / MISO=D12 / SCK=D13 (シールド上の SD カードは CS=D4)
+ * UkiUkiduino ProMicro の場合: シールドは直挿しできないので配線する
+   MOSI=D16 / MISO=D14 / SCK=D15、CS は任意のピン(Ethernet.init(pin) で指定)
+ * D13(SCK) は Serial2 の TX と共用のため、Ethernet 使用中は Serial2 を開かないこと
 
- This code is in the public domain.
+ 原作: Michael Margolis (2010)
+ このコードはパブリックドメインです。
+ UkiUkiduino向けに日本語化
  */
 
 
 #include <Ethernet.h>
 #include <EthernetUdp.h>
 
-// Enter a MAC address and IP address for your controller below.
-// The IP address will be dependent on your local network:
+// コントローラの MAC アドレスと IP アドレスを入力する。
+// IP アドレスは使用するネットワークに合わせる:
 byte mac[] = {
   0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED
 };
 IPAddress ip(192, 168, 1, 177);
 
-unsigned int localPort = 8888;      // local port to listen on
+unsigned int localPort = 8888;      // 待ち受けるローカルポート
 
-// buffers for receiving and sending data
-char packetBuffer[UDP_TX_PACKET_MAX_SIZE];  // buffer to hold incoming packet,
-char ReplyBuffer[] = "acknowledged";        // a string to send back
+// 送受信データ用のバッファ
+char packetBuffer[UDP_TX_PACKET_MAX_SIZE];  // 受信パケットを入れるバッファ
+char ReplyBuffer[] = "acknowledged";        // 返信する文字列
 
-// An EthernetUDP instance to let us send and receive packets over UDP
+// UDP でパケットを送受信するための EthernetUDP インスタンス
 EthernetUDP Udp;
 
 void setup() {
-  // You can use Ethernet.init(pin) to configure the CS pin
-  //Ethernet.init(10);  // Most Arduino shields
-  //Ethernet.init(5);   // MKR ETH Shield
-  //Ethernet.init(0);   // Teensy 2.0
-  //Ethernet.init(20);  // Teensy++ 2.0
-  //Ethernet.init(15);  // ESP8266 with Adafruit FeatherWing Ethernet
-  //Ethernet.init(33);  // ESP32 with Adafruit FeatherWing Ethernet
+  // CS ピンは Ethernet.init(pin) で変更できる(既定は D10 = Uno 用シールドの配線)
+  //Ethernet.init(10);  // UkiUkiduino + Uno 用イーサネットシールド(既定値なので省略可)
+  //Ethernet.init(10);  // UkiUkiduino ProMicro: 配線した CS ピンの番号を指定する
 
-  // start the Ethernet
+  // イーサネットを開始する
   Ethernet.begin(mac, ip);
 
-  // Open serial communications and wait for port to open:
+  // シリアル通信を開き、ポートが開くのを待つ:
   Serial.begin(9600);
   while (!Serial) {
-    ; // wait for serial port to connect. Needed for native USB port only
+    ; // シリアルポートの接続を待つ(ネイティブUSBポートでのみ必要)
   }
 
-  // Check for Ethernet hardware present
+  // イーサネットのハードウェアがあるか確認する
   if (Ethernet.hardwareStatus() == EthernetNoHardware) {
     Serial.println("Ethernet shield was not found.  Sorry, can't run without hardware. :(");
     while (true) {
-      delay(1); // do nothing, no point running without Ethernet hardware
+      delay(1); // ハードウェアが無ければ動かしようがないので何もしない
     }
   }
   if (Ethernet.linkStatus() == LinkOFF) {
     Serial.println("Ethernet cable is not connected.");
   }
 
-  // start UDP
+  // UDP を開始する
   Udp.begin(localPort);
 }
 
 void loop() {
-  // if there's data available, read a packet
+  // 受信データがあればパケットを読む
   int packetSize = Udp.parsePacket();
   if (packetSize) {
     Serial.print("Received packet of size ");
@@ -83,12 +85,12 @@ void loop() {
     Serial.print(", port ");
     Serial.println(Udp.remotePort());
 
-    // read the packet into packetBuffer
+    // パケットを packetBuffer に読み込む
     Udp.read(packetBuffer, UDP_TX_PACKET_MAX_SIZE);
     Serial.println("Contents:");
     Serial.println(packetBuffer);
 
-    // send a reply to the IP address and port that sent us the packet we received
+    // パケットを送ってきた IP アドレスとポートへ返信する
     Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
     Udp.write(ReplyBuffer);
     Udp.endPacket();
@@ -98,22 +100,22 @@ void loop() {
 
 
 /*
-  Processing sketch to run with this example
+  この例と組み合わせて動かす Processing スケッチ
  =====================================================
 
- // Processing UDP example to send and receive string data from Arduino
- // press any key to send the "Hello Arduino" message
+ // Arduino と文字列データを送受信する Processing の UDP サンプル
+ // 何かキーを押すと "Hello Arduino" メッセージを送る
 
 
  import hypermedia.net.*;
 
- UDP udp;  // define the UDP object
+ UDP udp;  // UDP オブジェクトを定義する
 
 
  void setup() {
- udp = new UDP( this, 6000 );  // create a new datagram connection on port 6000
- //udp.log( true ); 		// <-- printout the connection activity
- udp.listen( true );           // and wait for incoming message
+ udp = new UDP( this, 6000 );  // ポート 6000 で新しいデータグラム接続を作る
+ //udp.log( true ); 		// <-- 接続の動作を表示する
+ udp.listen( true );           // 受信メッセージを待つ
  }
 
  void draw()
@@ -121,15 +123,15 @@ void loop() {
  }
 
  void keyPressed() {
- String ip       = "192.168.1.177";	// the remote IP address
- int port        = 8888;		// the destination port
+ String ip       = "192.168.1.177";	// 送信先の IP アドレス
+ int port        = 8888;		// 送信先のポート
 
- udp.send("Hello World", ip, port );   // the message to send
+ udp.send("Hello World", ip, port );   // 送るメッセージ
 
  }
 
- void receive( byte[] data ) { 			// <-- default handler
- //void receive( byte[] data, String ip, int port ) {	// <-- extended handler
+ void receive( byte[] data ) { 			// <-- 既定のハンドラ
+ //void receive( byte[] data, String ip, int port ) {	// <-- 拡張ハンドラ
 
  for(int i=0; i < data.length; i++)
  print(char(data[i]));

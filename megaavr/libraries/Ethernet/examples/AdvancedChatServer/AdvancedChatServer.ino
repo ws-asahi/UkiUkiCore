@@ -1,30 +1,30 @@
 /*
- Advanced Chat Server
+ 高機能チャットサーバー
 
- A more advanced server that distributes any incoming messages
- to all connected clients but the client the message comes from.
- To use, telnet to your device's IP address and type.
- You can see the client's input in the serial monitor as well.
- Using an Arduino WIZnet Ethernet shield.
+ 受信したメッセージを、送信元を除く接続中の全クライアントに配信する
+ 少し高度なサーバーです。
+ 使い方: このボードの IP アドレスへ telnet で接続して文字を入力してください。
+ クライアントの入力はシリアルモニタでも確認できます。
+ WIZnet イーサネットシールドを使用します。
 
- Circuit:
- * Ethernet shield attached to pins 10, 11, 12, 13
+ 回路(UkiUkiduino):
+ * イーサネットシールド(WIZnet W5100/W5200/W5500)を Uno ヘッダに直挿し
+   CS=D10 / MOSI=D11 / MISO=D12 / SCK=D13 (シールド上の SD カードは CS=D4)
+ * UkiUkiduino ProMicro の場合: シールドは直挿しできないので配線する
+   MOSI=D16 / MISO=D14 / SCK=D15、CS は任意のピン(Ethernet.init(pin) で指定)
+ * D13(SCK) は Serial2 の TX と共用のため、Ethernet 使用中は Serial2 を開かないこと
 
- created 18 Dec 2009
- by David A. Mellis
- modified 9 Apr 2012
- by Tom Igoe
- redesigned to make use of operator== 25 Nov 2013
- by Norbert Truchsess
-
+ 原作: David A. Mellis (2009)、Tom Igoe 改変 (2012)、
+       Norbert Truchsess が operator== を使う形に再設計 (2013)
+ UkiUkiduino向けに日本語化
  */
 
 #include <SPI.h>
 #include <Ethernet.h>
 
-// Enter a MAC address and IP address for your controller below.
-// The IP address will be dependent on your local network.
-// gateway and subnet are optional:
+// コントローラの MAC アドレスと IP アドレスを入力する。
+// IP アドレスは使用するネットワークに合わせる。
+// ゲートウェイとサブネットは省略可:
 byte mac[] = {
   0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED
 };
@@ -34,41 +34,37 @@ IPAddress gateway(192, 168, 1, 1);
 IPAddress subnet(255, 255, 0, 0);
 
 
-// telnet defaults to port 23
+// telnet の既定ポートは 23
 EthernetServer server(23);
 
 EthernetClient clients[8];
 
 void setup() {
-  // You can use Ethernet.init(pin) to configure the CS pin
-  //Ethernet.init(10);  // Most Arduino shields
-  //Ethernet.init(5);   // MKR ETH Shield
-  //Ethernet.init(0);   // Teensy 2.0
-  //Ethernet.init(20);  // Teensy++ 2.0
-  //Ethernet.init(15);  // ESP8266 with Adafruit FeatherWing Ethernet
-  //Ethernet.init(33);  // ESP32 with Adafruit FeatherWing Ethernet
+  // CS ピンは Ethernet.init(pin) で変更できる(既定は D10 = Uno 用シールドの配線)
+  //Ethernet.init(10);  // UkiUkiduino + Uno 用イーサネットシールド(既定値なので省略可)
+  //Ethernet.init(10);  // UkiUkiduino ProMicro: 配線した CS ピンの番号を指定する
 
-  // initialize the Ethernet device
+  // イーサネットデバイスを初期化する
   Ethernet.begin(mac, ip, myDns, gateway, subnet);
 
-  // Open serial communications and wait for port to open:
+  // シリアル通信を開き、ポートが開くのを待つ:
   Serial.begin(9600);
   while (!Serial) {
-    ; // wait for serial port to connect. Needed for native USB port only
+    ; // シリアルポートの接続を待つ(ネイティブUSBポートでのみ必要)
   }
 
-  // Check for Ethernet hardware present
+  // イーサネットのハードウェアがあるか確認する
   if (Ethernet.hardwareStatus() == EthernetNoHardware) {
     Serial.println("Ethernet shield was not found.  Sorry, can't run without hardware. :(");
     while (true) {
-      delay(1); // do nothing, no point running without Ethernet hardware
+      delay(1); // ハードウェアが無ければ動かしようがないので何もしない
     }
   }
   if (Ethernet.linkStatus() == LinkOFF) {
     Serial.println("Ethernet cable is not connected.");
   }
 
-  // start listening for clients
+  // クライアントの接続待ちを開始する
   server.begin();
 
   Serial.print("Chat server address:");
@@ -76,7 +72,7 @@ void setup() {
 }
 
 void loop() {
-  // check for any new client connecting, and say hello (before any incoming data)
+  // 新しく接続してきたクライアントがあれば(データ受信前に)挨拶する
   EthernetClient newClient = server.accept();
   if (newClient) {
     for (byte i=0; i < 8; i++) {
@@ -85,21 +81,21 @@ void loop() {
         Serial.println(i);
         newClient.print("Hello, client number: ");
         newClient.println(i);
-        // Once we "accept", the client is no longer tracked by EthernetServer
-        // so we must store it into our list of clients
+        // accept() したクライアントは EthernetServer の管理から外れるので、
+        // 自分のクライアント一覧に保存しておく必要がある
         clients[i] = newClient;
         break;
       }
     }
   }
 
-  // check for incoming data from all clients
+  // 全クライアントからの受信データを確認する
   for (byte i=0; i < 8; i++) {
     if (clients[i] && clients[i].available() > 0) {
-      // read bytes from a client
+      // クライアントからバイト列を読む
       byte buffer[80];
       int count = clients[i].read(buffer, 80);
-      // write the bytes to all other connected clients
+      // 送信元以外の接続中クライアント全員に書き出す
       for (byte j=0; j < 8; j++) {
         if (j != i && clients[j].connected()) {
           clients[j].write(buffer, count);
@@ -108,7 +104,7 @@ void loop() {
     }
   }
 
-  // stop any clients which disconnect
+  // 切断されたクライアントを停止する
   for (byte i=0; i < 8; i++) {
     if (clients[i] && !clients[i].connected()) {
       Serial.print("disconnect client #");

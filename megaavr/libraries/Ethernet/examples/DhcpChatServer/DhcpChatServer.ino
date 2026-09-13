@@ -1,31 +1,31 @@
 /*
- DHCP Chat Server
+ DHCP チャットサーバー
 
- A simple server that distributes any incoming messages to all
- connected clients.  To use, telnet to your device's IP address and type.
- You can see the client's input in the serial monitor as well.
- Using an Arduino WIZnet Ethernet shield.
+ 受信したメッセージを接続中の全クライアントに配信する簡単なサーバーです。
+ 使い方: このボードの IP アドレスへ telnet で接続して文字を入力してください。
+ クライアントの入力はシリアルモニタでも確認できます。
+ WIZnet イーサネットシールドを使用します。
 
- THis version attempts to get an IP address using DHCP
+ この版は DHCP で IP アドレスの取得を試みます。
 
- Circuit:
- * Ethernet shield attached to pins 10, 11, 12, 13
+ 回路(UkiUkiduino):
+ * イーサネットシールド(WIZnet W5100/W5200/W5500)を Uno ヘッダに直挿し
+   CS=D10 / MOSI=D11 / MISO=D12 / SCK=D13 (シールド上の SD カードは CS=D4)
+ * UkiUkiduino ProMicro の場合: シールドは直挿しできないので配線する
+   MOSI=D16 / MISO=D14 / SCK=D15、CS は任意のピン(Ethernet.init(pin) で指定)
+ * D13(SCK) は Serial2 の TX と共用のため、Ethernet 使用中は Serial2 を開かないこと
 
- created 21 May 2011
- modified 9 Apr 2012
- by Tom Igoe
- modified 02 Sept 2015
- by Arturo Guadalupi
- Based on ChatServer example by David A. Mellis
-
+ 原作: Tom Igoe (2011/2012)、Arturo Guadalupi 改変 (2015)
+       David A. Mellis の ChatServer サンプルを基にしています
+ UkiUkiduino向けに日本語化
  */
 
 #include <SPI.h>
 #include <Ethernet.h>
 
-// Enter a MAC address and IP address for your controller below.
-// The IP address will be dependent on your local network.
-// gateway and subnet are optional:
+// コントローラの MAC アドレスと IP アドレスを入力する。
+// IP アドレスは使用するネットワークに合わせる。
+// ゲートウェイとサブネットは省略可:
 byte mac[] = {
   0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED
 };
@@ -34,55 +34,51 @@ IPAddress myDns(192, 168, 1, 1);
 IPAddress gateway(192, 168, 1, 1);
 IPAddress subnet(255, 255, 0, 0);
 
-// telnet defaults to port 23
+// telnet の既定ポートは 23
 EthernetServer server(23);
-bool gotAMessage = false; // whether or not you got a message from the client yet
+bool gotAMessage = false; // クライアントからメッセージを受け取ったかどうか
 
 void setup() {
-  // You can use Ethernet.init(pin) to configure the CS pin
-  //Ethernet.init(10);  // Most Arduino shields
-  //Ethernet.init(5);   // MKR ETH Shield
-  //Ethernet.init(0);   // Teensy 2.0
-  //Ethernet.init(20);  // Teensy++ 2.0
-  //Ethernet.init(15);  // ESP8266 with Adafruit FeatherWing Ethernet
-  //Ethernet.init(33);  // ESP32 with Adafruit FeatherWing Ethernet
+  // CS ピンは Ethernet.init(pin) で変更できる(既定は D10 = Uno 用シールドの配線)
+  //Ethernet.init(10);  // UkiUkiduino + Uno 用イーサネットシールド(既定値なので省略可)
+  //Ethernet.init(10);  // UkiUkiduino ProMicro: 配線した CS ピンの番号を指定する
 
-  // Open serial communications and wait for port to open:
+  // シリアル通信を開き、ポートが開くのを待つ:
   Serial.begin(9600);
   while (!Serial) {
-    ; // wait for serial port to connect. Needed for native USB port only
+    ; // シリアルポートの接続を待つ(ネイティブUSBポートでのみ必要)
   }
 
-  // start the Ethernet connection:
+  // イーサネット接続を開始する:
   Serial.println("Trying to get an IP address using DHCP");
   if (Ethernet.begin(mac) == 0) {
     Serial.println("Failed to configure Ethernet using DHCP");
-    // Check for Ethernet hardware present
+    // イーサネットのハードウェアがあるか確認する
     if (Ethernet.hardwareStatus() == EthernetNoHardware) {
       Serial.println("Ethernet shield was not found.  Sorry, can't run without hardware. :(");
       while (true) {
-        delay(1); // do nothing, no point running without Ethernet hardware
+        delay(1); // ハードウェアが無ければ動かしようがないので何もしない
       }
     }
     if (Ethernet.linkStatus() == LinkOFF) {
       Serial.println("Ethernet cable is not connected.");
     }
-    // initialize the Ethernet device not using DHCP:
+    // DHCP を使わずに固定アドレスで初期化する:
     Ethernet.begin(mac, ip, myDns, gateway, subnet);
   }
-  // print your local IP address:
+  // 自分の IP アドレスを表示する:
   Serial.print("My IP address: ");
   Serial.println(Ethernet.localIP());
 
-  // start listening for clients
+  // クライアントの接続待ちを開始する
   server.begin();
 }
 
 void loop() {
-  // wait for a new client:
+  // 新しいクライアントを待つ:
   EthernetClient client = server.available();
 
-  // when the client sends the first byte, say hello:
+  // クライアントが最初の 1 バイトを送ってきたら挨拶する:
   if (client) {
     if (!gotAMessage) {
       Serial.println("We have a new client");
@@ -90,11 +86,11 @@ void loop() {
       gotAMessage = true;
     }
 
-    // read the bytes incoming from the client:
+    // クライアントから届いたバイトを読む:
     char thisChar = client.read();
-    // echo the bytes back to the client:
+    // 全クライアントへエコーバックする:
     server.write(thisChar);
-    // echo the bytes to the server as well:
+    // シリアルモニタにもエコーする:
     Serial.print(thisChar);
     Ethernet.maintain();
   }

@@ -1,64 +1,59 @@
 /*
- Telnet client
+ Telnet クライアント
 
- This sketch connects to a telnet server (http://www.google.com)
- using an Arduino WIZnet Ethernet shield.  You'll need a telnet server
- to test this with.
- Processing's ChatServer example (part of the Network library) works well,
- running on port 10002. It can be found as part of the examples
- in the Processing application, available at
- https://processing.org/
+ WIZnet イーサネットシールドを使って telnet サーバーに接続します。
+ 動作確認には telnet サーバーが必要です。
+ Processing の Network ライブラリに含まれる ChatServer サンプル(ポート 10002)が
+ 相手として使えます。Processing は https://processing.org/ から入手できます。
 
- Circuit:
- * Ethernet shield attached to pins 10, 11, 12, 13
+ 回路(UkiUkiduino):
+ * イーサネットシールド(WIZnet W5100/W5200/W5500)を Uno ヘッダに直挿し
+   CS=D10 / MOSI=D11 / MISO=D12 / SCK=D13 (シールド上の SD カードは CS=D4)
+ * UkiUkiduino ProMicro の場合: シールドは直挿しできないので配線する
+   MOSI=D16 / MISO=D14 / SCK=D15、CS は任意のピン(Ethernet.init(pin) で指定)
+ * D13(SCK) は Serial2 の TX と共用のため、Ethernet 使用中は Serial2 を開かないこと
 
- created 14 Sep 2010
- modified 9 Apr 2012
- by Tom Igoe
+ 原作: Tom Igoe (2010/2012)
+ UkiUkiduino向けに日本語化
  */
 
 #include <SPI.h>
 #include <Ethernet.h>
 
-// Enter a MAC address and IP address for your controller below.
-// The IP address will be dependent on your local network:
+// コントローラの MAC アドレスと IP アドレスを入力する。
+// IP アドレスは使用するネットワークに合わせる:
 byte mac[] = {
   0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED
 };
 IPAddress ip(192, 168, 1, 177);
 
-// Enter the IP address of the server you're connecting to:
+// 接続先サーバーの IP アドレスを入力する:
 IPAddress server(1, 1, 1, 1);
 
-// Initialize the Ethernet client library
-// with the IP address and port of the server
-// that you want to connect to (port 23 is default for telnet;
-// if you're using Processing's ChatServer, use port 10002):
+// 接続先サーバーの IP アドレスとポートで
+// イーサネットクライアントライブラリを初期化する
+// (telnet の既定ポートは 23、Processing の ChatServer なら 10002):
 EthernetClient client;
 
 void setup() {
-  // You can use Ethernet.init(pin) to configure the CS pin
-  //Ethernet.init(10);  // Most Arduino shields
-  //Ethernet.init(5);   // MKR ETH Shield
-  //Ethernet.init(0);   // Teensy 2.0
-  //Ethernet.init(20);  // Teensy++ 2.0
-  //Ethernet.init(15);  // ESP8266 with Adafruit FeatherWing Ethernet
-  //Ethernet.init(33);  // ESP32 with Adafruit FeatherWing Ethernet
+  // CS ピンは Ethernet.init(pin) で変更できる(既定は D10 = Uno 用シールドの配線)
+  //Ethernet.init(10);  // UkiUkiduino + Uno 用イーサネットシールド(既定値なので省略可)
+  //Ethernet.init(10);  // UkiUkiduino ProMicro: 配線した CS ピンの番号を指定する
 
-  // start the Ethernet connection:
+  // イーサネット接続を開始する:
   Ethernet.begin(mac, ip);
 
-  // Open serial communications and wait for port to open:
+  // シリアル通信を開き、ポートが開くのを待つ:
   Serial.begin(9600);
   while (!Serial) {
-    ; // wait for serial port to connect. Needed for native USB port only
+    ; // シリアルポートの接続を待つ(ネイティブUSBポートでのみ必要)
   }
 
-  // Check for Ethernet hardware present
+  // イーサネットのハードウェアがあるか確認する
   if (Ethernet.hardwareStatus() == EthernetNoHardware) {
     Serial.println("Ethernet shield was not found.  Sorry, can't run without hardware. :(");
     while (true) {
-      delay(1); // do nothing, no point running without Ethernet hardware
+      delay(1); // ハードウェアが無ければ動かしようがないので何もしない
     }
   }
   while (Ethernet.linkStatus() == LinkOFF) {
@@ -66,29 +61,29 @@ void setup() {
     delay(500);
   }
 
-  // give the Ethernet shield a second to initialize:
+  // イーサネットシールドの初期化に 1 秒ほど猶予を与える:
   delay(1000);
   Serial.println("connecting...");
 
-  // if you get a connection, report back via serial:
+  // 接続できたらシリアルに報告する:
   if (client.connect(server, 10002)) {
     Serial.println("connected");
   } else {
-    // if you didn't get a connection to the server:
+    // サーバーに接続できなかった場合:
     Serial.println("connection failed");
   }
 }
 
 void loop() {
-  // if there are incoming bytes available
-  // from the server, read them and print them:
+  // サーバーから届いたバイトがあれば
+  // 読み出して表示する:
   if (client.available()) {
     char c = client.read();
     Serial.print(c);
   }
 
-  // as long as there are bytes in the serial queue,
-  // read them and send them out the socket if it's open:
+  // シリアルの受信キューにバイトがある限り読み出し、
+  // ソケットが開いていればそこへ送る:
   while (Serial.available() > 0) {
     char inChar = Serial.read();
     if (client.connected()) {
@@ -96,12 +91,12 @@ void loop() {
     }
   }
 
-  // if the server's disconnected, stop the client:
+  // サーバーとの接続が切れたらクライアントを停止する:
   if (!client.connected()) {
     Serial.println();
     Serial.println("disconnecting.");
     client.stop();
-    // do nothing:
+    // 以後何もしない:
     while (true) {
       delay(1);
     }

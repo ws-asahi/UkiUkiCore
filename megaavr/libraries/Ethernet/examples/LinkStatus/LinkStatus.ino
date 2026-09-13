@@ -1,27 +1,29 @@
 /*
-  Link Status
+  リンク状態の表示
 
-  This sketch prints the Ethernet link status. When the
-  Ethernet cable is connected the link status should go to "ON".
-  NOTE: Only WIZnet W5200 and W5500 are capable of reporting
-  the link status. W5100 will report "Unknown".
-  Hardware:
-   - Ethernet shield or equivalent board/shield with WIZnet W5200/W5500
-  Written by Cristian Maglie
-  This example is public domain.
+  イーサネットのリンク状態を表示します。LAN ケーブルを接続すると
+  リンク状態が "ON" になります。
+  注意: リンク状態を報告できるのは WIZnet W5200 と W5500 だけです。
+  W5100 は常に "Unknown" を返します。
+
+ 回路(UkiUkiduino):
+ * イーサネットシールド(WIZnet W5100/W5200/W5500)を Uno ヘッダに直挿し
+   CS=D10 / MOSI=D11 / MISO=D12 / SCK=D13 (シールド上の SD カードは CS=D4)
+ * UkiUkiduino ProMicro の場合: シールドは直挿しできないので配線する
+   MOSI=D16 / MISO=D14 / SCK=D15、CS は任意のピン(Ethernet.init(pin) で指定)
+ * D13(SCK) は Serial2 の TX と共用のため、Ethernet 使用中は Serial2 を開かないこと
+
+  原作: Cristian Maglie (パブリックドメイン)
+  UkiUkiduino向けに日本語化
 */
 
 #include <SPI.h>
 #include <Ethernet.h>
 
 void setup() {
-  // You can use Ethernet.init(pin) to configure the CS pin
-  //Ethernet.init(10);  // Most Arduino shields
-  //Ethernet.init(5);   // MKR ETH Shield
-  //Ethernet.init(0);   // Teensy 2.0
-  //Ethernet.init(20);  // Teensy++ 2.0
-  //Ethernet.init(15);  // ESP8266 with Adafruit FeatherWing Ethernet
-  //Ethernet.init(33);  // ESP32 with Adafruit FeatherWing Ethernet
+  // CS ピンは Ethernet.init(pin) で変更できる(既定は D10 = Uno 用シールドの配線)
+  //Ethernet.init(10);  // UkiUkiduino + Uno 用イーサネットシールド(既定値なので省略可)
+  //Ethernet.init(10);  // UkiUkiduino ProMicro: 配線した CS ピンの番号を指定する
 
   Serial.begin(9600);
 }

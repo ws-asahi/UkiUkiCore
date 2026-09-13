@@ -1,55 +1,57 @@
 /*
- SCP1000 Barometric Pressure Sensor Display
+ SCP1000 気圧センサの Web 表示
 
- Serves the output of a Barometric Pressure Sensor as a web page.
- Uses the SPI library. For details on the sensor, see:
+ 気圧センサの測定値を Web ページとして配信します。
+ SPI ライブラリを使用します。センサの詳細:
  http://www.sparkfun.com/commerce/product_info.php?products_id=8161
 
- This sketch adapted from Nathan Seidle's SCP1000 example for PIC:
+ Nathan Seidle の PIC 用 SCP1000 サンプルを元にしています:
  http://www.sparkfun.com/datasheets/Sensors/SCP1000-Testing.zip
 
- TODO: this hardware is long obsolete.  This example program should
- be rewritten to use https://www.sparkfun.com/products/9721
+ ※SCP1000 は既に入手困難ですが、「Ethernet と同じ SPI バスに別のデバイスを
+   同居させ、その値を Web で配信する方法」の教材としてこのサンプルを残しています。
+   他の SPI センサにも応用できます。
 
- Circuit:
- SCP1000 sensor attached to pins 6,7, and 11 - 13:
- DRDY: pin 6
- CSB: pin 7
- MOSI: pin 11
- MISO: pin 12
- SCK: pin 13
+ 回路(UkiUkiduino):
+ * イーサネットシールド(WIZnet W5100/W5200/W5500)を Uno ヘッダに直挿し
+   CS=D10 / MOSI=D11 / MISO=D12 / SCK=D13 (シールド上の SD カードは CS=D4)
+ * UkiUkiduino ProMicro の場合: シールドは直挿しできないので配線する
+   MOSI=D16 / MISO=D14 / SCK=D15、CS は任意のピン(Ethernet.init(pin) で指定)
+ * D13(SCK) は Serial2 の TX と共用のため、Ethernet 使用中は Serial2 を開かないこと
+ * SCP1000 センサ: DRDY=D6 / CSB=D7 / MOSI=D11 / MISO=D12 / SCK=D13
+   (UkiUkiduino ProMicro の場合: DRDY=D6 / CSB=D7、MOSI=D16 / MISO=D14 / SCK=D15)
 
- created 31 July 2010
- by Tom Igoe
+ 原作: Tom Igoe (2010)
+ UkiUkiduino向けに日本語化
  */
 
 #include <Ethernet.h>
-// the sensor communicates using SPI, so include the library:
+// センサは SPI で通信するのでライブラリを読み込む:
 #include <SPI.h>
 
 
-// assign a MAC address for the Ethernet controller.
-// fill in your address here:
+// イーサネットコントローラの MAC アドレスを割り当てる。
+// ここに自分のアドレスを入れる:
 byte mac[] = {
   0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED
 };
-// assign an IP address for the controller:
+// コントローラの IP アドレスを割り当てる:
 IPAddress ip(192, 168, 1, 20);
 
 
-// Initialize the Ethernet server library
-// with the IP address and port you want to use
-// (port 80 is default for HTTP):
+// 使用する IP アドレスとポートで
+// イーサネットサーバーライブラリを初期化する
+// (HTTP の既定ポートは 80):
 EthernetServer server(80);
 
 
-//Sensor's memory register addresses:
-const int PRESSURE = 0x1F;      //3 most significant bits of pressure
-const int PRESSURE_LSB = 0x20;  //16 least significant bits of pressure
-const int TEMPERATURE = 0x21;   //16 bit temperature reading
+// センサのレジスタアドレス:
+const int PRESSURE = 0x1F;      // 気圧の上位 3 ビット
+const int PRESSURE_LSB = 0x20;  // 気圧の下位 16 ビット
+const int TEMPERATURE = 0x21;   // 16 ビットの温度
 
-// pins used for the connection with the sensor
-// the others you need are controlled by the SPI library):
+// センサとの接続に使うピン
+// (これ以外のSPIピンは SPI ライブラリが管理する):
 const int dataReadyPin = 6;
 const int chipSelectPin = 7;
 
@@ -58,89 +60,85 @@ long pressure = 0;
 long lastReadingTime = 0;
 
 void setup() {
-  // You can use Ethernet.init(pin) to configure the CS pin
-  //Ethernet.init(10);  // Most Arduino shields
-  //Ethernet.init(5);   // MKR ETH Shield
-  //Ethernet.init(0);   // Teensy 2.0
-  //Ethernet.init(20);  // Teensy++ 2.0
-  //Ethernet.init(15);  // ESP8266 with Adafruit FeatherWing Ethernet
-  //Ethernet.init(33);  // ESP32 with Adafruit FeatherWing Ethernet
+  // CS ピンは Ethernet.init(pin) で変更できる(既定は D10 = Uno 用シールドの配線)
+  //Ethernet.init(10);  // UkiUkiduino + Uno 用イーサネットシールド(既定値なので省略可)
+  //Ethernet.init(10);  // UkiUkiduino ProMicro: 配線した CS ピンの番号を指定する
 
-  // start the SPI library:
+  // SPI ライブラリを開始する:
   SPI.begin();
 
-  // start the Ethernet connection
+  // イーサネット接続を開始する
   Ethernet.begin(mac, ip);
 
-  // Open serial communications and wait for port to open:
+  // シリアル通信を開き、ポートが開くのを待つ:
   Serial.begin(9600);
   while (!Serial) {
-    ; // wait for serial port to connect. Needed for native USB port only
+    ; // シリアルポートの接続を待つ(ネイティブUSBポートでのみ必要)
   }
 
-  // Check for Ethernet hardware present
+  // イーサネットのハードウェアがあるか確認する
   if (Ethernet.hardwareStatus() == EthernetNoHardware) {
     Serial.println("Ethernet shield was not found.  Sorry, can't run without hardware. :(");
     while (true) {
-      delay(1); // do nothing, no point running without Ethernet hardware
+      delay(1); // ハードウェアが無ければ動かしようがないので何もしない
     }
   }
   if (Ethernet.linkStatus() == LinkOFF) {
     Serial.println("Ethernet cable is not connected.");
   }
 
-  // start listening for clients
+  // クライアントの接続待ちを開始する
   server.begin();
 
-  // initialize the data ready and chip select pins:
+  // DRDY と CS のピンを初期化する:
   pinMode(dataReadyPin, INPUT);
   pinMode(chipSelectPin, OUTPUT);
 
-  //Configure SCP1000 for low noise configuration:
+  // SCP1000 を低ノイズ構成に設定する:
   writeRegister(0x02, 0x2D);
   writeRegister(0x01, 0x03);
   writeRegister(0x03, 0x02);
 
-  // give the sensor and Ethernet shield time to set up:
+  // センサとイーサネットシールドの立ち上がりを待つ:
   delay(1000);
 
-  //Set the sensor to high resolution mode to start readings:
+  // センサを高分解能モードにして測定を開始する:
   writeRegister(0x03, 0x0A);
 
 }
 
 void loop() {
-  // check for a reading no more than once a second.
+  // 測定は 1 秒に 1 回まで。
   if (millis() - lastReadingTime > 1000) {
-    // if there's a reading ready, read it:
-    // don't do anything until the data ready pin is high:
+    // 測定値が準備できていれば読む:
+    // DRDY ピンが HIGH になるまで何もしない:
     if (digitalRead(dataReadyPin) == HIGH) {
       getData();
-      // timestamp the last time you got a reading:
+      // 最後に測定した時刻を記録する:
       lastReadingTime = millis();
     }
   }
 
-  // listen for incoming Ethernet connections:
+  // イーサネットの接続を待ち受ける:
   listenForEthernetClients();
 }
 
 
 void getData() {
   Serial.println("Getting reading");
-  //Read the temperature data
+  // 温度データを読む
   int tempData = readRegister(0x21, 2);
 
-  // convert the temperature to Celsius and display it:
+  // 温度を摂氏に変換して表示する:
   temperature = (float)tempData / 20.0;
 
-  //Read the pressure data highest 3 bits:
+  // 気圧データの上位 3 ビットを読む:
   byte  pressureDataHigh = readRegister(0x1F, 1);
-  pressureDataHigh &= 0b00000111; //you only needs bits 2 to 0
+  pressureDataHigh &= 0b00000111; // 必要なのはビット 2〜0 だけ
 
-  //Read the pressure data lower 16 bits:
+  // 気圧データの下位 16 ビットを読む:
   unsigned int pressureDataLow = readRegister(0x20, 2);
-  //combine the two parts into one 19-bit number:
+  // 2 つを結合して 19 ビットの値にする:
   pressure = ((pressureDataHigh << 16) | pressureDataLow) / 4;
 
   Serial.print("Temperature: ");
@@ -151,24 +149,23 @@ void getData() {
 }
 
 void listenForEthernetClients() {
-  // listen for incoming clients
+  // 接続してくるクライアントを待ち受ける
   EthernetClient client = server.available();
   if (client) {
     Serial.println("Got a client");
-    // an HTTP request ends with a blank line
+    // HTTP リクエストは空行で終わる
     bool currentLineIsBlank = true;
     while (client.connected()) {
       if (client.available()) {
         char c = client.read();
-        // if you've gotten to the end of the line (received a newline
-        // character) and the line is blank, the HTTP request has ended,
-        // so you can send a reply
+        // 行末(改行文字)に達し、かつその行が空行なら
+        // HTTP リクエストは終わっているので応答を返してよい
         if (c == '\n' && currentLineIsBlank) {
-          // send a standard HTTP response header
+          // 標準的な HTTP 応答ヘッダを送る
           client.println("HTTP/1.1 200 OK");
           client.println("Content-Type: text/html");
           client.println();
-          // print the current readings, in HTML format:
+          // 現在の測定値を HTML 形式で出力する:
           client.print("Temperature: ");
           client.print(temperature);
           client.print(" degrees C");
@@ -179,69 +176,67 @@ void listenForEthernetClients() {
           break;
         }
         if (c == '\n') {
-          // you're starting a new line
+          // 新しい行の始まり
           currentLineIsBlank = true;
         } else if (c != '\r') {
-          // you've gotten a character on the current line
+          // 現在の行に文字がある
           currentLineIsBlank = false;
         }
       }
     }
-    // give the web browser time to receive the data
+    // Web ブラウザがデータを受け取る時間を与える
     delay(1);
-    // close the connection:
+    // 接続を閉じる:
     client.stop();
   }
 }
 
 
-//Send a write command to SCP1000
+// SCP1000 に書き込みコマンドを送る
 void writeRegister(byte registerName, byte registerValue) {
-  // SCP1000 expects the register name in the upper 6 bits
-  // of the byte:
+  // SCP1000 はレジスタ名をバイトの上位 6 ビットに期待する:
   registerName <<= 2;
-  // command (read or write) goes in the lower two bits:
-  registerName |= 0b00000010; //Write command
+  // コマンド(読み/書き)は下位 2 ビット:
+  registerName |= 0b00000010; // 書き込みコマンド
 
-  // take the chip select low to select the device:
+  // チップセレクトを LOW にしてデバイスを選択する:
   digitalWrite(chipSelectPin, LOW);
 
-  SPI.transfer(registerName); //Send register location
-  SPI.transfer(registerValue); //Send value to record into register
+  SPI.transfer(registerName); // レジスタ位置を送る
+  SPI.transfer(registerValue); // レジスタに記録する値を送る
 
-  // take the chip select high to de-select:
+  // チップセレクトを HIGH にして選択を解除する:
   digitalWrite(chipSelectPin, HIGH);
 }
 
 
-//Read register from the SCP1000:
+// SCP1000 のレジスタを読む:
 unsigned int readRegister(byte registerName, int numBytes) {
-  byte inByte = 0;           // incoming from the SPI read
-  unsigned int result = 0;   // result to return
+  byte inByte = 0;           // SPI で読んだ受信バイト
+  unsigned int result = 0;   // 返す結果
 
-  // SCP1000 expects the register name in the upper 6 bits
-  // of the byte:
+  // SCP1000 はレジスタ名をバイトの上位 6 ビットに期待する:
   registerName <<=  2;
-  // command (read or write) goes in the lower two bits:
-  registerName &= 0b11111100; //Read command
+  // コマンド(読み/書き)は下位 2 ビット:
+  registerName &= 0b11111100; // 読み出しコマンド
 
-  // take the chip select low to select the device:
+  // チップセレクトを LOW にしてデバイスを選択する:
   digitalWrite(chipSelectPin, LOW);
-  // send the device the register you want to read:
+  // 読みたいレジスタをデバイスに送る:
   SPI.transfer(registerName);
-  // send a value of 0 to read the first byte returned:
+  // 0 を送って最初の返信バイトを読む:
   inByte = SPI.transfer(0x00);
 
   result = inByte;
-  // if there's more than one byte returned,
-  // shift the first byte then get the second byte:
+  // 返信が 2 バイト以上なら、
+  // 最初のバイトをシフトしてから 2 バイト目を読む:
   if (numBytes > 1) {
     result = inByte << 8;
     inByte = SPI.transfer(0x00);
     result = result | inByte;
   }
-  // take the chip select high to de-select:
+  // チップセレクトを HIGH にして選択を解除する:
   digitalWrite(chipSelectPin, HIGH);
-  // return the result:
+  // 結果を返す:
   return (result);
 }

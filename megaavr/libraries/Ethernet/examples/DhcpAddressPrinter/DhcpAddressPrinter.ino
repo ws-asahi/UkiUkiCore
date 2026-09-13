@@ -1,46 +1,41 @@
 /*
-  DHCP-based IP printer
+  DHCP による IP アドレス表示
 
-  This sketch uses the DHCP extensions to the Ethernet library
-  to get an IP address via DHCP and print the address obtained.
-  using an Arduino WIZnet Ethernet shield.
+  Ethernet ライブラリの DHCP 拡張を使って DHCP で IP アドレスを取得し、
+  取得したアドレスを表示します。WIZnet イーサネットシールドを使用します。
 
-  Circuit:
-   Ethernet shield attached to pins 10, 11, 12, 13
+ 回路(UkiUkiduino):
+ * イーサネットシールド(WIZnet W5100/W5200/W5500)を Uno ヘッダに直挿し
+   CS=D10 / MOSI=D11 / MISO=D12 / SCK=D13 (シールド上の SD カードは CS=D4)
+ * UkiUkiduino ProMicro の場合: シールドは直挿しできないので配線する
+   MOSI=D16 / MISO=D14 / SCK=D15、CS は任意のピン(Ethernet.init(pin) で指定)
+ * D13(SCK) は Serial2 の TX と共用のため、Ethernet 使用中は Serial2 を開かないこと
 
-  created 12 April 2011
-  modified 9 Apr 2012
-  by Tom Igoe
-  modified 02 Sept 2015
-  by Arturo Guadalupi
-
- */
+  原作: Tom Igoe (2011/2012)、Arturo Guadalupi 改変 (2015)
+  UkiUkiduino向けに日本語化
+*/
 
 #include <SPI.h>
 #include <Ethernet.h>
 
-// Enter a MAC address for your controller below.
-// Newer Ethernet shields have a MAC address printed on a sticker on the shield
+// コントローラの MAC アドレスを入力する。
+// 新しいイーサネットシールドにはシールド上のシールに MAC アドレスが印刷されている
 byte mac[] = {
   0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED
 };
 
 void setup() {
-  // You can use Ethernet.init(pin) to configure the CS pin
-  //Ethernet.init(10);  // Most Arduino shields
-  //Ethernet.init(5);   // MKR ETH Shield
-  //Ethernet.init(0);   // Teensy 2.0
-  //Ethernet.init(20);  // Teensy++ 2.0
-  //Ethernet.init(15);  // ESP8266 with Adafruit FeatherWing Ethernet
-  //Ethernet.init(33);  // ESP32 with Adafruit FeatherWing Ethernet
+  // CS ピンは Ethernet.init(pin) で変更できる(既定は D10 = Uno 用シールドの配線)
+  //Ethernet.init(10);  // UkiUkiduino + Uno 用イーサネットシールド(既定値なので省略可)
+  //Ethernet.init(10);  // UkiUkiduino ProMicro: 配線した CS ピンの番号を指定する
 
-  // Open serial communications and wait for port to open:
+  // シリアル通信を開き、ポートが開くのを待つ:
   Serial.begin(9600);
   while (!Serial) {
-    ; // wait for serial port to connect. Needed for native USB port only
+    ; // シリアルポートの接続を待つ(ネイティブUSBポートでのみ必要)
   }
 
-  // start the Ethernet connection:
+  // イーサネット接続を開始する:
   Serial.println("Initialize Ethernet with DHCP:");
   if (Ethernet.begin(mac) == 0) {
     Serial.println("Failed to configure Ethernet using DHCP");
@@ -49,12 +44,12 @@ void setup() {
     } else if (Ethernet.linkStatus() == LinkOFF) {
       Serial.println("Ethernet cable is not connected.");
     }
-    // no point in carrying on, so do nothing forevermore:
+    // 続けても意味がないので、以後何もしない:
     while (true) {
       delay(1);
     }
   }
-  // print your local IP address:
+  // 自分の IP アドレスを表示する:
   Serial.print("My IP address: ");
   Serial.println(Ethernet.localIP());
 }
@@ -62,33 +57,33 @@ void setup() {
 void loop() {
   switch (Ethernet.maintain()) {
     case 1:
-      //renewed fail
+      // 更新(renew)失敗
       Serial.println("Error: renewed fail");
       break;
 
     case 2:
-      //renewed success
+      // 更新(renew)成功
       Serial.println("Renewed success");
-      //print your local IP address:
+      // 自分の IP アドレスを表示する:
       Serial.print("My IP address: ");
       Serial.println(Ethernet.localIP());
       break;
 
     case 3:
-      //rebind fail
+      // 再取得(rebind)失敗
       Serial.println("Error: rebind fail");
       break;
 
     case 4:
-      //rebind success
+      // 再取得(rebind)成功
       Serial.println("Rebind success");
-      //print your local IP address:
+      // 自分の IP アドレスを表示する:
       Serial.print("My IP address: ");
       Serial.println(Ethernet.localIP());
       break;
 
     default:
-      //nothing happened
+      // 何も起きていない
       break;
   }
 }

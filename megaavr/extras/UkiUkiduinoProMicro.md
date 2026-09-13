@@ -21,7 +21,7 @@ MCU・クロック・USB・書き込み方式・オンボード LED / ボタン�
 | MCU / クロック / USB | UkiUkiduino と同一(AVR64DU32、内蔵 24 MHz、USB 2.0 FS) |
 | 電源 | **USB 5V のみ**(レギュレータ非搭載。RAW / VCC ピンはともに +5V に直結) |
 | オンボード LED | フルカラー LED(WS2812B、`LED_BUILTIN` = D17)、TX / RX LED(D30 / D31、負論理)、電源 LED |
-| オンボードボタン | `BTN_BUILTIN` = **D22**(押下 = HIGH) |
+| オンボードボタン | `BTN_BUILTIN` = **D32**(押下 = HIGH) |
 | 書き込み | USB ブートローダー / UPDI(4 ピン UPDI ヘッダ: RESET / VCC / GND / UPDI) |
 
 > ⚠️ **RAW ピンに 5V を超える電圧を加えないでください。** Pro Micro と異なりレギュレータがなく、  
@@ -36,8 +36,8 @@ MCU・クロック・USB・書き込み方式・オンボード LED / ボタン�
 Pro Micro(SparkFun / ATmega32U4)と同じ番号付けです。D11〜D13 は存在しません。  
 A0〜A3 は D18〜D21 を兼ね、その他のデジタルピンはアナログ A6〜A19 を兼ねます(A4 / A5 はありません)。  
 
-| D# | MCU | アナログ別名 | ADC ch | 主な機能 |
-|----|-----|--------------|--------|----------|
+| ピン名 | MCU | 別名 | ADC ch | 主な機能 |
+|--------|-----|-----|--------|----------|
 | D0 | PA5 | A11 | AIN25 | **RX**(Serial1) / **MOSI**(SPI1) |
 | D1 | PA4 | A12 | AIN24 | **TX**(Serial1) / **MISO**(SPI1) |
 | D2 | PA2 | A13 | AIN22 | **SDA**(I2C) |
@@ -52,23 +52,22 @@ A0〜A3 は D18〜D21 を兼ね、その他のデジタルピンはアナログ 
 | D14 | PD5 | A17 | AIN5 | PWM / **MISO**(SPI) |
 | D15 | PD6 | A18 | AIN6 | **SCK**(SPI) / TX(Serial2) |
 | D16 | PD4 | A19 | AIN4 | PWM / **MOSI**(SPI) |
-| D17 | PF5 | — | — | **LED_BUILTIN**(物理ピンなし) |
-| D18 | PD7 | A0 | AIN7 | **A0** / SPI ハードウェア SS / RX(Serial2) / VREFA |
-| D19 | PF1 | A1 | AIN17 | **A1** / CCL(LUT3-IN1) |
-| D20 | PF2 | A2 | AIN18 | **A2** / CCL(LUT3-IN2) / EVOUTF |
-| D21 | PF3 | A3 | AIN19 | **A3** / CCL(LUT3-OUT) |
-| D22 | PF0 | — | AIN16 | **BTN_BUILTIN**(物理ピンなし) / CCL(LUT3-IN0) |
+| A0 | PD7 | D18 | AIN7 | **A0** / SPI ハードウェア SS / RX(Serial2) / VREFA |
+| A1 | PF1 | D19 | AIN17 | **A1** / CCL(LUT3-IN1) |
+| A2 | PF2 | D20 | AIN18 | **A2** / CCL(LUT3-IN2) / EVOUTF |
+| A3 | PF3 | D21| AIN19 | **A3** / CCL(LUT3-OUT) |
 | D30 | PA0 | — | — | **LED_BUILTIN_TX**(TX LED、負論理、物理ピンなし) |
 | D31 | PA1 | — | — | **LED_BUILTIN_RX**(RX LED、負論理、物理ピンなし) |
+| D32 | PF0 | — | AIN16 | **BTN_BUILTIN**(物理ピンなし) / CCL(LUT3-IN0) |
 
 > **D3 / D4 / D7 の PWM は択一**です(UkiUkiduino の D3 / D4 / D7 と同じ仕組み)。  
 > 最後に `analogWrite()` したピンが出口になり、`tone()` 実行中は 3 本とも停止します。  
 > Pro Micro 本来の PWM ピン(D3 / D5 / D6 / D9 / D10)はすべて使え、さらに D4 / D7 / D14 / D16 が加わります。  
 >  
-> **Pro Micro に AREF ピンはありません。** 外部基準電圧を使う場合は A0(PD7 = VREFA)に入力し、  
+> **Pro Micro に AREF 専用ピンはありません。** 外部基準電圧を使う場合は A0(PD7 = VREFA)に入力し、  
 > その間 A0 / SPI SS / Serial2 RX は使えません。  
 >  
-> オンボード LED は D17 への digitalWrite に連動します。D17 に物理ピンはありません。  
+> オンボード LED は D17 への digitalWrite に連動します。  
 
 ---
 
@@ -81,6 +80,9 @@ A0〜A3 は D18〜D21 を兼ね、その他のデジタルピンはアナログ 
 | `Serial2` | USART1 | A0(RX) / D15(TX) | 追加 UART。SPI の SCK / SS と共用(排他) |
 
 > Serial1 は XCK(D7) / XDIR(D8) と併用して **RS-485 の方向制御や SPI ホストモード(SPI1)にも対応**。  
+>  
+> 通信速度は 2400bps から 1000000bps までが安定領域です。  
+> 動作クロックを落とす場合上限は下がります。  
 
 ---
 
@@ -93,8 +95,11 @@ A0〜A3 は D18〜D21 を兼ね、その他のデジタルピンはアナログ 
 | SCK | D15 | D7 |
 | SS | A0(D18) | なし |
 
-> **クライアント(受信側)動作:** ハードウェア SS が A0(PD7)にあるため、付属の **SPISlave ライブラリ**で SPI スレーブとしても動作できます。  
-> その間 A0 はアナログ入力・Serial2 RX と排他です。  
+> **クライアント(受信側)動作:** ハードウェア SS が A0 に出ているため、  
+> 付属の **SPISlave ライブラリ**(ESP8266 互換 API)で SPI スレーブとしても動作できます。  
+> その間 A0 ピンは SS 入力となり、GPIO / Serial2 / AREF とは排他です。  
+>  
+> 詳細は [libraries/SPISlave](../libraries/SPISlave/README.md) を参照。  
 
 ---
 
@@ -150,7 +155,7 @@ A0〜A3 は D18〜D21 を兼ね、その他のデジタルピンはアナログ 
 |------|------|------|
 | **LED_BUILTIN** | D17(Active-HIGH) | ユーザー用フルカラー LED(WS2812B) |
 | **LED_BUILTIN_TX / RX** | D30 / D31(Active-LOW) | USB シリアル送受信表示(Pro Micro と同じ挙動) |
-| **BTN_BUILTIN** | **D22**(Push-HIGH) | ユーザー用ボタン |
+| **BTN_BUILTIN** | **D32**(Push-HIGH) | ユーザー用ボタン |
 | リセット | RESET | ボタン(ダブルタップでブートローダ) |
 
 > `setBLEDColor()` による色・明るさ指定、`digitalWrite(LED_BUILTIN, HIGH/LOW)` による点灯・消灯、  
@@ -167,14 +172,6 @@ A0〜A3 は D18〜D21 を兼ね、その他のデジタルピンはアナログ 
 
 - USB ブートローダ(USB-CDC / STK500v1)。RESET ダブルタップでブートローダに入り、フルカラー LED が黄色にブレス点灯します。
 - ブートローダ書き換えは基板端の 4 ピン UPDI ヘッダ(RESET / VCC / GND / UPDI)から UPDI プログラマで行います。
-
----
-
-## ボード識別マクロ
-
-| マクロ |  用途 |
-|--------|------|
-| `ARDUINO_AVR_UKIUKIDUINO_PROMICRO` | ボード識別用 |
 
 ---
 

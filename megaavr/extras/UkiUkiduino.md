@@ -21,14 +21,14 @@ VTuber「浮々ゆにこ」のファングッズとして開発され、基板�
 | クロック | 24 MHz 内蔵発振(水晶なし) |
 | 電源 | USB 5V / DC ジャック 7–12V |
 | オンボード LED | フルカラー LED(WS2812D-F5、`LED_BUILTIN` = D13)、電源 LED(白) |
-| オンボードボタン | `BTN_BUILTIN` = D21(押下 = HIGH) |
+| オンボードボタン | `BTN_BUILTIN` = D32(押下 = HIGH) |
 | 書き込み | USB CDC ブートローダ(STK500v1) / UPDI(Power ヘッダ 1 番ピン) |
 
 ---
 
 ## Uno R3 / Leonardo との比較
 
-UkiUkiduino の比較対象となる Arduino Uno R3 は 旧世代の8ビットマイコン **ATmega328P**（ネイティブUSB なし）を搭載しています。  
+UkiUkiduino の比較対象となる Arduino Uno R3 は 旧世代の8ビットマイコン **ATmega328P**(ネイティブUSB なし)を搭載しています。  
 また同じく旧世代の Arduino Leonardo が搭載する **ATmega32U4** はネイティブUSBを搭載していますが  
 ブートローダーで多くのプログラムメモリを消費します。  
 AVR64DU32 は新世代の **AVRxt コア**で、USB 内蔵・クロック・メモリ・周辺機能の多くが強化されています。  
@@ -56,34 +56,28 @@ AVR64DU32 は新世代の **AVRxt コア**で、USB 内蔵・クロック・メ�
 
 ## ピンマッピング
 
-Arduino Uno R3 と同じ番号付け（D0–D13、A0–A5）です。
+Arduino Uno R3 と同じ番号付け(D0–D13、A0–A5)です。
 A0–A5 はデジタル D14–D19 、D0～D13 は アナログ A6–A19 を兼ねます。  
-また AREF 端子の D20 とオンボードボタンの D21 が追加されています。
+また AREF 端子の D20 とオンボードボタンの D32 が追加されています。
 
-| D# | MCU | アナログ別名 | ADC ch | 主な機能 |
-|----|-----|--------------|--------|----------|
+| ピン名 | MCU | 別名 | ADC ch | 主な機能 |
+|--------|-----|-----|--------|----------|
 | D0 | PA5 | A6 | AIN25 | **RX**(Serial1) / **MOSI**(SPI1)|
 | D1 | PA4 | A7 | AIN24 | **TX**(Serial1) / **MISO**(SPI1)|
-| D2 | PA7 | A8 | AIN27 | XDIR（Serial1） / AC0 OUT / EVOUTA |
-| D3 | PA6 | A9 | AIN26 | PWM（TCB1 → CCL LUT0 経由） / XCK（Serial1） / SCK（SPI1） |
-| D4 | PC3 | A10 | AIN31 | PWM（TCB1 → CCL LUT1 経由） / AC0 AINP4 |
-| D5 | PD0 | A11 | AIN0 | PWM / CCL（LUT2-IN0） |
-| D6 | PD1 | A12 | AIN1 | PWM / CCL（LUT2-IN1） |
-| D7 | PF5 | A13 | AIN21 | PWM（TCB1 WO 直結） |
+| D2 | PA7 | A8 | AIN27 | XDIR(Serial1) / **ACOUT**(AnalogComp) / EVOUTA |
+| D3 | PA6 | A9 | AIN26 | PWM(TCB1 → CCL LUT0 経由) / XCK(Serial1) / SCK(SPI1) |
+| D4 | PC3 | A10 | AIN31 | PWM(TCB1 → CCL LUT1 経由) |
+| D5 | PD0 | A11 | AIN0 | PWM / CCL(LUT2-IN0) |
+| D6 | PD1 | A12 | AIN1 | PWM / CCL(LUT2-IN1) |
+| D7 | PF5 | A13 | AIN21 | PWM(TCB1 WO 直結) |
 | D8 | PF4 | A14 | AIN20 |  |
-| D9 | PD2 | A15 | AIN2 | PWM / CCL（LUT2-IN2）/ AC AINP0 / EVOUTD |
-| D10 | PD3 | A16 | AIN3 | PWM / CCL（LUT2-OUT）/ AC AINN0  |
-| D11 | PD4 | A17 | AIN4 | PWM / **MOSI**（SPI） |
-| D12 | PD5 | A18 | AIN5 | PWM / **MISO**（SPI） |
-| D13 | PD6 | A19 | AIN6 | **LED_BUILTIN** / **SCK**（SPI） / TX（Serial2） |
-| D14 | PF0 | A0 | AIN16 | CCL（LUT3-IN0） |
-| D15 | PF1 | A1 | AIN17 | CCL（LUT3-IN1） |
-| D16 | PF2 | A2 | AIN18 | CCL（LUT3-IN2） |
-| D17 | PF3 | A3 | AIN19 | CCL（LUT3-OUT） |
-| D18 | PA2 | A4 | AIN22 | アナログ A4 / **SDA**（I2C） |
-| D19 | PA3 | A5 | AIN23 | アナログ A5 / **SCL**（I2C） |
-| D20 | PD7 | A20 | AIN7 | **AREF**（VREFA 外部基準電圧入力）/ GPIO / SPI ハードウェア SS / RX（Serial2） |
-| D21 | PA1 | — | — | **BTN_BUILTIN** |
+| D9 | PD2 | A15 | AIN2 | PWM / CCL(LUT2-IN2)/ **AC+**(AnalogComp) / EVOUTD |
+| D10 | PD3 | A16 | AIN3 | PWM / CCL(LUT2-OUT)/ **AC-**(AnalogComp)  |
+| D11 | PD4 | A17 | AIN4 | PWM / **MOSI**(SPI) |
+| D12 | PD5 | A18 | AIN5 | PWM / **MISO**(SPI) |
+| D13 | PD6 | A19 | AIN6 | **LED_BUILTIN** / **SCK**(SPI)/ TX(Serial2)|
+| D20 | PD7 | A20 | AIN7 | **AREF** / **SS**(SPI)/ RX(Serial2)|
+| D32 | PA1 | — | — | **BTN_BUILTIN** |
 | A0 | PF0 | D14 | AIN16 | **IN0**(CustomLogic1) |
 | A1 | PF1 | D15 | AIN17 | **IN1**(CustomLogic1) |
 | A2 | PF2 | D16 | AIN18 | **IN2**(CustomLogic1) / EVOUTF |
@@ -98,9 +92,7 @@ A0–A5 はデジタル D14–D19 、D0～D13 は アナログ A6–A19 を兼�
 > tone などで TCB1 を使用する時は 3 つとも PWM が無効化されます。  
 >  
 > **AREF は GPIO D20 / A20 や SPI SS(スレーブ側)として使えます**。  
-> それぞれの機能は排他利用です。  
->  
-> D21 は物理ピンを持ちません。  
+> それぞれの機能は排他利用です。    
 >  
 > オンボード LED は D13 への digitalWrite に連動して動作します。 
 > D13 への入力および SPI 動作等では動作しません。 
@@ -118,7 +110,8 @@ A0–A5 はデジタル D14–D19 、D0～D13 は アナログ A6–A19 を兼�
 
 > Serial1は XCK(D3) / XDIR(D2) と併用して **RS-485 の方向制御や SPI ホストモードにも対応**。  
 >  
-> `Serial` は `USBSerial` の別名として定義されており USB-CDC を利用します。  
+> 通信速度は 2400bps から 1000000bps までが安定領域です。  
+> 動作クロックを落とす場合上限は下がります。  
 
 ---
 
@@ -133,19 +126,10 @@ A0–A5 はデジタル D14–D19 、D0～D13 は アナログ A6–A19 を兼�
 | SS | AREF | なし |
 
 > **クライアント(受信側)動作:** ハードウェア SS(AREF) が実ピンにあるため、  
-> 付属の **SPISlave ライブラリ**（ESP8266 互換 API）で SPI スレーブとしても動作できます。  
+> 付属の **SPISlave ライブラリ**(ESP8266 互換 API)で SPI スレーブとしても動作できます。  
 > その間 AREF ピンは SS 入力となり、外部基準電圧(`analogReference(EXTERNAL)`)・GPIO D20/A20・Serial2 とは排他です。  
 >  
 > 詳細は [libraries/SPISlave](../libraries/SPISlave/README.md) を参照。  
-
-> **SPI クロックの注意:** AVR DU の SPI 分周は /2, /4, /8 … のみのため、24 MHz 動作では  
-> `SPISettings(14000000, …)` のような要求が **12 MHz** に丸められます。Uno R3(16 MHz → 8 MHz)より速くなるので、  
-> W5100 など古い 5V 系デバイスでは応答しないことがあります。8 MHz 以下を要求すれば  
-> F_CPU = 12/16/20/24 MHz でそれぞれ 6/8/5/6 MHz となり安全です。  
->  
-> **Ethernet シールド(W5100/W5200/W5500):** 同梱の **Ethernet ライブラリ**(公式 2.0.2 の SPI クロックを  
-> 8 MHz 要求に調整したもの)を使ってください。CS は D10(W5100) / D4(SD) の標準配線のままで動作します。  
-> D13(SCK) は Serial2 TX と共用のため、Ethernet/SD 使用中は Serial2 を開かないでください。  
 
 ---
 
@@ -193,7 +177,6 @@ A0–A5 はデジタル D14–D19 、D0～D13 は アナログ A6–A19 を兼�
 > 24MHz の連続矩形波は EMI 源になるため、必要な期間だけ有効化する運用を推奨します。  
 > D2 は AC0 出力・EVOUTA と共用のため、それらが使用中は `begin()` が `false` を返します。 
 
-
 ---
 
 ## 電源
@@ -203,11 +186,10 @@ UkiUkiduino は **2 系統の電源入力**を持ち、いずれからでも 5V 
 - **USB-C(5V):** 理想ダイオードで逆流保護し、ホストを破損させずに 5V を供給します。  
   理想ダイオードを採用しているので USB 駆動時でもアナログ入力の基準電圧を 5V として動作できます。  
   (通常のダイオードで保護する場合、アナログ基準電圧が低下し外部から 5V を入力した時の値がズレます)
-- **DC ジャック（7–12V、推奨 7–9V）:** φ5.5/2.1mm の DC ジャックから入力し、ダイオードで逆接続保護後、リニアレギュレータで 5V を生成します。  
+- **DC ジャック(7–12V、推奨 7–9V):** φ5.5/2.1mm の DC ジャックから入力し、ダイオードで逆接続保護後、リニアレギュレータで 5V を生成します。  
   リニア方式のため入力電圧が高いほど発熱が増えます。  
-  **大きな負荷（数百 mA 以上）を駆動する場合は 7–9V での使用を推奨**します。  
+  **大きな負荷(数百 mA 以上)を駆動する場合は 7–9V での使用を推奨**します。  
 - **3.3V(シールドピン用):** 基板上の LDO。  
-
 
 ---
 
@@ -216,22 +198,13 @@ UkiUkiduino は **2 系統の電源入力**を持ち、いずれからでも 5V 
 | 部品 | 接続 | 用途 |
 |------|------|------|
 | **LED_BUILTIN** | D13(Active-HIGH) | ユーザー用フルカラー LED |
-| **BTN_BUILTIN** | **D21**(Push-HIGH) | ユーザー用ボタン |
+| **BTN_BUILTIN** | **D32**(Push-HIGH) | ユーザー用ボタン |
 | リセット | RESET | ボタン |
 
 > LED_BUILTIN は `setBLED` 命令により点灯色を指定可。  
 >  
-> BTN_BUILTIN は `digitalRead(BTN_BUILTIN)` または `digitalRead(D21)` で読み取り可能。  
+> BTN_BUILTIN は `digitalRead(BTN_BUILTIN)` または `digitalRead(D32)` で読み取り可能。  
 > ボタン押下で HIGH 、離すと LOW になる。
-
-
----
-
-## ボード識別マクロ
-
-| マクロ |  用途 |
-|--------|------|
-| `ARDUINO_AVR_UKIUKIDUINO` | ボード識別用 |
 
 ---
 

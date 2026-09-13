@@ -70,21 +70,6 @@ A0〜A3 は D18〜D21 を兼ね、その他のデジタルピンはアナログ 
 >  
 > オンボード LED は D17 への digitalWrite に連動します。D17 に物理ピンはありません。  
 
-| 機能 | UkiUkiduino | UkiUkiduino ProMicro |
-|------|-------------|----------------------|
-| `Serial1`(USART0) | D0(RX) / D1(TX) | D0(RX) / D1(TX) |
-| `Serial2`(USART1) | AREF(RX) / D13(TX) | A0(RX) / D15(TX) |
-| SPI(MOSI / MISO / SCK) | D11 / D12 / D13 | D16 / D14 / D15 |
-| SPI ハードウェア SS(SPISlave) | AREF(D20) | A0(D18) |
-| I2C(SDA / SCL) | A4 / A5 | D2 / D3 |
-| クロック出力(ClockOut) | D2 | D8 |
-| イベント出力 EVOUTA / EVOUTD / EVOUTF | D2 / D9 / A2 | D8 / D9 / A2 |
-| CustomLogic1(LUT3) IN0 / IN1 / IN2 / OUT | A0 / A1 / A2 / A3 | D22(ボタン) / A1 / A2 / A3 |
-| `LED_BUILTIN` | D13 | D17 |
-| `BTN_BUILTIN` | D21 | D22 |
-| TX / RX LED | なし | D30 / D31(`TXLED1` 等の 32U4 互換マクロあり) |
-
-
 ---
 
 ### シリアルポート

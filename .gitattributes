@@ -4,3 +4,5 @@
 *.sh text eol=lf
 # PowerShell is CRLF-tolerant but keep it declared as text.
 *.ps1 text
+# Batch files need CRLF for cmd.exe (labels/loops misbehave with bare LF).
+*.bat text eol=crlf

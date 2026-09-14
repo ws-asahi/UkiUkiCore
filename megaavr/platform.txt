@@ -31,7 +31,7 @@ compiler.warning_flags.more=-Wall
 compiler.warning_flags.all=-Wall -Wextra
 
 # Default "compiler.path" is correct, change only if you want to override the initial value
-compiler.path={runtime.tools.avr-gcc.path}/bin/
+compiler.path={runtime.tools.avr-gcc-15.2.0-wazamono2.path}/bin/
 compiler.c.cmd=avr-gcc
 # Optimization flags. The Arduino IDE "Optimize for Debugging" toggle picks
 # .release (default) or .debug. Release keeps -mrelax (linker relaxation =
@@ -71,7 +71,7 @@ compiler.ldflags=
 compiler.libraries.ldflags=
 compiler.size.cmd=avr-size
 
-# Overridden by platform.local.txt if used
+# Extra flags (empty by default)
 compiler.c.extra_flags=
 compiler.c.elf.extra_flags=
 compiler.S.extra_flags=
@@ -179,7 +179,7 @@ tools.avrdude.erase.params.quiet=
 tools.avrdude.erase.pattern=
 
 ## avrdude-related paths
-tools.avrdude.path={runtime.tools.avrdude.path}
+tools.avrdude.path={runtime.tools.avrdude-8.1-wazamono2.path}
 tools.avrdude.cmd.path={path}/bin/avrdude
 tools.avrdude.config.path={path}/etc/avrdude.conf
 tools.avrdude.network_cmd={runtime.tools.arduinoOTA.path}/bin/arduinoOTA
@@ -242,8 +242,9 @@ tools.avrdude.upload.network_pattern="{network_cmd}" -address {serial.port} -por
 # This MANUAL install does not auto-resolve the debug toolchain. To enable:
 #   1) obtain an avr-gdb (the C:\avr-gcc build was made with BUILD_GDB=0),
 #   2) pip install pyavrocd  (verify it supports avr64du32 + ships its SVD),
-#   3) in platform.local.txt set:
-#        debug.toolchain.path=C:/path/to/avrocd   (folder holding pyavrocd + avr-gdb)
+#   3) place them as  tools/avrocd-tools/<version>/  under hardware/UkiUkiCore
+#      (same layout setup_toolchain.{sh,bat} uses) so that
+#        {runtime.tools.avrocd-tools.path} resolves to the folder holding pyavrocd + avr-gdb
 # Debug probe: Atmel-ICE / Curiosity Nano nEDBG / PICkit (jtag3updi-class).
 # ------------------------------------------------------------
 debug.executable={build.path}/{build.project_name}.elf

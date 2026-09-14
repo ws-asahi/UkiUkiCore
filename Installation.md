@@ -67,11 +67,29 @@ UkiUkiCore は、UkiUkiduino / UkiUkimicro を Arduino IDE で開発するため
    - macOS 例: `~/Documents/Arduino/hardware/UkiUkiCore/`
    - Linux 例: `~/Arduino/hardware/UkiUkiCore/`
 
-3. **ツールチェーンを設定します（手動インストールでは必須）。**
-   `megaavr\make_platform_local.bat` を実行して、ローカルの avr-gcc 15.x を指す
-   `platform.local.txt` を生成してください（詳細はバッチファイル冒頭のコメント参照）。
-   [wazamono-toolchain](https://github.com/ws-asahi/wazamono-toolchain)をダウンロードして`Arduino/tools/`へ配置してください。
-   （詳細は wazamono-toolchain の説明を確認してください）
+3. **ツールチェーンを配置します（手動インストールでは必須）。**
+   リポジトリ直下のスクリプトを実行すると、
+   [wazamono-toolchain](https://github.com/ws-asahi/wazamono-toolchain) のリリースから
+   avr-gcc と avrdude をダウンロードして `hardware\UkiUkiCore\tools\` に配置します。
+
+   - Windows: `setup_toolchain.bat` をダブルクリック（または `cmd` から実行）
+   - macOS / Linux: `./setup_toolchain.sh`
+
+   ```
+   UkiUkiCore/
+     megaavr/                          <- コア
+     tools/avr-gcc/15.2.0-wazamono2/   <- bin/avr-gcc ...
+     tools/avrdude/8.1-wazamono2/      <- bin/avrdude, etc/avrdude.conf
+   ```
+
+   Arduino IDE は `hardware\<ベンダ>\tools\<名前>\<バージョン>\` を正式なツール置き場として
+   認識するため、コンパイル・スケッチ書き込み・ブートローダ書き込みの全てでこの
+   ツールチェーンが使われます。`platform.local.txt` は不要になりました
+   （残っていればスクリプトが削除します）。
+
+   > **注意:** スケッチブック直下の `Arduino\tools\` に置いても IDE 2 には認識されません。
+   > 必ず `hardware\UkiUkiCore\tools\` 配下に置いてください。
+   > macOS と Linux(aarch64) には現時点で avr-gcc のビルドが無いため avrdude のみ配置されます。
 
 5. Arduino IDE を再起動します。
 

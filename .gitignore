@@ -9,6 +9,10 @@ megaavr/extras/.DS_Store
 # Local environment-specific tool paths (not for upstream)
 megaavr/platform.local.txt
 
+# Toolchain placed by setup_toolchain.sh / setup_toolchain.bat (manual install)
+/tools/avr-gcc/
+/tools/avrdude/
+
 # Boards Manager release staging (make_release.sh output)
 dist/
 WazamonoCore-*.tar.bz2

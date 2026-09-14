@@ -33,7 +33,7 @@ compiler.warning_flags.more=-Wall
 compiler.warning_flags.all=-Wall -Wextra
 
 # Default "compiler.path" is correct, change only if you want to override the initial value
-compiler.path={runtime.tools.avr-gcc.path}/bin/
+compiler.path={runtime.tools.avr-gcc-15.2.0-wazamono2.path}/bin/
 compiler.c.cmd=avr-gcc
 compiler.c.flags=-c -g -Os {compiler.warning_flags} -std=gnu11 -ffunction-sections -fdata-sections -MMD -flto -fno-fat-lto-objects -mrelax -Werror=implicit-function-declaration -Wundef
 # DxCore has the three additional FLMAP sections for mapped flash
@@ -57,7 +57,7 @@ compiler.ldflags=
 compiler.libraries.ldflags=
 compiler.size.cmd=avr-size
 
-# Overridden by platform.local.txt if used
+# Extra flags (empty by default)
 compiler.c.extra_flags=
 compiler.c.elf.extra_flags=
 compiler.S.extra_flags=
@@ -164,7 +164,7 @@ tools.avrdude.erase.params.quiet=
 tools.avrdude.erase.pattern=
 
 ## avrdude-related paths
-tools.avrdude.path={runtime.tools.avrdude.path}
+tools.avrdude.path={runtime.tools.avrdude-8.1-wazamono2.path}
 tools.avrdude.cmd.path={path}/bin/avrdude
 tools.avrdude.config.path={runtime.platform.path}/avrdude.conf
 tools.avrdude.network_cmd={runtime.tools.arduinoOTA.path}/bin/arduinoOTA

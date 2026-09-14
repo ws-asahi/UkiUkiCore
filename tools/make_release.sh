@@ -49,7 +49,6 @@ mkdir -p "$STAGE/$NAME" "$DIST"
 # Copy platform contents, excluding machine-local / junk files.
 tar -C "$MEGAAVR" -cf - \
     --exclude='platform.local.txt' \
-    --exclude='make_platform_local.bat' \
     --exclude='.DS_Store' \
     --exclude='*.pyc' \
     . | tar -C "$STAGE/$NAME" -xf -

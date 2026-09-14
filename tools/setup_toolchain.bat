@@ -1,27 +1,32 @@
 @echo off
 setlocal EnableExtensions
 REM ============================================================================
-REM  tools\setup_toolchain.bat  -  UkiUkiCore 手動インストール用ツールチェーン配置スクリプト(Windows)
+REM  tools\setup_toolchain.bat  -  toolchain installer for a MANUAL (sketchbook) install
 REM
-REM  docs\package_ukiuki_index.json(ボードマネージャ用インデックス)を読み、最新の
-REM  platform が要求する avr-gcc / avrdude(toolsDependencies)をダウンロードして、
-REM  このディレクトリ(hardware\UkiUkiCore\tools\)に Arduino IDE が認識する形で配置します:
+REM  Reads docs\package_ukiuki_index.json (the Boards Manager index), takes the
+REM  avr-gcc / avrdude versions required by the newest platform (toolsDependencies)
+REM  and places them in THIS directory (hardware\UkiUkiCore\tools\) in the layout
+REM  the Arduino IDE recognises:
 REM
-REM      <スケッチブック>\hardware\UkiUkiCore\
-REM          megaavr\                        <- コア(platform.txt など)
+REM      <sketchbook>\hardware\UkiUkiCore\
+REM          megaavr\                        <- the core (platform.txt ...)
 REM          tools\avr-gcc\<version>\        <- bin\avr-gcc.exe ...
 REM          tools\avrdude\<version>\        <- bin\avrdude.exe, etc\avrdude.conf
 REM
-REM  Arduino IDE 2 / arduino-cli は hardware\<VENDOR>\tools\<name>\<version>\ を
-REM  {runtime.tools.<name>-<version>.path} として登録するため、コンパイル・
-REM  スケッチ書き込み・ブートローダ書き込みの全てでこのツールが使われます。
-REM  (platform.local.txt は不要です。あれば削除します。)
+REM  Arduino IDE 2 / arduino-cli registers hardware\<VENDOR>\tools\<name>\<version>\
+REM  as {runtime.tools.<name>-<version>.path}, so compile, sketch upload AND
+REM  burn-bootloader all use these tools. platform.local.txt is no longer
+REM  needed (it is deleted if present).
 REM
-REM  使い方:  tools\setup_toolchain.bat [--force]
-REM      --force   既に配置済みでも削除して入れ直す
+REM  Usage:  tools\setup_toolchain.bat [--force]
+REM      --force   reinstall even if the tool is already present
 REM
-REM  必要なもの: Windows 10 1803 以降(標準の curl.exe / tar.exe / certutil / PowerShell を使用)
-REM  日本語を含むパス(ドキュメント\Arduino など)でも動作します。
+REM  Requires Windows 10 1803 or later (built-in curl.exe / tar.exe / certutil /
+REM  PowerShell). Works from paths containing non-ASCII characters.
+REM
+REM  NOTE: keep this file ASCII-only. cmd.exe reads batch files in the console
+REM  code page (CP932 on Japanese Windows); UTF-8 comments get mis-parsed and
+REM  fragments of them are executed as commands.
 REM ============================================================================
 
 set "DEST=%~dp0"
@@ -45,8 +50,8 @@ mkdir "%WORK%" || exit /b 1
 echo Index : %INDEX%
 echo Host  : %HOST%
 
-REM ---- PowerShell でインデックスを解析し、1 行 1 ツール(name|version|archive|url|sha256)を書き出す ----
-REM      最新 platform(バージョン最大)の toolsDependencies を対象にする。ホスト用が無ければ url は空。
+REM ---- Parse the index with PowerShell: one line per tool (name|version|archive|url|sha256) ----
+REM      Uses toolsDependencies of the newest platform. url is empty when no archive exists for HOST.
 powershell.exe -NoProfile -ExecutionPolicy Bypass -Command ^
   "$ErrorActionPreference='Stop';" ^
   "$d = Get-Content -Raw -Encoding UTF8 '%INDEX%' | ConvertFrom-Json;" ^
@@ -70,12 +75,12 @@ for /f "usebackq tokens=1-5 delims=|" %%a in ("%WORK%\tools.lst") do (
   call :install "%%a" "%%b" "%%c" "%%d" "%%e" || goto :fail
 )
 
-REM ---- platform.txt のバージョン固定と一致しているか確認 ----------------------
+REM ---- Check that platform.txt pins the same versions ------------------------
 if exist "%ROOT%\megaavr\platform.txt" for %%t in (%INSTALLED%) do (
   findstr /c:"runtime.tools.%%t.path" "%ROOT%\megaavr\platform.txt" >nul || echo [warn] megaavr\platform.txt does not reference {runtime.tools.%%t.path} - update the pin to match the index.
 )
 
-REM ---- 旧方式の platform.local.txt を片付ける ----------------------------
+REM ---- Remove the obsolete platform.local.txt --------------------------------
 if exist "%ROOT%\megaavr\platform.local.txt" (
   del /q "%ROOT%\megaavr\platform.local.txt"
   echo [clean] removed obsolete megaavr\platform.local.txt ^(no longer needed^)
@@ -113,7 +118,7 @@ if exist "%T_TARGET%\%T_PROBE%" if "%FORCE%"=="0" (
 echo [get ] %T_ARCHIVE%
 curl.exe -fL -# -o "%WORK%\%T_ARCHIVE%" "%T_URL%" || (echo ERROR: download failed: %T_ARCHIVE%& exit /b 1)
 
-REM --- SHA-256 検証 (certutil の出力からハッシュ行を取り出す) ---
+REM --- SHA-256 check (take the hash line from certutil output) ---
 set "HAVE="
 for /f "skip=1 tokens=1" %%h in ('certutil -hashfile "%WORK%\%T_ARCHIVE%" SHA256 ^| findstr /v /i "certutil"') do if not defined HAVE set "HAVE=%%h"
 if not "%WANT%"=="" if not "%HAVE%"=="" (
@@ -128,12 +133,12 @@ if not "%WANT%"=="" if not "%HAVE%"=="" (
 if "%HAVE%"=="" echo [warn] could not verify SHA-256; continuing
 
 echo [untar] %T_ARCHIVE%
-REM 配置先と同じドライブ上に展開してから改名する(TEMP が別ドライブでも move で失敗しないように)
+REM Extract on the destination drive, then rename (move fails across drives if TEMP is elsewhere)
 set "T_STAGE=%DEST%\%T_NAME%\.staging"
 if exist "%T_STAGE%" rd /s /q "%T_STAGE%"
 mkdir "%T_STAGE%" || (echo ERROR: cannot create %T_STAGE%& exit /b 1)
 tar.exe -xzf "%WORK%\%T_ARCHIVE%" -C "%T_STAGE%" || (echo ERROR: extract failed& exit /b 1)
-REM アーカイブ直下は <name>-<version>\ の 1 ディレクトリ
+REM The archive contains a single top-level directory <name>-<version>\
 set "T_TOP="
 for /d %%d in ("%T_STAGE%\*") do if not defined T_TOP set "T_TOP=%%~fd"
 if not defined T_TOP (echo ERROR: unexpected archive layout& exit /b 1)

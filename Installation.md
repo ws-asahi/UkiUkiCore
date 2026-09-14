@@ -68,12 +68,13 @@ UkiUkiCore は、UkiUkiduino / UkiUkimicro を Arduino IDE で開発するため
    - Linux 例: `~/Arduino/hardware/UkiUkiCore/`
 
 3. **ツールチェーンを配置します（手動インストールでは必須）。**
-   リポジトリ直下のスクリプトを実行すると、
+   `tools\` 内のスクリプトを実行すると、`docs\package_ukiuki_index.json`（ボードマネージャ用
+   インデックス）に書かれた最新の avr-gcc / avrdude を
    [wazamono-toolchain](https://github.com/ws-asahi/wazamono-toolchain) のリリースから
-   avr-gcc と avrdude をダウンロードして `hardware\UkiUkiCore\tools\` に配置します。
+   ダウンロードして `hardware\UkiUkiCore\tools\` に配置します（SHA-256 検証付き）。
 
-   - Windows: `setup_toolchain.bat` をダブルクリック（または `cmd` から実行）
-   - macOS / Linux: `./setup_toolchain.sh`
+   - Windows: `tools\setup_toolchain.bat` をダブルクリック（または `cmd` から実行）
+   - macOS / Linux: `tools/setup_toolchain.sh`（python3 または jq が必要）
 
    ```
    UkiUkiCore/

@@ -8,7 +8,7 @@
 #  SHA-256 + size, and writes them into docs/package_ukiuki_index.json.
 #
 #  Usage (from repo root or anywhere, Git Bash OK):
-#      docs/make_release.sh [version]
+#      tools/make_release.sh [version]
 #  If [version] is omitted, the LAST "version=" line of megaavr/platform.txt
 #  is used (the IDE-workaround override, e.g. "version=0.0.3").
 #
@@ -21,9 +21,14 @@
 #    4. Push main; GitHub Pages (docs/) serves the index at
 #       https://ws-asahi.github.io/UkiUkiCore/package_ukiuki_index.json
 #
-#  NOTE: toolsDependencies (avr-gcc 15.2.0-wazamono1 / avrdude 8.1-wazamono1)
+#  NOTE: toolsDependencies (avr-gcc 15.2.0-wazamono2 / avrdude 8.1-wazamono2)
 #  are downloaded from ws-asahi/wazamono-toolchain releases - shared with
-#  WazamonoCore, nothing to rebuild here.
+#  WazamonoCore, nothing to rebuild here.  Keep them in sync with the
+#  {runtime.tools.<name>-<version>.path} pins in megaavr/platform.txt.
+#
+#  The index keeps every released platform version (newest first) so users can
+#  downgrade from the Boards Manager; an existing entry for [version] is
+#  replaced in place, a new version is inserted at the top.
 # ============================================================================
 set -euo pipefail
 
@@ -63,16 +68,27 @@ echo "  archive : $TARBALL"
 echo "  sha256  : $SHA"
 echo "  size    : $SIZE"
 
-python3 - "$INDEX" "$VER" "$SHA" "$SIZE" <<'PYEOF'
-import json, sys
-index_path, ver, sha, size = sys.argv[1:5]
+python3 - "$INDEX" "$VER" "$SHA" "$SIZE" "$MEGAAVR/boards.txt" <<'PYEOF'
+import json, sys, re
+index_path, ver, sha, size, boards_txt = sys.argv[1:6]
+# board display names for the Boards Manager entry, straight from boards.txt
+boards = [{"name": m.group(1).strip()}
+          for m in re.finditer(r"^[A-Za-z0-9_]+\.name=(.+)$", open(boards_txt, encoding="utf-8").read(), re.M)]
+import copy
 d = json.load(open(index_path))
-p = d["packages"][0]["platforms"][0]
+plats = d["packages"][0]["platforms"]
+existing = [p for p in plats if p["version"] == ver]
+if existing:
+    p = existing[0]
+else:
+    p = copy.deepcopy(plats[0])   # newest entry is the template (boards, toolsDependencies, ...)
+    plats.insert(0, p)
 p["version"] = ver
 p["url"] = f"https://github.com/ws-asahi/UkiUkiCore/releases/download/v{ver}/UkiUkiCore-{ver}.tar.bz2"
 p["archiveFileName"] = f"UkiUkiCore-{ver}.tar.bz2"
 p["checksum"] = f"SHA-256:{sha}"
 p["size"] = size
+p["boards"] = boards
 with open(index_path, "w") as f:
     json.dump(d, f, indent=2, ensure_ascii=False)
     f.write("\n")

@@ -7,7 +7,7 @@ UkiUkiduino シリーズは VTuber「浮々ゆにこ」のファングッズと�
 
 ![platform](https://img.shields.io/badge/platform-AVR%20DU-blue)
 ![license](https://img.shields.io/badge/license-LGPL--2.1-green)
-![version](https://img.shields.io/badge/core-v0.0.4-orange)
+![version](https://img.shields.io/badge/core-v0.0.5-orange)
 ![based on](https://img.shields.io/badge/based%20on-WazamonoCore%20%2F%20DxCore-lightgrey)
 
 UkiUkiduino シリーズは、定番の Arduino 互換ボードを **USB を内蔵した新世代 AVR** で置き換えたボード群です。  
@@ -15,7 +15,7 @@ USB-シリアル変換チップを別途搭載せず、マイコン単体で PC 
 UkiUkiCore は、これらのボードを Arduino IDE で開発するための専用コアで、  
 [WazamonoCore](https://github.com/ws-asahi/WazamonoCore)から **UkiUkiduino シリーズに必要な部分だけを残して再構成** しています。
 
-> ⚠️ **開発版(v0.0.4)です。** API・ボード定義・ブートローダは予告なく変更されることがあります。
+> ⚠️ **開発版(v0.0.5)です。** API・ボード定義・ブートローダは予告なく変更されることがあります。
 
 ---
 
@@ -106,7 +106,8 @@ UkiUkiCore は、これらのボードを Arduino IDE で開発するための�
 3. コア本体に加えて、専用ツールチェーン(avr-gcc 15.2.0 / avrdude 8.1)が自動的にダウンロード・設定されます。  
    追加の設定は不要です。
 
-詳しい手順・手動インストール(開発者向け)は [Installation.md](Installation.md) を参照してください。
+詳しい手順・手動インストール(開発者向け)は [Installation.md](Installation.md) を参照してください。  
+バージョンごとの変更内容は [ChangeLog.md](ChangeLog.md) を参照してください。
 
 ### 必要環境
 

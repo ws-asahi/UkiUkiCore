@@ -38,11 +38,13 @@
 #include <avr/pgmspace.h>
 #include <avr/interrupt.h>
 
-/* AVR DU watchdog.  avr-libc's <avr/wdt.h> (with WDT fixes #1068/#1069) now
- * provides correct wdt_enable()/wdt_disable()/wdt_reset() and the classic
- * WDTO_* timeout constants directly, so no WDT compatibility shim is needed.
- * Included here so WDT functions are available to sketches via Arduino.h. */
-#include <avr/wdt.h>
+/* AVR DU watchdog.  avr-libc 2.3.2 (as shipped in the wazamono toolchain)
+ * lacks the upstream wdt.h fixes #1065/#1068/#1069, so wdt_compat.h wraps
+ * <avr/wdt.h> and re-maps wdt_enable()/wdt_disable()/WDTO_* to correct,
+ * Pro Micro / Uno compatible behaviour.  Must be included here so the remap is
+ * in effect before the sketch's own "#include <avr/wdt.h>" is reached.
+ * (Ported from WazamonoCore e8b2400; correct on both stock and fixed avr-libc.) */
+#include "wdt_compat.h"
 
 /* Pro Micro / classic-AVR watchdog-reset detection (MCUSR / WDRF idiom).
  * NOT provided by <avr/wdt.h>.  The modern AVR keeps the reset cause in

@@ -12,6 +12,39 @@
         {
           "name": "UkiUkiCore",
           "architecture": "megaavr",
+          "version": "0.0.5",
+          "category": "Contributed",
+          "help": {
+            "online": "https://github.com/ws-asahi/UkiUkiCore"
+          },
+          "url": "https://github.com/ws-asahi/UkiUkiCore/releases/download/v0.0.5/UkiUkiCore-0.0.5.tar.bz2",
+          "archiveFileName": "UkiUkiCore-0.0.5.tar.bz2",
+          "checksum": "SHA-256:0862d20b46997a075bb3f8e8552f0b6beaa4874616cf193962dbead55011f6ae",
+          "size": "3815703",
+          "boards": [
+            {
+              "name": "UkiUkiduino"
+            },
+            {
+              "name": "UkiUkimicro"
+            }
+          ],
+          "toolsDependencies": [
+            {
+              "packager": "UkiUkiCore",
+              "name": "avr-gcc",
+              "version": "15.2.0-wazamono2"
+            },
+            {
+              "packager": "UkiUkiCore",
+              "name": "avrdude",
+              "version": "8.1-wazamono2"
+            }
+          ]
+        },
+        {
+          "name": "UkiUkiCore",
+          "architecture": "megaavr",
           "version": "0.0.4",
           "category": "Contributed",
           "help": {
